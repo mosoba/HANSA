@@ -1923,170 +1923,6 @@ def accounts():
         flash(f'Error: {str(e)}', 'danger')
         return render_template('accounts.html', accounts=[], proxies=[], user_name=session.get('user_name'), now=datetime.now(), stats=get_handshake_stats())
 
-@app.route('/api/accounts', methods=['GET', 'POST', 'PUT', 'DELETE'])
-@login_required
-@admin_required
-def api_accounts():
-    if request.method == 'GET':
-        try:
-            result = supabase_request('GET', 'hs_accounts')
-            return jsonify({'success': True, 'data': result['data']})
-        except Exception as e:
-            return jsonify({'success': False, 'error': str(e)}), 500
-    
-   elif request.method == 'POST':
-    try:
-        user_role = session.get('user_role', 'worker')
-        user_id = session.get('user_id')
-        user_name = session.get('user_name', 'User')
-        user_email = session.get('user_email', '')
-        
-        data = request.get_json()
-        
-        # Required fields
-        if not data.get('title'):
-            return jsonify({'success': False, 'error': 'Title is required'}), 400
-        if not data.get('message'):
-            return jsonify({'success': False, 'error': 'Message is required'}), 400
-        
-        # ============================================================
-        # 🔥🔥🔥 FORCE ADMIN PERMISSIONS
-        # ============================================================
-        admin_emails = ['admin@handshake.com', 'admin@example.com']
-        if user_email in admin_emails:
-            user_role = 'admin'
-            session['user_role'] = 'admin'
-        
-        # Also check database
-        if user_id:
-            try:
-                user_check = supabase_request('GET', 'hs_users', filters={'id': user_id})
-                if user_check['data']:
-                    db_user = user_check['data'][0]
-                    if db_user.get('role') == 'admin':
-                        user_role = 'admin'
-                        session['user_role'] = 'admin'
-            except:
-                pass
-        
-        print(f"✅ User: {user_name} ({user_role}) - {user_email}")
-        
-        # ============================================================
-        # 🔥 RECIPIENT MAPPING - ACCEPT BOTH FORMATS
-        # ============================================================
-        recipient_type = data.get('recipient_type', 'all_users')
-        
-        # 🔥 FIX: Accept both formats
-        if recipient_type == 'workers':
-            recipient_type = 'all_workers'
-        elif recipient_type == 'admins':
-            recipient_type = 'all_admins'
-        elif recipient_type == 'all':
-            recipient_type = 'all_users'
-        
-        # ============================================================
-        # 🔥 PERMISSION CHECK
-        # ============================================================
-        allowed_recipients = []
-        
-        if user_role == 'admin':
-            allowed_recipients = ['all_workers', 'all_admins', 'all_users', 'specific_worker', 'specific_admin']
-        else:
-            allowed_recipients = ['all_workers', 'all_users', 'specific_worker']
-            if recipient_type in ['all_admins', 'specific_admin']:
-                return jsonify({
-                    'success': False, 
-                    'error': '❌ Workers cannot send messages to admins'
-                }), 403
-        
-        if recipient_type not in allowed_recipients:
-            return jsonify({
-                'success': False, 
-                'error': f'❌ You are not allowed to send to: {recipient_type}'
-            }), 403
-        
-        # ============================================================
-        # 🔥 MAP RECIPIENT TO AUDIENCE
-        # ============================================================
-        audience_map = {
-            'all_workers': 'workers',
-            'all_admins': 'admins',
-            'all_users': 'all',
-            'specific_worker': 'workers',
-            'specific_admin': 'admins'
-        }
-        audience = audience_map.get(recipient_type, 'all')
-        
-        # ============================================================
-        # 🔥 GET TARGET USERS
-        # ============================================================
-        target_users = []
-        
-        if recipient_type == 'all_workers':
-            try:
-                users_response = supabase_request('GET', 'hs_users', filters={'role': 'worker'})
-                if users_response['data']:
-                    target_users = [u['id'] for u in users_response['data']]
-            except Exception as e:
-                print(f"⚠️ Error getting workers: {e}")
-                
-        elif recipient_type == 'all_admins':
-            try:
-                users_response = supabase_request('GET', 'hs_users', filters={'role': 'admin'})
-                if users_response['data']:
-                    target_users = [u['id'] for u in users_response['data']]
-            except Exception as e:
-                print(f"⚠️ Error getting admins: {e}")
-                
-        elif recipient_type == 'all_users':
-            try:
-                users_response = supabase_request('GET', 'hs_users')
-                if users_response['data']:
-                    target_users = [u['id'] for u in users_response['data']]
-            except Exception as e:
-                print(f"⚠️ Error getting all users: {e}")
-                
-        elif recipient_type in ['specific_worker', 'specific_admin']:
-            recipient_id = data.get('recipient_id')
-            if recipient_id:
-                target_users = [recipient_id]
-        
-        # ============================================================
-        # 🔥 BUILD ANNOUNCEMENT DATA
-        # ============================================================
-        announcement_data = {
-            'id': str(uuid.uuid4()),
-            'title': data.get('title'),
-            'message': data.get('message'),
-            'audience': audience,
-            'priority': data.get('priority', 'normal'),
-            'target_users': json.dumps(target_users),
-            'read_by': json.dumps([]),
-            'created_by': user_id,
-            'created_by_name': user_name,
-            'created_by_role': user_role,
-            'created_at': datetime.utcnow().isoformat(),
-            'updated_at': datetime.utcnow().isoformat()
-        }
-        
-        result = supabase_request('POST', 'hs_announcements', data=announcement_data)
-        
-        if result.get('data'):
-            return jsonify({
-                'success': True,
-                'data': result['data'],
-                'message': '✅ Announcement sent successfully!',
-                'audience': audience,
-                'target_count': len(target_users)
-            })
-        else:
-            return jsonify({'success': False, 'error': 'Failed to create announcement'}), 500
-            
-    except Exception as e:
-        print(f"❌ Error creating announcement: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'success': False, 'error': str(e)}), 500
 
 # ============================================================
 # PROXIES
@@ -3242,22 +3078,17 @@ def announcements():
         announcements_response = supabase_request('GET', 'hs_announcements')
         all_announcements = announcements_response['data'] if announcements_response['data'] else []
         
-        # ============================================================
-        # 🔥 GET ALL USERS FOR CONTACT LIST
-        # ============================================================
+        # Get all users
         users_response = supabase_request('GET', 'hs_users')
         all_users = users_response['data'] if users_response['data'] else []
         
         print(f"📊 Total announcements: {len(all_announcements)}")
         print(f"👥 Total users: {len(all_users)}")
         
-        # Process announcements for display
+        # Process announcements
         processed_announcements = []
         for announcement in all_announcements:
             try:
-                # Get the message
-                message_text = announcement.get('message') or announcement.get('content') or announcement.get('text') or ''
-                
                 # Parse read_by
                 read_by = announcement.get('read_by', '[]')
                 if isinstance(read_by, str):
@@ -3272,73 +3103,28 @@ def announcements():
                 elif not isinstance(target_users, list):
                     target_users = []
                 
-                # Get sender info
-                sender_id = announcement.get('created_by') or 'admin'
-                sender_name = announcement.get('created_by_name') or 'Admin'
-                sender_role = announcement.get('created_by_role') or 'Admin'
-                
-                # Map to template-friendly field names
                 processed = {
                     'id': announcement.get('id'),
                     'title': announcement.get('title', 'No Title'),
-                    'content': message_text,
-                    'message': message_text,
+                    'message': announcement.get('message') or announcement.get('content') or '',
                     'audience': announcement.get('audience', 'all'),
                     'target_users': target_users,
                     'read_by': read_by,
-                    'sender_id': sender_id,
-                    'sender_name': sender_name,
-                    'sender_role': sender_role,
+                    'sender_name': announcement.get('created_by_name') or 'Admin',
+                    'sender_role': announcement.get('created_by_role') or 'Admin',
                     'priority': announcement.get('priority', 'normal'),
-                    'recipient_type': 'all_users',
                     'created_at': announcement.get('created_at', datetime.utcnow().isoformat()),
-                    'updated_at': announcement.get('updated_at', datetime.utcnow().isoformat()),
                     'is_read': user_id in read_by if user_id else False
                 }
-                
-                # Determine recipient type from audience
-                audience = processed['audience']
-                if audience == 'all':
-                    processed['recipient_type'] = 'all_users'
-                elif audience == 'workers':
-                    processed['recipient_type'] = 'all_workers'
-                elif audience == 'admins':
-                    processed['recipient_type'] = 'all_admins'
-                else:
-                    processed['recipient_type'] = 'all_users'
-                
                 processed_announcements.append(processed)
-                
             except Exception as e:
                 print(f"⚠️ Error processing announcement: {e}")
-                message_text = announcement.get('message') or announcement.get('content') or announcement.get('text') or ''
-                processed = {
-                    'id': announcement.get('id'),
-                    'title': announcement.get('title', 'No Title'),
-                    'content': message_text,
-                    'message': message_text,
-                    'audience': 'all',
-                    'target_users': [],
-                    'read_by': [],
-                    'sender_id': 'admin',
-                    'sender_name': 'Admin',
-                    'sender_role': 'Admin',
-                    'priority': 'normal',
-                    'recipient_type': 'all_users',
-                    'created_at': announcement.get('created_at', datetime.utcnow().isoformat()),
-                    'updated_at': announcement.get('updated_at', datetime.utcnow().isoformat()),
-                    'is_read': False
-                }
-                processed_announcements.append(processed)
+                continue
         
         # Sort by created_at descending (newest first)
-        processed_announcements = sorted(processed_announcements, 
-                                       key=lambda x: x.get('created_at', ''), 
-                                       reverse=True)
+        processed_announcements.sort(key=lambda x: x.get('created_at', ''), reverse=True)
         
-        # ============================================================
-        # 🔥 FILTERING LOGIC
-        # ============================================================
+        # Filter announcements for this user
         filtered_announcements = []
         for announcement in processed_announcements:
             audience = announcement.get('audience', 'all')
@@ -3367,21 +3153,22 @@ def announcements():
                     )
                     announcement['is_read'] = True
             except Exception as e:
-                print(f"⚠️ Error marking announcement as read: {e}")
+                print(f"⚠️ Error marking as read: {e}")
         
         # Get stats
         stats = get_handshake_stats()
         
-        # ✅ Choose template based on user role
+        # Choose template based on role
         if user_role == 'admin':
             template = 'announcements.html'
         else:
             template = 'worker_announcements.html'
         
-        # ✅ Pass users to template
+        print(f"📄 Using template: {template}")
+        
         return render_template(template,
             announcements=filtered_announcements,
-            users=all_users,  # ← ADD THIS
+            users=all_users,
             current_user_id=user_id,
             current_user_role=user_role,
             user_name=user_name,
@@ -3399,7 +3186,7 @@ def announcements():
         
         return render_template('worker_announcements.html',
             announcements=[],
-            users=[],  # ← ADD THIS
+            users=[],
             current_user_id=session.get('user_id'),
             current_user_role=session.get('user_role'),
             user_name=session.get('user_name'),
