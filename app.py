@@ -3059,6 +3059,10 @@ def export_report(report_type):
 # ANNOUNCEMENTS
 # ============================================================
 
+# ============================================================
+# ANNOUNCEMENTS - FIXED VERSION
+# ============================================================
+
 @app.route('/announcements')
 @login_required
 def announcements():
@@ -3114,6 +3118,7 @@ def announcements():
                     'sender_role': announcement.get('created_by_role') or 'Admin',
                     'priority': announcement.get('priority', 'normal'),
                     'created_at': announcement.get('created_at', datetime.utcnow().isoformat()),
+                    # ✅ FIX: Set is_read based on read_by, don't auto-mark
                     'is_read': user_id in read_by if user_id else False
                 }
                 processed_announcements.append(processed)
@@ -3141,19 +3146,8 @@ def announcements():
         
         print(f"📊 Showing {len(filtered_announcements)} announcements after filtering")
         
-        # Mark announcements as read
-        for announcement in filtered_announcements:
-            try:
-                read_by = announcement.get('read_by', [])
-                if user_id and user_id not in read_by:
-                    read_by.append(user_id)
-                    supabase_request('PATCH', 'hs_announcements', 
-                        data={'read_by': json.dumps(read_by)},
-                        filters={'id': announcement['id']}
-                    )
-                    announcement['is_read'] = True
-            except Exception as e:
-                print(f"⚠️ Error marking as read: {e}")
+        # ✅ REMOVED: The auto-mark-read code that was here!
+        # Now the frontend will handle marking as read via the Intersection Observer
         
         # Get stats
         stats = get_handshake_stats()
