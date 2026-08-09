@@ -53,7 +53,6 @@
     .currency-value { font-weight: 700; }
     .no-data { color: #94a3b8; font-style: italic; }
     
-    /* ===== NEW: Submission Status Card ===== */
     .status-card {
       border-radius: 16px;
       padding: 16px 20px;
@@ -69,6 +68,24 @@
     .status-card .status-label { font-weight: 600; font-size: 0.85rem; }
     .status-card .status-detail { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
     .deadline-countdown { font-weight: 700; font-size: 1.1rem; }
+
+    /* Payday Info Badge */
+    .payday-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 40px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .payday-badge.sunday { background: #fef3c7; color: #92400e; }
+    .payday-badge.monday { background: #dbeafe; color: #1e40af; }
+    .payday-badge.tuesday { background: #e0e7ff; color: #3730a3; }
+    .payday-badge.wednesday { background: #ede9fe; color: #5b21b6; }
+    .payday-badge.thursday { background: #fce7f3; color: #9d174d; }
+    .payday-badge.friday { background: #d1fae5; color: #065f46; }
+    .payday-badge.saturday { background: #e5e7eb; color: #374151; }
   </style>
 </head>
 <body>
@@ -221,6 +238,7 @@
           <div class="mt-4">
             <label class="form-label"><i class="far fa-clock mr-1"></i> Hours</label>
             <input type="number" id="workHours" class="form-input" step="0.5" min="0.5" max="24" placeholder="4.5" required>
+            <p class="text-xs text-slate-400 mt-1">⏳ 24-hour rule: Must wait 24 hours between submissions</p>
           </div>
           <div class="mt-4">
             <label class="form-label"><i class="far fa-image mr-1"></i> Screenshot (optional)</label>
@@ -241,7 +259,7 @@
               <i class="fas fa-exclamation-triangle mr-2"></i><span id="paymentDateWarningText">Payment proof submitted within 7 days.</span>
             </div>
           </div>
-          <!-- ===== NEW: Payment Deadline Info ===== -->
+          <!-- ===== PAYDAY DEADLINE INFO ===== -->
           <div id="paymentDeadlineInfo" class="hidden p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-indigo-700 text-sm">
             <i class="fas fa-calendar-check mr-2"></i>
             <span><strong>Payday:</strong> <span id="paydayDisplay">Sunday</span></span>
@@ -281,7 +299,7 @@
         <div class="p-4 bg-slate-50/80 rounded-2xl border border-gray-200 text-xs text-slate-500 space-y-1">
           <p><i class="fas fa-info-circle text-blue-500 mr-1.5"></i><strong>Rules</strong></p>
           <p>📋 Hours: 1 submission every 24h (once per day)</p>
-          <p>💰 Payment Proof: Submit on account's payday (e.g., Sunday)</p>
+          <p>💰 Payment Proof: Submit on account's payday (e.g., Sunday, Thursday)</p>
           <p>⏳ You can submit payment proof even if you started mid-week</p>
         </div>
       </div>
@@ -403,14 +421,12 @@
       return;
     }
     
-    // Get payday from selected account
     const select = document.getElementById('accountId');
     const selectedOption = select.options[select.selectedIndex];
     const payday = selectedOption?.dataset?.payday || 'Sunday';
     
     document.getElementById('paydayDisplay').textContent = payday;
     
-    // Calculate next payday
     const today = new Date();
     const daysMap = {
       'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 
@@ -424,10 +440,9 @@
     const nextPayday = new Date(today);
     nextPayday.setDate(today.getDate() + daysUntil);
     
-    // Check if payment proof already submitted
     const dateStr = nextPayday.toISOString().split('T')[0];
     
-    fetch(`/api/check-payment-submission?date=${dateStr}`)
+    fetch(`/api/check-payment-submission?date=${dateStr}&account_id=${accountId}`)
       .then(r => r.json())
       .then(data => {
         const formattedDate = nextPayday.toLocaleDateString('en-US', { 
@@ -443,7 +458,6 @@
           detail.innerHTML = `You already submitted payment proof for ${payday}. Next submission on ${formattedDate}`;
           statusDiv.classList.remove('hidden');
         } else {
-          // Check if today is payday
           const todayStr = new Date().toISOString().split('T')[0];
           if (todayStr === dateStr) {
             statusDiv.className = 'status-card success';
@@ -481,11 +495,12 @@
   }
 
   function checkPaymentDate() {
+    const accountId = document.getElementById('accountId').value;
     const date = document.getElementById('paymentDate').value;
     const warn = document.getElementById('paymentDateWarning');
     const txt = document.getElementById('paymentDateWarningText');
     if (!date) return;
-    fetch(`/api/check-payment-submission?date=${date}`)
+    fetch(`/api/check-payment-submission?date=${date}&account_id=${accountId}`)
       .then(r => r.json())
       .then(data => {
         if (data.exists) {
