@@ -729,17 +729,19 @@
         <div class="list-body" id="announcementsList">
             {% if announcements %}
                 {% for announcement in announcements %}
+                <!-- ✅ FIX: Use session.user_id in announcement.read_by instead of announcement.is_read -->
                 <div class="announce-card 
-                            {% if not announcement.is_read %}unread{% endif %}
+                            {% if session.user_id not in announcement.read_by %}unread{% endif %}
                             {% if announcement.priority == 'high' %}high-priority{% endif %}" 
                      id="announcement-{{ announcement.id }}"
-                     data-read="{% if announcement.is_read %}read{% else %}unread{% endif %}"
+                     data-read="{% if session.user_id in announcement.read_by %}read{% else %}unread{% endif %}"
                      data-priority="{{ announcement.priority or 'normal' }}"
                      data-sender="{{ announcement.sender_id or '' }}">
                     <div class="card-top">
                         <div class="card-title">
                             {{ announcement.title }}
-                            {% if not announcement.is_read %}
+                            <!-- ✅ FIX: Use session.user_id not in announcement.read_by -->
+                            {% if session.user_id not in announcement.read_by %}
                             <span class="badge-new">New</span>
                             {% endif %}
                             {% if announcement.priority == 'high' %}
@@ -761,14 +763,16 @@
                     <div class="card-body">{{ announcement.message }}</div>
                     <div class="card-footer">
                         <div class="read-status">
-                            {% if announcement.is_read %}
+                            <!-- ✅ FIX: Use session.user_id in announcement.read_by -->
+                            {% if session.user_id in announcement.read_by %}
                                 <span class="read"><i class="fas fa-check-circle"></i> Read</span>
                             {% else %}
                                 <span class="unread"><i class="fas fa-circle"></i> Unread</span>
                             {% endif %}
                         </div>
                         <div class="actions">
-                            {% if not announcement.is_read %}
+                            <!-- ✅ FIX: Use session.user_id not in announcement.read_by -->
+                            {% if session.user_id not in announcement.read_by %}
                             <button class="read-btn" onclick="markRead('{{ announcement.id }}')">
                                 <i class="fas fa-check"></i> Mark Read
                             </button>
