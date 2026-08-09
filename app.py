@@ -3188,7 +3188,6 @@ def announcements():
             stats=get_handshake_stats(),
             is_admin=False
         )
-
 @app.route('/api/announcements', methods=['GET', 'POST'])
 @login_required
 def api_announcements():
@@ -3262,17 +3261,19 @@ def api_announcements():
                     'error': f'❌ You are not allowed to send to: {recipient_type}'
                 }), 403
             
-              # ============================================================
-# 🔥 MAP RECIPIENT TO AUDIENCE
-# ============================================================
-audience_map = {
-    'all_workers': 'workers',
-    'all_admins': 'admins',
-    'all_users': 'all',
-    'specific_worker': 'specific',  # ← CHANGE TO 'specific'
-    'specific_admin': 'specific'    # ← CHANGE TO 'specific'
-}
-audience = audience_map.get(recipient_type, 'all')
+            # ============================================================
+            # 🔥 MAP RECIPIENT TO AUDIENCE
+            # ============================================================
+            audience_map = {
+                'all_workers': 'workers',
+                'all_admins': 'admins',
+                'all_users': 'all',
+                'specific_worker': 'specific',
+                'specific_admin': 'specific'
+            }
+            audience = audience_map.get(recipient_type, 'all')
+            
+            print(f"📤 User: {user_name} ({user_role}) sending to: {recipient_type} → Audience: {audience}")
             
             # ============================================================
             # 🔥 GET TARGET USERS
