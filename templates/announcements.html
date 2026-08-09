@@ -21,17 +21,12 @@
 
 {% block extra_css %}
 <style>
-/* ============================================================
-   SIMPLE ANNOUNCEMENTS - ADMIN WITH CREATE FORM
-   ============================================================ */
 .announcements-wrapper {
     display: grid;
     grid-template-columns: 420px 1fr;
     gap: 24px;
     min-height: 550px;
 }
-
-/* ===== LEFT PANEL - CREATE ===== */
 .create-panel {
     background: white;
     border-radius: 16px;
@@ -42,7 +37,6 @@
     position: sticky;
     top: 20px;
 }
-
 .create-panel .panel-header {
     display: flex;
     align-items: center;
@@ -74,7 +68,6 @@
     color: #94a3b8;
     margin: 0;
 }
-
 .form-group {
     margin-bottom: 16px;
 }
@@ -115,7 +108,6 @@
     max-height: 180px;
     line-height: 1.6;
 }
-
 .audience-pills {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -150,7 +142,6 @@
 .audience-pills .pill.active .pill-label {
     color: #6366f1;
 }
-
 .priority-group {
     display: flex;
     gap: 8px;
@@ -182,7 +173,6 @@
     font-size: 16px;
     display: block;
 }
-
 .btn-send {
     width: 100%;
     padding: 12px;
@@ -208,8 +198,6 @@
     cursor: not-allowed;
     transform: none !important;
 }
-
-/* ===== RIGHT PANEL ===== */
 .list-panel {
     background: white;
     border-radius: 16px;
@@ -219,7 +207,6 @@
     display: flex;
     flex-direction: column;
 }
-
 .list-header {
     padding: 16px 24px;
     border-bottom: 1px solid #f0f4fa;
@@ -275,26 +262,15 @@
     border-color: #6366f1;
     color: #6366f1;
 }
-
 .list-body {
     padding: 16px 20px;
     flex: 1;
     overflow-y: auto;
     max-height: 600px;
 }
-.list-body::-webkit-scrollbar {
-    width: 4px;
-}
-.list-body::-webkit-scrollbar-track {
-    background: #f1f4f9;
-    border-radius: 10px;
-}
-.list-body::-webkit-scrollbar-thumb {
-    background: #d1d9e6;
-    border-radius: 10px;
-}
-
-/* ===== ANNOUNCEMENT CARD ===== */
+.list-body::-webkit-scrollbar { width: 4px; }
+.list-body::-webkit-scrollbar-track { background: #f1f4f9; border-radius: 10px; }
+.list-body::-webkit-scrollbar-thumb { background: #d1d9e6; border-radius: 10px; }
 .announce-card {
     background: white;
     border-radius: 12px;
@@ -318,7 +294,6 @@
 .announce-card.high-priority.unread {
     border-left: 4px solid #ef4444;
 }
-
 .announce-card .card-top {
     display: flex;
     justify-content: space-between;
@@ -378,7 +353,6 @@
 .announce-card .card-top .card-meta .audience-tag.all { background: #dbeafe; color: #1d4ed8; }
 .announce-card .card-top .card-meta .audience-tag.workers { background: #d1fae5; color: #065f46; }
 .announce-card .card-top .card-meta .audience-tag.admins { background: #fef3c7; color: #92400e; }
-
 .announce-card .card-body {
     margin-top: 8px;
     font-size: 14px;
@@ -389,7 +363,6 @@
     border-radius: 8px;
     border: 1px solid #f0f4fa;
 }
-
 .announce-card .card-footer {
     margin-top: 10px;
     padding-top: 10px;
@@ -439,8 +412,6 @@
     background: #d1fae5;
     color: #065f46;
 }
-
-/* ===== EMPTY STATE ===== */
 .empty-state {
     text-align: center;
     padding: 60px 20px;
@@ -462,8 +433,6 @@
     margin: 4px auto 0;
     max-width: 300px;
 }
-
-/* ===== TOAST ===== */
 .toast-modern {
     position: fixed;
     top: 20px;
@@ -485,41 +454,23 @@
 .toast-modern.error { background: #ef4444; }
 .toast-modern.warning { background: #f59e0b; }
 .toast-modern.info { background: #3b82f6; }
-.toast-modern .close-btn {
-    cursor: pointer;
-    opacity: 0.7;
-}
+.toast-modern .close-btn { cursor: pointer; opacity: 0.7; }
 .toast-modern .close-btn:hover { opacity: 1; }
-
 @keyframes slideInRight {
     from { transform: translateX(120%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
 }
-
-/* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
     .announcements-wrapper {
         grid-template-columns: 1fr;
     }
-    .create-panel {
-        position: static;
-    }
+    .create-panel { position: static; }
 }
-
 @media (max-width: 768px) {
-    .audience-pills {
-        grid-template-columns: 1fr 1fr 1fr;
-    }
-    .list-header {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .announce-card .card-top {
-        flex-direction: column;
-    }
-    .create-panel {
-        padding: 16px;
-    }
+    .audience-pills { grid-template-columns: 1fr 1fr 1fr; }
+    .list-header { flex-direction: column; align-items: stretch; }
+    .announce-card .card-top { flex-direction: column; }
+    .create-panel { padding: 16px; }
 }
 </style>
 {% endblock %}
@@ -528,7 +479,7 @@
 
 <div class="announcements-wrapper">
 
-    <!-- ===== LEFT PANEL - CREATE ===== -->
+    <!-- LEFT PANEL - CREATE -->
     <div class="create-panel">
         <div class="panel-header">
             <div class="icon-box"><i class="fas fa-pen-fancy"></i></div>
@@ -604,7 +555,7 @@
         </form>
     </div>
 
-    <!-- ===== RIGHT PANEL ===== -->
+    <!-- RIGHT PANEL - LIST -->
     <div class="list-panel">
         <div class="list-header">
             <div class="left-group">
@@ -691,22 +642,17 @@
 </div>
 
 <script>
-// ============================================================
 // AUDIENCE SELECTOR
-// ============================================================
 function selectAudience(value) {
     document.querySelectorAll('.audience-pills .pill').forEach(el => {
         el.classList.toggle('active', el.dataset.value === value);
     });
     document.getElementById('audience').value = value;
-    
     const specificGroup = document.getElementById('specificWorkerGroup');
     specificGroup.style.display = value === 'specific_worker' ? 'block' : 'none';
 }
 
-// ============================================================
 // PRIORITY SELECTOR
-// ============================================================
 function selectPriority(value) {
     document.querySelectorAll('.priority-group .prio-btn').forEach(el => {
         el.className = 'prio-btn';
@@ -717,20 +663,15 @@ function selectPriority(value) {
     document.getElementById('priority').value = value;
 }
 
-// ============================================================
 // CHARACTER COUNTER
-// ============================================================
 document.getElementById('message').addEventListener('input', function() {
     document.getElementById('charCount').textContent = this.value.length;
 });
 
-// ============================================================
 // FILTER ANNOUNCEMENTS
-// ============================================================
 function filterAnnouncements(filter, btn) {
     document.querySelectorAll('#filterGroup button').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
-    
     document.querySelectorAll('.announce-card').forEach(item => {
         const isRead = item.dataset.read === 'read';
         const priority = item.dataset.priority || 'normal';
@@ -742,33 +683,26 @@ function filterAnnouncements(filter, btn) {
     });
 }
 
-// ============================================================
 // SEND ANNOUNCEMENT
-// ============================================================
 async function sendAnnouncement(event) {
     event.preventDefault();
-    
     const sendBtn = document.getElementById('sendBtn');
     const originalText = sendBtn.innerHTML;
     sendBtn.disabled = true;
     sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-    
     const title = document.getElementById('title').value.trim();
     const message = document.getElementById('message').value.trim();
     const audience = document.getElementById('audience').value;
     const priority = document.getElementById('priority').value;
     const specificWorker = document.getElementById('specificWorker').value;
-    
     if (!title || !message) {
         showToast('Please fill in all required fields', 'warning');
         sendBtn.disabled = false;
         sendBtn.innerHTML = originalText;
         return;
     }
-    
     let recipient_type = 'all_users';
     let recipient_id = null;
-    
     if (audience === 'all') {
         recipient_type = 'all_users';
     } else if (audience === 'workers') {
@@ -785,7 +719,6 @@ async function sendAnnouncement(event) {
         recipient_type = 'specific_worker';
         recipient_id = specificWorker;
     }
-    
     const payload = {
         title: title,
         message: message,
@@ -793,19 +726,15 @@ async function sendAnnouncement(event) {
         priority: priority
     };
     if (recipient_id) payload.recipient_id = recipient_id;
-    
     try {
         const response = await fetch('/api/announcements', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-        
         const result = await response.json();
-        
         sendBtn.disabled = false;
         sendBtn.innerHTML = originalText;
-        
         if (result.success) {
             showToast('✅ Announcement sent successfully!', 'success');
             document.getElementById('title').value = '';
@@ -832,15 +761,11 @@ async function sendAnnouncement(event) {
     }
 }
 
-// ============================================================
 // MARK AS READ
-// ============================================================
 let markedRead = new Set();
-
 async function markRead(id) {
     if (markedRead.has(id)) return;
     markedRead.add(id);
-    
     try {
         const response = await fetch(`/api/announcements/${id}/read`, {
             method: 'PATCH'
@@ -860,7 +785,6 @@ async function markRead(id) {
                 const readBtn = card.querySelector('.read-btn');
                 if (readBtn) readBtn.remove();
             }
-            // Update count
             const unreadCards = document.querySelectorAll('.announce-card.unread');
             document.querySelector('.count-badge').textContent = unreadCards.length;
         }
@@ -869,9 +793,7 @@ async function markRead(id) {
     }
 }
 
-// ============================================================
-// AUTO-MARK AS READ WHEN CARD COMES INTO VIEW
-// ============================================================
+// AUTO-MARK AS READ
 function setupAutoRead() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -883,21 +805,15 @@ function setupAutoRead() {
                 }
             }
         });
-    }, {
-        threshold: 0.3
-    });
-    
+    }, { threshold: 0.3 });
     document.querySelectorAll('.announce-card.unread').forEach(card => {
         observer.observe(card);
     });
 }
 
-// ============================================================
 // DELETE ANNOUNCEMENT
-// ============================================================
 async function deleteAnnouncement(id) {
     if (!confirm('Delete this announcement permanently?')) return;
-    
     try {
         const response = await fetch(`/api/announcements/${id}`, {
             method: 'DELETE'
@@ -920,9 +836,7 @@ async function deleteAnnouncement(id) {
     }
 }
 
-// ============================================================
 // SHOW TOAST
-// ============================================================
 function showToast(message, type = 'success') {
     document.querySelectorAll('.toast-modern').forEach(el => el.remove());
     const toast = document.createElement('div');
@@ -935,9 +849,7 @@ function showToast(message, type = 'success') {
     setTimeout(() => toast.remove(), 4000);
 }
 
-// ============================================================
 // INITIALIZE
-// ============================================================
 document.addEventListener('DOMContentLoaded', function() {
     setupAutoRead();
 });
