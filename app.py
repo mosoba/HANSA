@@ -3262,19 +3262,17 @@ def api_announcements():
                     'error': f'❌ You are not allowed to send to: {recipient_type}'
                 }), 403
             
-            # ============================================================
-            # 🔥 MAP RECIPIENT TO AUDIENCE
-            # ============================================================
-            audience_map = {
-                'all_workers': 'workers',
-                'all_admins': 'admins',
-                'all_users': 'all',
-                'specific_worker': 'workers',
-                'specific_admin': 'admins'
-            }
-            audience = audience_map.get(recipient_type, 'all')
-            
-            print(f"📤 User: {user_name} ({user_role}) sending to: {recipient_type} → Audience: {audience}")
+              # ============================================================
+# 🔥 MAP RECIPIENT TO AUDIENCE
+# ============================================================
+audience_map = {
+    'all_workers': 'workers',
+    'all_admins': 'admins',
+    'all_users': 'all',
+    'specific_worker': 'specific',  # ← CHANGE TO 'specific'
+    'specific_admin': 'specific'    # ← CHANGE TO 'specific'
+}
+audience = audience_map.get(recipient_type, 'all')
             
             # ============================================================
             # 🔥 GET TARGET USERS
