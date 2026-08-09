@@ -1,0 +1,1957 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Verification Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== ROOT VARIABLES ===== */
+    :root {
+        --primary: #4f46e5;
+        --primary-light: #818cf8;
+        --primary-dark: #4338ca;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --gray-50: #f8fafc;
+        --gray-100: #f1f5f9;
+        --gray-200: #e2e8f0;
+        --gray-300: #cbd5e1;
+        --gray-400: #94a3b8;
+        --gray-500: #64748b;
+        --gray-600: #475569;
+        --gray-700: #334155;
+        --gray-800: #1e293b;
+        --gray-900: #0f172a;
+        --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+        --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+        --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+        --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+        --radius: 12px;
+        --radius-lg: 16px;
+        --radius-xl: 20px;
+        --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ===== PAGE HEADER ===== */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 28px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .page-header-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .page-header-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius);
+        background: linear-gradient(135deg, var(--primary), #7c3aed);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+
+    .page-header-title h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        letter-spacing: -0.025em;
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .page-header-title p {
+        font-size: 0.875rem;
+        color: var(--gray-500);
+        margin: 2px 0 0 0;
+    }
+
+    .page-header-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .header-badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: white;
+        border: 1px solid var(--gray-200);
+        border-radius: 40px;
+        font-size: 0.8rem;
+        color: var(--gray-600);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .header-badge i {
+        color: var(--primary);
+    }
+
+    .header-badge .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .dot.green { background: var(--success); }
+    .dot.orange { background: var(--warning); }
+
+    /* ===== STATS GRID ===== */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: var(--radius);
+        padding: 18px 20px 16px;
+        border: 1px solid var(--gray-200);
+        box-shadow: var(--shadow-sm);
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        opacity: 0;
+        transition: var(--transition);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--gray-300);
+    }
+
+    .stat-card:hover::before { opacity: 1; }
+
+    .stat-card .stat-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .stat-card .stat-label {
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--gray-400);
+    }
+
+    .stat-card .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        line-height: 1.2;
+        margin-top: 4px;
+    }
+
+    .stat-card .stat-value .stat-unit {
+        font-size: 0.75rem;
+        font-weight: 400;
+        color: var(--gray-400);
+        margin-left: 2px;
+    }
+
+    .stat-card .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .stat-card .stat-footer {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid var(--gray-100);
+        font-size: 0.7rem;
+        color: var(--gray-500);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .stat-card.primary::before { background: var(--primary); }
+    .stat-card.success::before { background: var(--success); }
+    .stat-card.info::before { background: #3b82f6; }
+    .stat-card.warning::before { background: var(--warning); }
+    .stat-card.danger::before { background: var(--danger); }
+    .stat-card.purple::before { background: #8b5cf6; }
+
+    .stat-card.primary .stat-icon { background: #eef2ff; color: var(--primary); }
+    .stat-card.success .stat-icon { background: #d1fae5; color: var(--success); }
+    .stat-card.info .stat-icon { background: #dbeafe; color: #3b82f6; }
+    .stat-card.warning .stat-icon { background: #fef3c7; color: var(--warning); }
+    .stat-card.danger .stat-icon { background: #fee2e2; color: var(--danger); }
+    .stat-card.purple .stat-icon { background: #ede9fe; color: #8b5cf6; }
+
+    /* ===== COMPLIANCE ROW ===== */
+    .compliance-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+
+    .compliance-card {
+        background: white;
+        border-radius: var(--radius);
+        padding: 18px 20px;
+        border: 1px solid var(--gray-200);
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: var(--transition);
+    }
+
+    .compliance-card:hover {
+        box-shadow: var(--shadow-md);
+        border-color: var(--gray-300);
+    }
+
+    .compliance-card .compliance-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: var(--radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .compliance-card .compliance-content {
+        flex: 1;
+    }
+
+    .compliance-card .compliance-content .label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--gray-400);
+    }
+
+    .compliance-card .compliance-content .value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        line-height: 1.2;
+    }
+
+    .compliance-card .compliance-content .sub {
+        font-size: 0.7rem;
+        color: var(--gray-500);
+    }
+
+    .compliance-card.green .compliance-icon { background: #d1fae5; color: var(--success); }
+    .compliance-card.blue .compliance-icon { background: #dbeafe; color: #3b82f6; }
+    .compliance-card.amber .compliance-icon { background: #fef3c7; color: var(--warning); }
+
+    /* ===== ENHANCED CONTROLS BAR ===== */
+    .controls-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 20px;
+        padding: 14px 20px;
+        background: white;
+        border-radius: var(--radius);
+        border: 1px solid var(--gray-200);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .controls-bar .search-box {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--gray-50);
+        border: 2px solid var(--gray-200);
+        border-radius: 40px;
+        padding: 8px 18px;
+        transition: var(--transition);
+        flex: 1;
+        max-width: 340px;
+    }
+
+    .controls-bar .search-box:focus-within {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        background: white;
+    }
+
+    .controls-bar .search-box i {
+        color: var(--gray-400);
+        font-size: 0.9rem;
+    }
+
+    .controls-bar .search-box input {
+        border: none;
+        background: transparent;
+        padding: 6px 0;
+        font-size: 0.85rem;
+        color: var(--gray-700);
+        width: 100%;
+        outline: none;
+    }
+
+    .controls-bar .search-box input::placeholder {
+        color: var(--gray-400);
+    }
+
+    .controls-bar .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .controls-bar .filter-group .filter-label {
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--gray-400);
+        margin-right: 4px;
+    }
+
+    .controls-bar .filter-btn {
+        padding: 6px 14px;
+        border: 2px solid var(--gray-200);
+        border-radius: 40px;
+        background: white;
+        font-size: 0.72rem;
+        font-weight: 500;
+        color: var(--gray-600);
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .controls-bar .filter-btn:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: #eef2ff;
+        transform: translateY(-1px);
+    }
+
+    .controls-bar .filter-btn.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+        box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+    }
+
+    .controls-bar .filter-btn .badge {
+        background: rgba(255,255,255,0.2);
+        padding: 0 6px;
+        border-radius: 20px;
+        font-size: 0.6rem;
+    }
+
+    .controls-bar .filter-btn.active .badge {
+        background: rgba(255,255,255,0.25);
+    }
+
+    /* ===== TABLE CARD ===== */
+    .table-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--gray-200);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        margin-bottom: 28px;
+    }
+
+    .table-card-header {
+        padding: 16px 24px;
+        background: var(--gray-50);
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .table-card-header .left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .table-card-header .left .icon-wrap {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius);
+        background: linear-gradient(135deg, var(--primary), #7c3aed);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.85rem;
+    }
+
+    .table-card-header .left h3 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin: 0;
+    }
+
+    .table-card-header .left h3 small {
+        font-weight: 400;
+        font-size: 0.75rem;
+        color: var(--gray-400);
+        margin-left: 6px;
+    }
+
+    .table-card-header .right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .table-card-header .badge-count {
+        padding: 4px 14px;
+        background: #eef2ff;
+        color: var(--primary);
+        border-radius: 40px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .table-card-header .date-badge {
+        font-size: 0.7rem;
+        color: var(--gray-400);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* ===== ENHANCED TABLE ===== */
+    .table-wrap {
+        overflow-x: auto;
+        padding: 0 4px 4px 4px;
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .table-wrap::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    .table-wrap::-webkit-scrollbar-track {
+        background: var(--gray-100);
+        border-radius: 10px;
+    }
+
+    .table-wrap::-webkit-scrollbar-thumb {
+        background: var(--gray-300);
+        border-radius: 10px;
+    }
+
+    .table-wrap::-webkit-scrollbar-thumb:hover {
+        background: var(--gray-400);
+    }
+
+    .table-wrap table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        min-width: 900px;
+    }
+
+    .table-wrap thead th {
+        padding: 12px 16px;
+        font-size: 0.6rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--gray-400);
+        background: var(--gray-50);
+        border-bottom: 2px solid var(--gray-200);
+        text-align: left;
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .table-wrap thead th.text-center {
+        text-align: center;
+    }
+
+    .table-wrap tbody td {
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--gray-100);
+        vertical-align: middle;
+    }
+
+    .table-wrap tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .table-wrap tbody tr:hover {
+        background: var(--gray-50);
+    }
+
+    /* ===== ENHANCED ACCOUNT GROUP ===== */
+    .table-wrap tbody tr.account-group {
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        border-top: 2px solid var(--gray-200);
+        border-bottom: 2px solid var(--gray-200);
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .table-wrap tbody tr.account-group:hover {
+        background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+    }
+
+    .table-wrap tbody tr.account-group td {
+        padding: 10px 16px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .table-wrap tbody tr.account-group .group-label {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .table-wrap tbody tr.account-group .group-label .acct-badge {
+        padding: 3px 14px;
+        background: linear-gradient(135deg, var(--primary), #7c3aed);
+        color: white;
+        border-radius: 40px;
+        font-size: 0.6rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+    }
+
+    .table-wrap tbody tr.account-group .group-label .worker-name {
+        font-weight: 700;
+        color: var(--gray-800);
+        font-size: 0.9rem;
+    }
+
+    .table-wrap tbody tr.account-group .group-label .acct-name {
+        color: #7c3aed;
+        font-weight: 700;
+        font-size: 0.85rem;
+        background: #ede9fe;
+        padding: 2px 12px;
+        border-radius: 40px;
+        border: 1px solid #ddd6fe;
+    }
+
+    .table-wrap tbody tr.account-group .group-label .meta {
+        color: var(--gray-500);
+        font-weight: 500;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .table-wrap tbody tr.account-group .group-label .meta i {
+        color: var(--gray-400);
+        font-size: 0.7rem;
+    }
+
+    .table-wrap tbody tr.account-group .group-label .expand-icon {
+        margin-left: auto;
+        color: var(--gray-400);
+        transition: var(--transition);
+        background: white;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--gray-200);
+        font-size: 0.7rem;
+    }
+
+    .table-wrap tbody tr.account-group:hover .expand-icon {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .table-wrap tbody tr.account-group .group-label .expand-icon.rotated {
+        transform: rotate(180deg);
+    }
+
+    .week-row.collapsed {
+        display: none;
+    }
+
+    /* ===== WORKER CELL ===== */
+    .worker-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .worker-cell .avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: var(--radius);
+        background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.7rem;
+        color: var(--primary);
+        flex-shrink: 0;
+    }
+
+    .worker-cell .info .name {
+        font-weight: 600;
+        color: var(--gray-800);
+        font-size: 0.85rem;
+    }
+
+    .worker-cell .info .account {
+        font-size: 0.7rem;
+        color: var(--gray-400);
+    }
+
+    /* ===== WEEK NUMBER ===== */
+    .week-num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 26px;
+        height: 26px;
+        padding: 0 4px;
+        border-radius: 50%;
+        background: var(--gray-100);
+        color: var(--gray-600);
+        font-size: 0.65rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    /* ===== STATUS BADGE ===== */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 14px;
+        border-radius: 40px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .status-badge.matched {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-badge.pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-badge.fraud {
+        background: #fee2e2;
+        color: #991b1b;
+        animation: pulseGlow 2s infinite;
+    }
+
+    @keyframes pulseGlow {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.2); }
+        50% { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1); }
+    }
+
+    .status-badge.overpaid {
+        background: #fef3c7;
+        color: #78350f;
+    }
+
+    .status-badge.underpaid {
+        background: #fce4ec;
+        color: #880e4f;
+    }
+
+    .status-badge.no-data {
+        background: var(--gray-100);
+        color: var(--gray-500);
+    }
+
+    /* ===== ACTION BUTTON ===== */
+    .btn-view {
+        background: none;
+        border: none;
+        color: var(--primary);
+        font-weight: 500;
+        font-size: 0.75rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 12px;
+        border-radius: 40px;
+        transition: var(--transition);
+    }
+
+    .btn-view:hover {
+        background: #eef2ff;
+        color: var(--primary-dark);
+        transform: scale(1.05);
+    }
+
+    /* ===== SHOW MORE BUTTON ===== */
+    .show-more-row td {
+        padding: 6px 16px !important;
+        text-align: center;
+        background: var(--gray-50);
+    }
+
+    .show-more-btn {
+        background: none;
+        border: 1px solid var(--gray-200);
+        border-radius: 40px;
+        padding: 6px 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--primary);
+        cursor: pointer;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .show-more-btn:hover {
+        background: #eef2ff;
+        border-color: var(--primary);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(79, 70, 229, 0.15);
+    }
+
+    .show-more-btn i {
+        font-size: 0.7rem;
+    }
+
+    /* ===== PAGINATION ===== */
+    .pagination-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 16px 24px;
+        border-top: 1px solid var(--gray-200);
+        background: var(--gray-50);
+    }
+
+    .pagination-bar .info {
+        font-size: 0.8rem;
+        color: var(--gray-500);
+    }
+
+    .pagination-bar .info strong {
+        color: var(--gray-700);
+    }
+
+    .pagination-bar .pagination {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .pagination-bar .pagination button {
+        padding: 6px 14px;
+        border: 1px solid var(--gray-200);
+        border-radius: 8px;
+        background: white;
+        color: var(--gray-600);
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .pagination-bar .pagination button:hover:not(:disabled) {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: #eef2ff;
+    }
+
+    .pagination-bar .pagination button.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+        box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+    }
+
+    .pagination-bar .pagination button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state {
+        padding: 32px 20px;
+        text-align: center;
+        color: var(--gray-400);
+        background: var(--gray-50);
+        border-radius: var(--radius);
+        margin: 4px 0;
+    }
+
+    .empty-state i {
+        font-size: 2rem;
+        display: block;
+        margin-bottom: 8px;
+        opacity: 0.3;
+    }
+
+    .empty-state .empty-title {
+        font-weight: 500;
+        color: var(--gray-600);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .empty-state .empty-sub {
+        font-size: 0.75rem;
+        color: var(--gray-400);
+        margin: 2px 0 0 0;
+    }
+
+    .no-data-row td {
+        padding: 0 !important;
+    }
+
+    .no-data-row .empty-state {
+        border-radius: 0;
+        margin: 0;
+        padding: 24px 20px;
+    }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 99999;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-content {
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: 32px;
+        max-width: 720px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: var(--shadow-xl);
+        animation: modalSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        margin: auto;
+    }
+
+    .modal-content::-webkit-scrollbar { width: 4px; }
+    .modal-content::-webkit-scrollbar-track { background: var(--gray-100); border-radius: 10px; }
+    .modal-content::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .modal-header .modal-title h2 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin: 0;
+    }
+
+    .modal-header .modal-title p {
+        font-size: 0.85rem;
+        color: var(--gray-500);
+        margin: 2px 0 0 0;
+    }
+
+    .modal-close {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: none;
+        background: var(--gray-100);
+        color: var(--gray-500);
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-close:hover {
+        background: #fee2e2;
+        color: var(--danger);
+        transform: rotate(90deg);
+    }
+
+    @keyframes modalSlideIn {
+        from { opacity: 0; transform: scale(0.95) translateY(20px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1200px) {
+        .stats-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .page-header-right {
+            justify-content: flex-start;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .stat-card {
+            padding: 14px 16px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 1.3rem;
+        }
+
+        .stat-card .stat-icon {
+            width: 32px;
+            height: 32px;
+            font-size: 0.85rem;
+        }
+
+        .compliance-row {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .controls-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .controls-bar .search-box {
+            max-width: 100%;
+        }
+
+        .controls-bar .filter-group {
+            justify-content: flex-start;
+        }
+
+        .controls-bar .filter-group .filter-label {
+            width: 100%;
+            margin-bottom: 4px;
+        }
+
+        .table-card-header {
+            padding: 12px 16px;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .table-card-header .right {
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .table-wrap table {
+            font-size: 0.75rem;
+            min-width: 700px;
+        }
+
+        .table-wrap thead th,
+        .table-wrap tbody td {
+            padding: 8px 10px;
+        }
+
+        .worker-cell .avatar {
+            width: 28px;
+            height: 28px;
+            font-size: 0.6rem;
+        }
+
+        .worker-cell .info .name {
+            font-size: 0.75rem;
+        }
+
+        .status-badge {
+            font-size: 0.55rem;
+            padding: 2px 10px;
+        }
+
+        .modal-content {
+            padding: 20px;
+            margin: 10px;
+        }
+
+        .pagination-bar {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .stats-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .stat-card {
+            padding: 12px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 1.1rem;
+        }
+
+        .stat-card .stat-icon {
+            width: 28px;
+            height: 28px;
+            font-size: 0.75rem;
+        }
+
+        .stat-card .stat-footer {
+            font-size: 0.6rem;
+        }
+
+        .header-badge {
+            font-size: 0.7rem;
+            padding: 4px 12px;
+        }
+
+        .page-header-title h1 {
+            font-size: 1.2rem;
+        }
+
+        .page-header-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ===== PAGE HEADER ===== -->
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="page-header-icon">
+            <i class="fas fa-shield-alt"></i>
+        </div>
+        <div class="page-header-title">
+            <h1>Verification Dashboard</h1>
+            <p>Monitor worker hours, payments, and 7-day compliance per account</p>
+        </div>
+    </div>
+    <div class="page-header-right">
+        <span class="header-badge">
+            <i class="fas fa-users"></i>
+            <span id="totalWorkersDisplay">{{ total_workers|default(0) }}</span> workers
+        </span>
+        <span class="header-badge">
+            <i class="fas fa-calendar-alt"></i>
+            {{ now.strftime('%b %d, %Y') if now else 'Today' }}
+        </span>
+        <span class="header-badge">
+            <span class="dot green"></span>
+            Live
+        </span>
+    </div>
+</div>
+
+<!-- ===== STATS GRID ===== -->
+<div class="stats-grid">
+    <div class="stat-card primary">
+        <div class="stat-top">
+            <div>
+                <div class="stat-label">Total Workers</div>
+                <div class="stat-value">{{ total_workers|default(0) }}</div>
+            </div>
+            <div class="stat-icon"><i class="fas fa-users"></i></div>
+        </div>
+        <div class="stat-footer">
+            <i class="fas fa-circle text-green-500" style="font-size:6px;"></i>
+            Active workforce
+        </div>
+    </div>
+
+    <div class="stat-card success">
+        <div class="stat-top">
+            <div>
+                <div class="stat-label">Verified</div>
+                <div class="stat-value">{{ matched_workers|default(0) }}</div>
+            </div>
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+        </div>
+        <div class="stat-footer">
+            <i class="fas fa-check-circle" style="color:var(--success);"></i>
+            All weeks matched
+        </div>
+    </div>
+
+    <div class="stat-card info">
+        <div class="stat-top">
+            <div>
+                <div class="stat-label">On Track</div>
+                <div class="stat-value">{{ on_track_frequency|default(0) }}</div>
+            </div>
+            <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+        </div>
+        <div class="stat-footer">
+            <i class="fas fa-calendar"></i>
+            7-day compliance
+        </div>
+    </div>
+
+    <div class="stat-card warning">
+        <div class="stat-top">
+            <div>
+                <div class="stat-label">Pending</div>
+                <div class="stat-value">{{ pending_payment|default(0) }}</div>
+            </div>
+            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+        </div>
+        <div class="stat-footer">
+            <i class="fas fa-hourglass-half" style="color:var(--warning);"></i>
+            Awaiting payment
+        </div>
+    </div>
+
+    <div class="stat-card danger">
+        <div class="stat-top">
+            <div>
+                <div class="stat-label">Fraud Alerts</div>
+                <div class="stat-value">{{ fraud_alerts|default(0) }}</div>
+            </div>
+            <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        </div>
+        <div class="stat-footer">
+            <i class="fas fa-exclamation-circle" style="color:var(--danger);"></i>
+            Payment without hours
+        </div>
+    </div>
+
+    <div class="stat-card purple">
+        <div class="stat-top">
+            <div>
+                <div class="stat-label">Issues</div>
+                <div class="stat-value">{{ missing_hours|default(0) }}<span class="stat-unit">H</span> / {{ missing_payment|default(0) }}<span class="stat-unit">P</span></div>
+            </div>
+            <div class="stat-icon"><i class="fas fa-exclamation-circle"></i></div>
+        </div>
+        <div class="stat-footer">
+            <i class="fas fa-exclamation-triangle" style="color:#8b5cf6;"></i>
+            Hours or payment missing
+        </div>
+    </div>
+</div>
+
+<!-- ===== COMPLIANCE ROW ===== -->
+<div class="compliance-row">
+    <div class="compliance-card green">
+        <div class="compliance-icon"><i class="fas fa-clock"></i></div>
+        <div class="compliance-content">
+            <div class="label">Daily Hours</div>
+            <div class="value">{{ on_track_frequency|default(0) }}</div>
+            <div class="sub">workers on track (24h cycle)</div>
+        </div>
+    </div>
+    <div class="compliance-card blue">
+        <div class="compliance-icon"><i class="fas fa-calendar-week"></i></div>
+        <div class="compliance-content">
+            <div class="label">Weekly Payment</div>
+            <div class="value">{{ (total_workers|default(0) - missing_payment|default(0) - pending_payment|default(0)) }}</div>
+            <div class="sub">workers on track (7-day cycle)</div>
+        </div>
+    </div>
+    <div class="compliance-card amber">
+        <div class="compliance-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <div class="compliance-content">
+            <div class="label">Compliance Issues</div>
+            <div class="value">{{ missing_hours|default(0) }}H / {{ missing_payment|default(0) }}P</div>
+            <div class="sub">hours missing / payments overdue</div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ENHANCED CONTROLS BAR ===== -->
+<div class="controls-bar">
+    <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Search workers or accounts..." onkeyup="filterWorkers()">
+        <span style="font-size:0.7rem;color:var(--gray-400);" id="searchCount"></span>
+    </div>
+    <div class="filter-group">
+        <span class="filter-label"><i class="fas fa-filter"></i> Filter:</span>
+        <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">
+            All <span class="badge" id="countAll">0</span>
+        </button>
+        <button class="filter-btn" data-filter="fraud" onclick="setFilter('fraud', this)">
+            🚨 Fraud <span class="badge" id="countFraud">0</span>
+        </button>
+        <button class="filter-btn" data-filter="overpaid" onclick="setFilter('overpaid', this)">
+            ⚠️ Overpaid <span class="badge" id="countOverpaid">0</span>
+        </button>
+        <button class="filter-btn" data-filter="underpaid" onclick="setFilter('underpaid', this)">
+            📉 Underpaid <span class="badge" id="countUnderpaid">0</span>
+        </button>
+        <button class="filter-btn" data-filter="matched" onclick="setFilter('matched', this)">
+            ✅ Matched <span class="badge" id="countMatched">0</span>
+        </button>
+        <button class="filter-btn" data-filter="pending" onclick="setFilter('pending', this)">
+            ⏳ Pending <span class="badge" id="countPending">0</span>
+        </button>
+    </div>
+</div>
+
+<!-- ===== TABLE CARD ===== -->
+<div class="table-card">
+    <div class="table-card-header">
+        <div class="left">
+            <div class="icon-wrap"><i class="fas fa-calendar-week"></i></div>
+            <h3>
+                Weekly Verification
+                <small>Workers with submissions • 7-day cycles</small>
+            </h3>
+        </div>
+        <div class="right">
+            <span class="badge-count">
+                <i class="fas fa-check-circle"></i> <span id="workerCount">0</span> active
+            </span>
+            <span class="date-badge">
+                <i class="fas fa-calendar"></i> {{ now.strftime('%b %d, %Y') if now else 'Today' }}
+            </span>
+            <button onclick="expandAll()" class="show-more-btn" style="padding:4px 12px;font-size:0.65rem;">
+                <i class="fas fa-chevron-down"></i> Expand All
+            </button>
+            <button onclick="collapseAll()" class="show-more-btn" style="padding:4px 12px;font-size:0.65rem;">
+                <i class="fas fa-chevron-up"></i> Collapse All
+            </button>
+        </div>
+    </div>
+
+    <div class="table-wrap" id="tableWrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Worker / Account</th>
+                    <th>Week</th>
+                    <th class="text-center">Hours</th>
+                    <th class="text-center">Subs</th>
+                    <th class="text-center">Expected</th>
+                    <th class="text-center">Paid</th>
+                    <th class="text-center">Diff</th>
+                    <th class="text-center">Days</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- Rows will be rendered by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ===== PAGINATION ===== -->
+    <div class="pagination-bar" id="paginationBar">
+        <div class="info">
+            Showing <strong id="startRange">0</strong> - <strong id="endRange">0</strong> of <strong id="totalItems">0</strong> workers
+        </div>
+        <div class="pagination" id="paginationControls">
+            <button onclick="changePage(-1)" id="prevBtn" disabled>
+                <i class="fas fa-chevron-left"></i> Prev
+            </button>
+            <span id="pageNumbers"></span>
+            <button onclick="changePage(1)" id="nextBtn" disabled>
+                Next <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== DETAIL MODAL ===== -->
+<div id="detailModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">
+                <h2 id="detailWeekTitle">Week Details</h2>
+                <p id="detailWorkerName">Loading...</p>
+            </div>
+            <button class="modal-close" onclick="closeDetailModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="detailContent">
+            <!-- Dynamic content -->
+        </div>
+    </div>
+</div>
+
+<!-- ===== SCRIPTS ===== -->
+<script>
+    // ===== DATA =====
+    const allWorkers = {{ workers|tojson|safe }};
+    const pageSize = 10;
+    const WEEKS_PER_PAGE = 20;
+    let currentPage = 1;
+    let currentFilter = 'all';
+    let weekStartIndex = {};
+
+    // ===== FILTER OUT WORKERS WITH NO DATA =====
+    function getActiveWorkers() {
+        return allWorkers.filter(w => w.weekly_data && w.weekly_data.length > 0);
+    }
+
+    function getFilterCounts() {
+        const active = getActiveWorkers();
+        let counts = { all: active.length, fraud: 0, overpaid: 0, underpaid: 0, matched: 0, pending: 0 };
+
+        active.forEach(w => {
+            (w.weekly_data || []).forEach(week => {
+                if (week.status === 'fraud') counts.fraud++;
+                else if (week.status === 'overpaid') counts.overpaid++;
+                else if (week.status === 'underpaid') counts.underpaid++;
+                else if (week.status === 'matched') counts.matched++;
+                else if (week.status === 'pending_payment') counts.pending++;
+            });
+        });
+
+        return counts;
+    }
+
+    let filteredWorkers = getActiveWorkers();
+
+    // ===== ENHANCED SEARCH - FIXED FOR "calsha" =====
+    function filterWorkers() {
+        const query = document.getElementById('searchInput').value.toLowerCase().trim();
+        const activeWorkers = getActiveWorkers();
+
+        // Update search count display
+        document.getElementById('searchCount').textContent = query ? '🔍' : '';
+
+        if (!query) {
+            filteredWorkers = activeWorkers;
+            currentPage = 1;
+            renderTable();
+            return;
+        }
+
+        const searchWords = query.split(/\s+/);
+        
+        filteredWorkers = activeWorkers.filter(w => {
+            // Check worker name
+            const workerName = (w.worker_name || '').toLowerCase();
+            
+            // Check ALL account names from weekly_data (FIX FOR "calsha")
+            let allAccountNames = '';
+            if (w.weekly_data && w.weekly_data.length > 0) {
+                const uniqueAccounts = new Set();
+                w.weekly_data.forEach(week => {
+                    if (week.account_name) {
+                        uniqueAccounts.add(week.account_name.toLowerCase());
+                    }
+                });
+                allAccountNames = Array.from(uniqueAccounts).join(' ');
+            }
+            
+            // Also check primary account_name field
+            const primaryAccount = (w.account_name || '').toLowerCase();
+            
+            // Check status texts too
+            let statusText = '';
+            if (w.weekly_data) {
+                w.weekly_data.forEach(week => {
+                    if (week.status_text) {
+                        statusText += ' ' + week.status_text.toLowerCase();
+                    }
+                    if (week.status) {
+                        statusText += ' ' + week.status.toLowerCase();
+                    }
+                });
+            }
+            
+            // Combine everything for searching
+            const allText = workerName + ' ' + primaryAccount + ' ' + allAccountNames + ' ' + statusText;
+
+            // Check if ANY search word matches ANY part of the text
+            const matches = searchWords.some(word => {
+                return allText.includes(word);
+            });
+
+            return matches;
+        });
+
+        currentPage = 1;
+        renderTable();
+    }
+
+    // ===== RENDER TABLE =====
+    function renderTable() {
+        const start = (currentPage - 1) * pageSize;
+        const end = Math.min(start + pageSize, filteredWorkers.length);
+        const pageWorkers = filteredWorkers.slice(start, end);
+
+        const tbody = document.getElementById('tableBody');
+        let html = '';
+
+        // Update filter counts
+        const counts = getFilterCounts();
+        document.getElementById('countAll').textContent = counts.all;
+        document.getElementById('countFraud').textContent = counts.fraud;
+        document.getElementById('countOverpaid').textContent = counts.overpaid;
+        document.getElementById('countUnderpaid').textContent = counts.underpaid;
+        document.getElementById('countMatched').textContent = counts.matched;
+        document.getElementById('countPending').textContent = counts.pending;
+
+        // Update search count
+        const query = document.getElementById('searchInput').value.trim();
+        if (query) {
+            document.getElementById('searchCount').textContent = `(${filteredWorkers.length} found)`;
+        } else {
+            document.getElementById('searchCount').textContent = '';
+        }
+
+        if (pageWorkers.length === 0) {
+            html = `
+                <tr class="no-data-row">
+                    <td colspan="10">
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p class="empty-title">No active workers found</p>
+                            <p class="empty-sub">${filteredWorkers.length === 0 ? 'All workers have no submissions yet' : 'Try adjusting your search or filter'}</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            tbody.innerHTML = html;
+            updatePagination();
+            return;
+        }
+
+        let workerCounter = (currentPage - 1) * pageSize;
+
+        for (const worker of pageWorkers) {
+            // Group weeks by account
+            const accountsMap = {};
+            for (const week of worker.weekly_data) {
+                const key = week.account_name || 'Unknown';
+                if (!accountsMap[key]) accountsMap[key] = [];
+                accountsMap[key].push(week);
+            }
+
+            let accountIndex = 0;
+            for (const [accountName, weeks] of Object.entries(accountsMap)) {
+                workerCounter++;
+                const accountId = `acc_${worker.worker_id}_${accountIndex}`;
+                const isExpanded = sessionStorage.getItem(accountId) !== 'collapsed';
+
+                // Initialize week pagination
+                if (!weekStartIndex[accountId]) {
+                    weekStartIndex[accountId] = 0;
+                }
+
+                const totalWeeks = weeks.length;
+                const weeksPerPage = WEEKS_PER_PAGE;
+                const currentWeekPage = weekStartIndex[accountId] || 0;
+                const weekStartIdx = currentWeekPage * weeksPerPage;
+                const weekEndIdx = Math.min(weekStartIdx + weeksPerPage, totalWeeks);
+                const visibleWeeks = weeks.slice(weekStartIdx, weekEndIdx);
+
+                // Count fraud and pending for this account
+                const fraudCount = weeks.filter(w => w.status === 'fraud').length;
+                const pendingCount = weeks.filter(w => w.status === 'pending_payment').length;
+
+                // Account group header - ENHANCED
+                html += `
+                    <tr class="account-group" onclick="toggleAccount('${accountId}')">
+                        <td colspan="10">
+                            <div class="group-label">
+                                <span class="acct-badge"><i class="fas fa-briefcase"></i> Account</span>
+                                <span class="worker-name"><i class="fas fa-user"></i> ${worker.worker_name}</span>
+                                <span class="acct-name"><i class="fas fa-building"></i> ${accountName}</span>
+                                <span class="meta">
+                                    <i class="fas fa-calendar-week"></i> ${totalWeeks} weeks
+                                </span>
+                                <span class="meta">
+                                    <i class="fas fa-dollar-sign"></i> $${worker.client_rate}/hr
+                                </span>
+                                ${pendingCount > 0 ? `
+                                <span class="meta" style="color:#f59e0b;">
+                                    <i class="fas fa-clock"></i> ${pendingCount} pending
+                                </span>
+                                ` : ''}
+                                ${fraudCount > 0 ? `
+                                <span class="meta" style="color:#ef4444;">
+                                    <i class="fas fa-exclamation-triangle"></i> ${fraudCount} fraud
+                                </span>
+                                ` : ''}
+                                <span class="expand-icon ${isExpanded ? '' : 'rotated'}">
+                                    <i class="fas fa-chevron-down"></i>
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+
+                // Weeks
+                let weekCounter = weekStartIdx;
+                for (const week of visibleWeeks) {
+                    weekCounter++;
+                    const isFirst = weekCounter === weekStartIdx + 1;
+                    const rowClass = isExpanded ? 'week-row' : 'week-row collapsed';
+
+                    html += `
+                        <tr class="${rowClass}" data-account="${accountId}">
+                            ${isFirst ? `
+                            <td rowspan="${visibleWeeks.length}">
+                                <div class="worker-cell">
+                                    <div class="avatar">${worker.worker_name[0]?.toUpperCase() || '?'}</div>
+                                    <div class="info">
+                                        <div class="name">${worker.worker_name}</div>
+                                        <div class="account">${accountName}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            ` : ''}
+
+                            <td>
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <span class="week-num">${weekCounter}</span>
+                                    <div>
+                                        <div style="font-weight:500;font-size:0.8rem;color:var(--gray-700);">
+                                            ${week.week_start || 'N/A'} - ${week.week_end || 'N/A'}
+                                        </div>
+                                        <div style="font-size:0.6rem;color:var(--gray-400);">
+                                            Week ${weekCounter}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td class="text-center" style="font-weight:600;color:${week.hours > 0 ? '#2563eb' : '#94a3b8'};">
+                                ${week.hours || 0}h
+                            </td>
+
+                            <td class="text-center" style="font-size:0.8rem;color:var(--gray-600);">
+                                <div>${week.hours_count || 0}h</div>
+                                <div style="font-size:0.65rem;color:var(--gray-400);">${week.payment_count || 0}p</div>
+                            </td>
+
+                            <td class="text-center" style="color:var(--gray-600);">
+                                $${(week.expected || 0).toFixed(2)}
+                            </td>
+
+                            <td class="text-center" style="font-weight:600;color:${week.payment > 0 ? '#10b981' : '#94a3b8'};">
+                                $${(week.payment || 0).toFixed(2)}
+                            </td>
+
+                            <td class="text-center" style="font-weight:600;
+                                ${week.difference > 0 ? 'color:#ef4444;' :
+                                  week.difference < 0 ? 'color:#10b981;' :
+                                  'color:var(--gray-600);'}">
+                                ${week.difference > 0 ? '+' : ''}$${(week.difference || 0).toFixed(2)}
+                            </td>
+
+                            <td class="text-center" style="color:var(--gray-400);font-size:0.8rem;">
+                                ${week.days_between || 'N/A'}d
+                            </td>
+
+                            <td class="text-center">
+                                <span class="status-badge
+                                    ${week.status === 'matched' ? 'matched' :
+                                      week.status === 'pending_payment' ? 'pending' :
+                                      week.status === 'fraud' ? 'fraud' :
+                                      week.status === 'overpaid' ? 'overpaid' :
+                                      week.status === 'underpaid' ? 'underpaid' :
+                                      'no-data'}">
+                                    ${week.status === 'matched' ? '<i class="fas fa-check-circle"></i>' :
+                                      week.status === 'pending_payment' ? '<i class="fas fa-clock"></i>' :
+                                      week.status === 'fraud' ? '<i class="fas fa-exclamation-triangle"></i>' :
+                                      week.status === 'overpaid' ? '<i class="fas fa-arrow-up"></i>' :
+                                      week.status === 'underpaid' ? '<i class="fas fa-arrow-down"></i>' :
+                                      ''}
+                                    ${(week.status_text || 'N/A').substring(0, 18)}
+                                </span>
+                            </td>
+
+                            <td class="text-center">
+                                <button class="btn-view" onclick="event.stopPropagation(); viewWeekDetails('${worker.worker_id}', '${week.week_start}', '${accountName}')">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }
+
+                // Show More / Show Less buttons for week pagination
+                if (totalWeeks > weeksPerPage) {
+                    const hasMore = weekEndIdx < totalWeeks;
+                    const hasLess = currentWeekPage > 0;
+
+                    html += `
+                        <tr class="${isExpanded ? 'week-row' : 'week-row collapsed'}" data-account="${accountId}">
+                            <td colspan="10" style="padding:4px 16px !important; text-align:center; background:var(--gray-50);">
+                                <div style="display:flex; justify-content:center; align-items:center; gap:12px; flex-wrap:wrap;">
+                                    ${hasLess ? `
+                                        <button class="show-more-btn" onclick="event.stopPropagation(); changeWeekPage('${accountId}', -1)">
+                                            <i class="fas fa-chevron-up"></i> Previous ${weeksPerPage}
+                                        </button>
+                                    ` : ''}
+                                    <span style="font-size:0.7rem;color:var(--gray-500);display:flex;align-items:center;gap:4px;">
+                                        <span style="background:var(--gray-200);padding:2px 10px;border-radius:20px;font-weight:600;color:var(--gray-700);">
+                                            ${weekStartIdx + 1} - ${Math.min(weekEndIdx, totalWeeks)}
+                                        </span>
+                                        of ${totalWeeks} weeks
+                                        <span style="color:var(--gray-300);">|</span>
+                                        Page ${currentWeekPage + 1}/${Math.ceil(totalWeeks / weeksPerPage)}
+                                    </span>
+                                    ${hasMore ? `
+                                        <button class="show-more-btn" onclick="event.stopPropagation(); changeWeekPage('${accountId}', 1)">
+                                            Next ${weeksPerPage} <i class="fas fa-chevron-down"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+
+                accountIndex++;
+            }
+        }
+
+        tbody.innerHTML = html;
+
+        // Update counts
+        document.getElementById('workerCount').textContent = filteredWorkers.length;
+        document.getElementById('totalItems').textContent = filteredWorkers.length;
+        document.getElementById('totalWorkersDisplay').textContent = allWorkers.length;
+
+        updatePagination();
+    }
+
+    // ===== EXPAND / COLLAPSE ALL =====
+    function expandAll() {
+        document.querySelectorAll('.expand-icon').forEach(icon => {
+            const accountId = icon.closest('tr').getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+            if (accountId) {
+                const rows = document.querySelectorAll(`[data-account="${accountId}"]`);
+                rows.forEach(row => row.classList.remove('collapsed'));
+                icon.classList.remove('rotated');
+                sessionStorage.setItem(accountId, 'expanded');
+            }
+        });
+    }
+
+    function collapseAll() {
+        document.querySelectorAll('.expand-icon').forEach(icon => {
+            const accountId = icon.closest('tr').getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+            if (accountId) {
+                const rows = document.querySelectorAll(`[data-account="${accountId}"]`);
+                rows.forEach(row => row.classList.add('collapsed'));
+                icon.classList.add('rotated');
+                sessionStorage.setItem(accountId, 'collapsed');
+            }
+        });
+    }
+
+    // ===== CHANGE WEEK PAGE =====
+    function changeWeekPage(accountId, delta) {
+        if (!weekStartIndex[accountId]) weekStartIndex[accountId] = 0;
+        weekStartIndex[accountId] += delta;
+        if (weekStartIndex[accountId] < 0) weekStartIndex[accountId] = 0;
+        renderTable();
+    }
+
+    // ===== PAGINATION =====
+    function updatePagination() {
+        const total = filteredWorkers.length;
+        const totalPages = Math.ceil(total / pageSize) || 1;
+
+        document.getElementById('startRange').textContent = total === 0 ? 0 : Math.min((currentPage - 1) * pageSize + 1, total);
+        document.getElementById('endRange').textContent = Math.min(currentPage * pageSize, total);
+        document.getElementById('totalItems').textContent = total;
+
+        document.getElementById('prevBtn').disabled = currentPage <= 1 || total === 0;
+        document.getElementById('nextBtn').disabled = currentPage >= totalPages || total === 0;
+
+        let pageHtml = '';
+        if (total > 0) {
+            for (let i = 1; i <= totalPages; i++) {
+                if (totalPages <= 7 || i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
+                    pageHtml += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+                } else if (i === 2 && currentPage > 3) {
+                    pageHtml += `<span style="padding:0 4px;color:var(--gray-400);">…</span>`;
+                } else if (i === totalPages - 1 && currentPage < totalPages - 2) {
+                    pageHtml += `<span style="padding:0 4px;color:var(--gray-400);">…</span>`;
+                }
+            }
+        }
+        document.getElementById('pageNumbers').innerHTML = pageHtml;
+    }
+
+    function goToPage(page) {
+        const totalPages = Math.ceil(filteredWorkers.length / pageSize) || 1;
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        renderTable();
+        document.getElementById('tableWrapper').scrollTop = 0;
+    }
+
+    function changePage(delta) {
+        goToPage(currentPage + delta);
+    }
+
+    // ===== FILTER =====
+    function setFilter(filter, btn) {
+        currentFilter = filter;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        filterWorkers();
+    }
+
+    // ===== TOGGLE ACCOUNT =====
+    function toggleAccount(accountId) {
+        const rows = document.querySelectorAll(`[data-account="${accountId}"]`);
+        const icon = document.querySelector(`tr[onclick*="toggleAccount('${accountId}')"] .expand-icon`);
+        if (!icon) return;
+
+        const isExpanded = !icon.classList.contains('rotated');
+
+        rows.forEach(row => {
+            row.classList.toggle('collapsed');
+        });
+        icon.classList.toggle('rotated');
+
+        sessionStorage.setItem(accountId, isExpanded ? 'collapsed' : 'expanded');
+    }
+
+    // ===== MODAL =====
+    function viewWeekDetails(workerId, weekStart, accountName) {
+        const worker = allWorkers.find(w => w.worker_id === workerId);
+        if (!worker) return;
+
+        const week = (worker.weekly_data || []).find(w => w.week_start === weekStart);
+        if (!week) return;
+
+        document.getElementById('detailWeekTitle').textContent = `Week of ${week.week_start || 'N/A'} - ${week.week_end || 'N/A'}`;
+        document.getElementById('detailWorkerName').textContent = `${worker.worker_name} • ${accountName || week.account_name || worker.account_name}`;
+
+        const container = document.getElementById('detailContent');
+
+        let html = `
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+                <div style="background:#f0f9ff;border-radius:12px;padding:14px;text-align:center;border:1px solid #bae6fd;">
+                    <div style="font-size:0.65rem;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.04em;">Hours</div>
+                    <div style="font-size:1.5rem;font-weight:700;color:#2563eb;">${week.hours || 0}h</div>
+                    <div style="font-size:0.7rem;color:var(--gray-400);">${week.hours_count || 0} submissions</div>
+                </div>
+                <div style="background:#ecfdf5;border-radius:12px;padding:14px;text-align:center;border:1px solid #a7f3d0;">
+                    <div style="font-size:0.65rem;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.04em;">Payment</div>
+                    <div style="font-size:1.5rem;font-weight:700;color:#10b981;">$${(week.payment || 0).toFixed(2)}</div>
+                    <div style="font-size:0.7rem;color:var(--gray-400);">${week.payment_count || 0} proofs</div>
+                </div>
+                <div style="background:#f5f3ff;border-radius:12px;padding:14px;text-align:center;border:1px solid #ddd6fe;">
+                    <div style="font-size:0.65rem;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.04em;">Expected</div>
+                    <div style="font-size:1.5rem;font-weight:700;color:#7c3aed;">$${(week.expected || 0).toFixed(2)}</div>
+                    <div style="font-size:0.7rem;color:var(--gray-400);">${week.hours || 0}h × $${worker.client_rate || 0}/hr</div>
+                </div>
+                <div style="background:${week.status === 'matched' ? '#ecfdf5' : week.status === 'fraud' ? '#fef2f2' : '#fffbeb'};border-radius:12px;padding:14px;text-align:center;border:1px solid ${week.status === 'matched' ? '#a7f3d0' : week.status === 'fraud' ? '#fca5a5' : '#fcd34d'};">
+                    <div style="font-size:0.65rem;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.04em;">Status</div>
+                    <div style="font-size:1rem;font-weight:700;color:${week.status === 'matched' ? '#10b981' : week.status === 'fraud' ? '#ef4444' : '#f59e0b'};">${week.status_text || 'N/A'}</div>
+                    <div style="font-size:0.7rem;color:var(--gray-400);">${week.days_between || 'N/A'} days between</div>
+                </div>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--gray-200);margin:16px 0;">
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div>
+                    <h4 style="font-size:0.85rem;font-weight:600;color:var(--gray-700);margin:0 0 10px 0;display:flex;align-items:center;gap:8px;">
+                        <i class="fas fa-clock" style="color:#3b82f6;"></i> Hours Submissions
+                    </h4>
+                    <div style="max-height:200px;overflow-y:auto;padding-right:4px;">
+                        ${(week.hours_submissions || []).length > 0 ?
+                            week.hours_submissions.map(h => `
+                                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--gray-50);border-radius:8px;margin-bottom:4px;border:1px solid var(--gray-100);">
+                                    <div style="display:flex;align-items:center;gap:8px;">
+                                        <span style="font-size:0.8rem;font-weight:500;color:var(--gray-700);">${h.date || 'N/A'}</span>
+                                        <span style="font-size:0.65rem;color:var(--gray-400);">${h.day || ''}</span>
+                                    </div>
+                                    <div style="display:flex;align-items:center;gap:8px;">
+                                        <span style="font-weight:600;color:#2563eb;">${h.hours || 0}h</span>
+                                        <span style="font-size:0.6rem;padding:2px 10px;border-radius:40px;
+                                            ${h.status === 'approved' ? 'background:#d1fae5;color:#065f46;' :
+                                              h.status === 'pending' ? 'background:#fef3c7;color:#92400e;' :
+                                              'background:var(--gray-100);color:var(--gray-500);'}">
+                                            ${h.status || 'unknown'}
+                                        </span>
+                                    </div>
+                                </div>
+                            `).join('') :
+                            '<div style="text-align:center;padding:20px;color:var(--gray-400);"><i class="fas fa-inbox" style="font-size:1.5rem;display:block;margin-bottom:6px;"></i>No hours submissions</div>'
+                        }
+                    </div>
+                </div>
+                <div>
+                    <h4 style="font-size:0.85rem;font-weight:600;color:var(--gray-700);margin:0 0 10px 0;display:flex;align-items:center;gap:8px;">
+                        <i class="fas fa-receipt" style="color:#10b981;"></i> Payment Proofs
+                    </h4>
+                    <div style="max-height:200px;overflow-y:auto;padding-right:4px;">
+                        ${(week.payment_submissions || []).length > 0 ?
+                            week.payment_submissions.map(p => `
+                                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--gray-50);border-radius:8px;margin-bottom:4px;border:1px solid var(--gray-100);">
+                                    <div style="display:flex;align-items:center;gap:8px;">
+                                        <span style="font-size:0.8rem;font-weight:500;color:var(--gray-700);">${p.date || 'N/A'}</span>
+                                        <span style="font-size:0.65rem;color:var(--gray-400);">${p.day || ''}</span>
+                                    </div>
+                                    <div style="display:flex;align-items:center;gap:8px;">
+                                        <span style="font-weight:600;color:#10b981;">$${(p.amount || 0).toFixed(2)}</span>
+                                        ${p.screenshot ? `<a href="${p.screenshot}" target="_blank" style="color:var(--primary);"><i class="fas fa-image"></i></a>` : ''}
+                                        <span style="font-size:0.6rem;padding:2px 10px;border-radius:40px;
+                                            ${p.status === 'paid' ? 'background:#d1fae5;color:#065f46;' :
+                                              p.status === 'pending' ? 'background:#fef3c7;color:#92400e;' :
+                                              'background:var(--gray-100);color:var(--gray-500);'}">
+                                            ${p.status || 'unknown'}
+                                        </span>
+                                    </div>
+                                </div>
+                            `).join('') :
+                            '<div style="text-align:center;padding:20px;color:var(--gray-400);"><i class="fas fa-inbox" style="font-size:1.5rem;display:block;margin-bottom:6px;"></i>No payment proofs</div>'
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--gray-200);margin:16px 0;">
+
+            <div style="background:var(--gray-50);border-radius:12px;padding:14px 18px;border:1px solid var(--gray-200);">
+                <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;">
+                    <div style="font-size:0.85rem;color:var(--gray-600);">
+                        <span style="font-weight:600;color:var(--gray-800);">${week.hours || 0}h</span> ×
+                        <span style="font-weight:600;color:var(--gray-800);">$${worker.client_rate || 0}/hr</span> =
+                        <span style="font-weight:600;color:#7c3aed;">$${(week.expected || 0).toFixed(2)}</span> expected
+                        <br>
+                        Paid: <span style="font-weight:600;color:#10b981;">$${(week.payment || 0).toFixed(2)}</span>
+                        ${(week.difference || 0) > 0 ?
+                            `• <span style="color:#ef4444;font-weight:600;">Overpaid by $${(week.difference || 0).toFixed(2)}</span>` :
+                          (week.difference || 0) < 0 ?
+                            `• <span style="color:#10b981;font-weight:600;">Underpaid by $${Math.abs(week.difference || 0).toFixed(2)}</span>` :
+                            `• <span style="color:#10b981;font-weight:600;">Perfect match ✅</span>`}
+                    </div>
+                    <span class="status-badge
+                        ${week.status == 'matched' ? 'matched' :
+                          week.status == 'pending_payment' ? 'pending' :
+                          week.status == 'fraud' ? 'fraud' :
+                          week.status == 'overpaid' ? 'overpaid' :
+                          week.status == 'underpaid' ? 'underpaid' : ''}">
+                        ${week.status_text || 'N/A'}
+                    </span>
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = html;
+
+        document.getElementById('detailModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDetailModal() {
+        document.getElementById('detailModal').classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+
+    document.getElementById('detailModal').addEventListener('click', function(e) {
+        if (e.target === this) closeDetailModal();
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeDetailModal();
+    });
+
+    // ===== INIT =====
+    document.addEventListener('DOMContentLoaded', function() {
+        filteredWorkers = getActiveWorkers();
+        renderTable();
+    });
+</script>
+
+{% endblock %}

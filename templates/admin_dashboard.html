@@ -1,0 +1,690 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Admin Dashboard - Handshake Manager{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Welcome back, {{ user_name or 'Admin' }}. Here's your overview.{% endblock %}
+
+{% block content %}
+
+<!-- ============================================================ -->
+<!-- STATS CARDS - Professional Clean Design -->
+<!-- ============================================================ -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+    <div class="bg-white rounded-xl p-5 border border-gray-200/80 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Accounts</p>
+                <p class="text-2xl font-bold text-slate-800 mt-1">{{ stats.total_accounts|default(0) }}</p>
+            </div>
+            <div class="w-11 h-11 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500">
+                <i class="fas fa-building text-xl"></i>
+            </div>
+        </div>
+        <div class="mt-2 flex items-center gap-2">
+            <span class="text-xs text-emerald-600 font-medium"><i class="fas fa-arrow-up mr-0.5"></i>12%</span>
+            <span class="text-xs text-slate-400">vs last month</span>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl p-5 border border-gray-200/80 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Workers</p>
+                <p class="text-2xl font-bold text-slate-800 mt-1">{{ stats.total_workers|default(0) }}</p>
+            </div>
+            <div class="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500">
+                <i class="fas fa-users text-xl"></i>
+            </div>
+        </div>
+        <div class="mt-2 flex items-center gap-2">
+            <span class="text-xs text-emerald-600 font-medium"><i class="fas fa-arrow-up mr-0.5"></i>8%</span>
+            <span class="text-xs text-slate-400">vs last month</span>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl p-5 border border-gray-200/80 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Pending Approvals</p>
+                <p class="text-2xl font-bold text-slate-800 mt-1">{{ stats.pending|default(0) }}</p>
+            </div>
+            <div class="w-11 h-11 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500">
+                <i class="fas fa-clock text-xl"></i>
+            </div>
+        </div>
+        <div class="mt-2 flex items-center gap-2">
+            <span class="text-xs text-amber-600 font-medium"><i class="fas fa-circle mr-0.5 text-[8px]"></i>{{ stats.pending|default(0) }} awaiting</span>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl p-5 border border-gray-200/80 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Revenue</p>
+                <p class="text-2xl font-bold text-slate-800 mt-1">${{ "%.2f"|format(stats.total_client_paid|default(0)) }}</p>
+            </div>
+            <div class="w-11 h-11 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500">
+                <i class="fas fa-dollar-sign text-xl"></i>
+            </div>
+        </div>
+        <div class="mt-2 flex items-center gap-2">
+            <span class="text-xs text-slate-400">Total client payments</span>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl p-5 border border-gray-200/80 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Your Revenue</p>
+                <p class="text-2xl font-bold text-indigo-600 mt-1">${{ "%.2f"|format(stats.your_revenue|default(0)) }}</p>
+            </div>
+            <div class="w-11 h-11 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500">
+                <i class="fas fa-chart-line text-xl"></i>
+            </div>
+        </div>
+        <div class="mt-2 flex items-center gap-2">
+            <span class="text-xs text-slate-400">After worker payments</span>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- QUICK ACTIONS -->
+<!-- ============================================================ -->
+<div class="bg-white rounded-xl border border-gray-200/80 shadow-sm mb-6 overflow-hidden">
+    <div class="px-5 py-3.5 border-b border-gray-100/80">
+        <h3 class="text-sm font-semibold text-slate-700">Quick Actions</h3>
+    </div>
+    <div class="p-4">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
+            <a href="/accounts" class="group px-4 py-3.5 bg-slate-50 hover:bg-indigo-50 rounded-xl text-center transition-all duration-200 border border-slate-100/80 hover:border-indigo-200">
+                <i class="fas fa-plus-circle text-slate-400 group-hover:text-indigo-500 text-lg block mb-1.5 transition-colors"></i>
+                <span class="text-xs text-slate-600 group-hover:text-indigo-600 transition-colors font-medium">Add Account</span>
+            </a>
+            <a href="/workers" class="group px-4 py-3.5 bg-slate-50 hover:bg-blue-50 rounded-xl text-center transition-all duration-200 border border-slate-100/80 hover:border-blue-200">
+                <i class="fas fa-user-plus text-slate-400 group-hover:text-blue-500 text-lg block mb-1.5 transition-colors"></i>
+                <span class="text-xs text-slate-600 group-hover:text-blue-600 transition-colors font-medium">Add Worker</span>
+            </a>
+            <a href="/assignments" class="group px-4 py-3.5 bg-slate-50 hover:bg-emerald-50 rounded-xl text-center transition-all duration-200 border border-slate-100/80 hover:border-emerald-200">
+                <i class="fas fa-link text-slate-400 group-hover:text-emerald-500 text-lg block mb-1.5 transition-colors"></i>
+                <span class="text-xs text-slate-600 group-hover:text-emerald-600 transition-colors font-medium">Assign Accounts</span>
+            </a>
+            <a href="/approvals" class="group px-4 py-3.5 bg-slate-50 hover:bg-amber-50 rounded-xl text-center transition-all duration-200 border border-slate-100/80 hover:border-amber-200 relative">
+                <i class="fas fa-check-double text-slate-400 group-hover:text-amber-500 text-lg block mb-1.5 transition-colors"></i>
+                <span class="text-xs text-slate-600 group-hover:text-amber-600 transition-colors font-medium">Review</span>
+                {% if stats.pending|default(0) > 0 %}
+                    <span class="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">{{ stats.pending }}</span>
+                {% endif %}
+            </a>
+            <a href="/payments" class="group px-4 py-3.5 bg-slate-50 hover:bg-emerald-50 rounded-xl text-center transition-all duration-200 border border-slate-100/80 hover:border-emerald-200">
+                <i class="fas fa-credit-card text-slate-400 group-hover:text-emerald-500 text-lg block mb-1.5 transition-colors"></i>
+                <span class="text-xs text-slate-600 group-hover:text-emerald-600 transition-colors font-medium">Payments</span>
+            </a>
+            <a href="/settings" class="group px-4 py-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-center transition-all duration-200 border border-slate-100/80 hover:border-slate-300">
+                <i class="fas fa-sliders-h text-slate-400 group-hover:text-slate-600 text-lg block mb-1.5 transition-colors"></i>
+                <span class="text-xs text-slate-600 group-hover:text-slate-700 transition-colors font-medium">Settings</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PENDING APPROVALS TABLE -->
+<!-- ============================================================ -->
+<div class="bg-white rounded-xl border border-gray-200/80 shadow-sm mb-6 overflow-hidden">
+    <div class="px-5 py-3.5 border-b border-gray-100/80 flex items-center justify-between">
+        <div>
+            <h3 class="text-sm font-semibold text-slate-700">Pending Approvals</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Review submissions waiting for your action</p>
+        </div>
+        <a href="/approvals" class="text-xs text-indigo-500 hover:text-indigo-600 font-medium transition-colors">View all →</a>
+    </div>
+    <div class="overflow-x-auto">
+        {% if stats.recent and stats.recent|length > 0 %}
+            {% set pending_subs = stats.recent|selectattr('status', 'equalto', 'pending')|list %}
+            {% if pending_subs|length > 0 %}
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-slate-50/60">
+                            <th class="px-4 py-2.5 text-left text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Type</th>
+                            <th class="px-4 py-2.5 text-left text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Worker</th>
+                            <th class="px-4 py-2.5 text-left text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Account</th>
+                            <th class="px-4 py-2.5 text-left text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Date</th>
+                            <th class="px-4 py-2.5 text-right text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Amount</th>
+                            <th class="px-4 py-2.5 text-right text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Payout</th>
+                            <th class="px-4 py-2.5 text-right text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Revenue</th>
+                            <th class="px-4 py-2.5 text-center text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100/80">
+                        {% for s in pending_subs %}
+                        <tr class="hover:bg-slate-50/60 transition-colors">
+                            <td class="px-4 py-3">
+                                {% if s.submission_type == 'payment_proof' %}
+                                    <span class="text-[10px] font-medium bg-purple-50 text-purple-600 px-2.5 py-1 rounded-full">💰 Proof</span>
+                                {% else %}
+                                    <span class="text-[10px] font-medium bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full">📋 Hours</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3 font-medium text-slate-700">{{ s.worker_name or 'Unknown' }}</td>
+                            <td class="px-4 py-3 text-slate-500">{{ s.account_name or 'Unknown' }}</td>
+                            <td class="px-4 py-3 text-slate-500">{{ s.date or 'N/A' }}</td>
+                            <td class="px-4 py-3 text-right font-medium text-slate-700">${{ "%.2f"|format(s.total_earnings_usd|default(0)) }}</td>
+                            <td class="px-4 py-3 text-right font-medium text-slate-700">${{ "%.2f"|format(s.worker_payout_usd|default(0)) }}</td>
+                            <td class="px-4 py-3 text-right font-medium text-emerald-600">${{ "%.2f"|format(s.your_revenue|default(0)) }}</td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <button onclick="viewSubmission('{{ s.id }}', '{{ s.worker_name }}', '{{ s.account_name }}', '{{ s.date }}', '{{ s.hours|default(0) }}', '{{ s.screenshot_url or '' }}', '{{ s.worker_payout_usd|default(0) }}', '{{ s.commission_usd|default(0) }}', '{{ s.total_earnings_usd|default(0) }}', '{{ s.submission_type or 'hours' }}', '{{ s.payment_reference or '' }}')" 
+                                            class="text-slate-400 hover:text-indigo-500 p-1.5 rounded-lg hover:bg-indigo-50 transition" title="View">
+                                        <i class="fas fa-eye text-xs"></i>
+                                    </button>
+                                    {% if s.submission_type == 'payment_proof' %}
+                                        <button onclick="confirmPaymentProof('{{ s.id }}')" class="text-slate-400 hover:text-emerald-500 p-1.5 rounded-lg hover:bg-emerald-50 transition" title="Confirm">
+                                            <i class="fas fa-check text-xs"></i>
+                                        </button>
+                                        <button onclick="rejectPaymentProof('{{ s.id }}')" class="text-slate-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition" title="Reject">
+                                            <i class="fas fa-times text-xs"></i>
+                                        </button>
+                                    {% else %}
+                                        <button onclick="approveSubmission('{{ s.id }}')" class="text-slate-400 hover:text-emerald-500 p-1.5 rounded-lg hover:bg-emerald-50 transition" title="Approve">
+                                            <i class="fas fa-check text-xs"></i>
+                                        </button>
+                                        <button onclick="rejectSubmission('{{ s.id }}')" class="text-slate-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition" title="Reject">
+                                            <i class="fas fa-times text-xs"></i>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="text-center py-12">
+                    <div class="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-check-circle text-emerald-400 text-2xl"></i>
+                    </div>
+                    <p class="text-slate-600 font-medium">All caught up</p>
+                    <p class="text-sm text-slate-400 mt-0.5">No pending approvals</p>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-12">
+                <div class="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-check-circle text-emerald-400 text-2xl"></i>
+                </div>
+                <p class="text-slate-600 font-medium">All caught up</p>
+                <p class="text-sm text-slate-400 mt-0.5">No pending approvals</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TWO COLUMN LAYOUT -->
+<!-- ============================================================ -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Recent Activity -->
+    <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200/80 shadow-sm overflow-hidden">
+        <div class="px-5 py-3.5 border-b border-gray-100/80 flex items-center justify-between">
+            <div>
+                <h3 class="text-sm font-semibold text-slate-700">Recent Activity</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Latest submissions</p>
+            </div>
+            <a href="/approvals" class="text-xs text-indigo-500 hover:text-indigo-600 font-medium transition-colors">View all →</a>
+        </div>
+        <div class="p-4 max-h-80 overflow-y-auto divide-y divide-slate-100/80">
+            {% if stats.recent and stats.recent|length > 0 %}
+                {% for s in stats.recent[:10] %}
+                <div class="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                    <div class="flex items-center gap-3.5 min-w-0">
+                        <div class="w-2 h-2 rounded-full shrink-0 
+                            {% if s.status == 'pending' %}bg-amber-400
+                            {% elif s.status == 'approved' %}bg-emerald-400
+                            {% elif s.status == 'paid' %}bg-indigo-400
+                            {% elif s.status == 'rejected' %}bg-red-400
+                            {% else %}bg-slate-300{% endif %}">
+                        </div>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-sm font-medium text-slate-700">{{ s.worker_name or 'Unknown' }}</span>
+                                <span class="text-[10px] font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                                    {% if s.submission_type == 'payment_proof' %}💰 Proof{% else %}📋 Hours{% endif %}
+                                </span>
+                            </div>
+                            <div class="text-xs text-slate-400 truncate">
+                                {% if s.submission_type == 'payment_proof' %}
+                                    ${{ "%.2f"|format(s.total_earnings_usd|default(0)) }}
+                                {% else %}
+                                    {{ s.account_name or 'Unknown' }} • {{ s.date or 'N/A' }} • {{ s.hours|default(0) }}h
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 shrink-0 ml-2">
+                        <span class="text-sm font-medium text-slate-700">${{ "%.2f"|format(s.worker_payout_usd|default(0)) }}</span>
+                        <span class="text-[10px] font-medium px-2 py-0.5 rounded-full
+                            {% if s.status == 'pending' %}bg-amber-50 text-amber-600
+                            {% elif s.status == 'approved' %}bg-emerald-50 text-emerald-600
+                            {% elif s.status == 'paid' %}bg-indigo-50 text-indigo-600
+                            {% elif s.status == 'rejected' %}bg-red-50 text-red-500
+                            {% else %}bg-slate-100 text-slate-500{% endif %}">
+                            {{ s.status|capitalize }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-10">
+                    <div class="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-inbox text-slate-300 text-xl"></i>
+                    </div>
+                    <p class="text-slate-500 font-medium">No recent activity</p>
+                    <p class="text-sm text-slate-400 mt-0.5">Submissions will appear here</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sidebar Stats -->
+    <div class="space-y-4">
+        <!-- Submission Stats -->
+        <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm overflow-hidden">
+            <div class="px-5 py-3.5 border-b border-gray-100/80">
+                <h3 class="text-sm font-semibold text-slate-700">Submission Stats</h3>
+            </div>
+            <div class="p-4 space-y-3.5">
+                <div>
+                    <div class="flex justify-between text-sm mb-1.5">
+                        <span class="text-slate-500">Approved</span>
+                        <span class="font-medium text-slate-700">{{ stats.approved|default(0) }}</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2">
+                        <div class="bg-emerald-500 rounded-full h-2 transition-all duration-500" 
+                             style="width: {% if stats.total_submissions and stats.total_submissions > 0 %}{{ (stats.approved|default(0) / stats.total_submissions) * 100 }}{% else %}0{% endif %}%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-sm mb-1.5">
+                        <span class="text-slate-500">Pending</span>
+                        <span class="font-medium text-amber-600">{{ stats.pending|default(0) }}</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2">
+                        <div class="bg-amber-400 rounded-full h-2 transition-all duration-500" 
+                             style="width: {% if stats.total_submissions and stats.total_submissions > 0 %}{{ (stats.pending|default(0) / stats.total_submissions) * 100 }}{% else %}0{% endif %}%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-sm mb-1.5">
+                        <span class="text-slate-500">Rejected</span>
+                        <span class="font-medium text-slate-700">{{ stats.rejected|default(0) }}</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2">
+                        <div class="bg-slate-400 rounded-full h-2 transition-all duration-500" 
+                             style="width: {% if stats.total_submissions and stats.total_submissions > 0 %}{{ (stats.rejected|default(0) / stats.total_submissions) * 100 }}{% else %}0{% endif %}%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-sm mb-1.5">
+                        <span class="text-slate-500">Payment Proofs</span>
+                        <span class="font-medium text-slate-700">{{ stats.pending_payment_proofs|default(0) }}</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2">
+                        <div class="bg-purple-400 rounded-full h-2 transition-all duration-500" 
+                             style="width: {% if stats.total_submissions and stats.total_submissions > 0 %}{{ (stats.pending_payment_proofs|default(0) / stats.total_submissions) * 100 }}{% else %}0{% endif %}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Info -->
+        <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm overflow-hidden">
+            <div class="px-5 py-3.5 border-b border-gray-100/80">
+                <h3 class="text-sm font-semibold text-slate-700">System Info</h3>
+            </div>
+            <div class="p-4 space-y-2 text-sm">
+                <div class="flex justify-between py-1.5 border-b border-slate-100/80">
+                    <span class="text-slate-500">Total Submissions</span>
+                    <span class="font-medium text-slate-700">{{ stats.total_submissions|default(0) }}</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-slate-100/80">
+                    <span class="text-slate-500">Total Assignments</span>
+                    <span class="font-medium text-slate-700">{{ stats.total_assignments|default(0) }}</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-slate-100/80">
+                    <span class="text-slate-500">Avg Worker %</span>
+                    <span class="font-medium text-slate-700">{{ stats.avg_worker_percentage|default(10) }}%</span>
+                </div>
+                <div class="flex justify-between py-1.5">
+                    <span class="text-slate-500">Exchange Rate</span>
+                    <span class="font-medium text-slate-700">1 USD = KSh {{ stats.exchange_rate|default(150) }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAYMENT SUMMARY -->
+<!-- ============================================================ -->
+<div class="mt-6 bg-white rounded-xl border border-gray-200/80 shadow-sm overflow-hidden">
+    <div class="px-5 py-3.5 border-b border-gray-100/80 flex items-center justify-between">
+        <div>
+            <h3 class="text-sm font-semibold text-slate-700">Payment Summary</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Financial overview</p>
+        </div>
+        <a href="/payments" class="text-xs text-indigo-500 hover:text-indigo-600 font-medium transition-colors">View all →</a>
+    </div>
+    <div class="p-4">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-slate-50/80 p-4 rounded-xl border border-slate-100/80">
+                <p class="text-xs text-slate-400 font-medium">Total Client Paid</p>
+                <p class="text-lg font-semibold text-slate-800 mt-0.5">${{ "%.2f"|format(stats.total_client_paid|default(0)) }}</p>
+            </div>
+            <div class="bg-slate-50/80 p-4 rounded-xl border border-slate-100/80">
+                <p class="text-xs text-slate-400 font-medium">Paid to Workers</p>
+                <p class="text-lg font-semibold text-slate-800 mt-0.5">${{ "%.2f"|format(stats.total_worker_payout|default(0)) }}</p>
+                <p class="text-xs text-slate-400">{{ stats.avg_worker_percentage|default(10) }}% avg</p>
+            </div>
+            <div class="bg-indigo-50/80 p-4 rounded-xl border border-indigo-100/80">
+                <p class="text-xs text-indigo-400 font-medium">Your Revenue</p>
+                <p class="text-lg font-semibold text-indigo-600 mt-0.5">${{ "%.2f"|format(stats.your_revenue|default(0)) }}</p>
+                <p class="text-xs text-indigo-400">{{ 100 - (stats.avg_worker_percentage|default(10)) }}% avg</p>
+            </div>
+            <div class="bg-amber-50/80 p-4 rounded-xl border border-amber-100/80">
+                <p class="text-xs text-amber-400 font-medium">Pending Payments</p>
+                <p class="text-lg font-semibold text-amber-600 mt-0.5">{{ stats.pending|default(0) }}</p>
+                <p class="text-xs text-amber-400">Awaiting approval</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCRIPTS -->
+<!-- ============================================================ -->
+<script>
+    let currentSubmissionId = null;
+    let currentSubmissionType = null;
+
+    function viewSubmission(id, worker, account, date, hours, screenshot, workerPayout, commission, totalAmount, submissionType, paymentReference) {
+        currentSubmissionId = id;
+        currentSubmissionType = submissionType || 'hours';
+        
+        document.getElementById('viewWorkerName').textContent = worker || 'Unknown';
+        document.getElementById('viewAccountName').textContent = account || 'Unknown';
+        document.getElementById('viewDate').textContent = date || 'N/A';
+        
+        const type = currentSubmissionType;
+        document.getElementById('viewType').textContent = type === 'payment_proof' ? '💰 Payment Proof' : '📋 Daily Hours';
+        
+        document.getElementById('viewHours').textContent = type === 'payment_proof' ? '—' : (hours || 0) + 'h';
+        document.getElementById('viewTotalAmount').textContent = '$' + parseFloat(totalAmount || 0).toFixed(2);
+        document.getElementById('viewWorkerPayout').textContent = '$' + parseFloat(workerPayout || 0).toFixed(2);
+        document.getElementById('viewCommission').textContent = '$' + parseFloat(commission || 0).toFixed(2);
+        document.getElementById('viewPaymentReference').textContent = paymentReference || '—';
+        
+        const actionBtn = document.getElementById('modalActionBtn');
+        if (type === 'payment_proof') {
+            actionBtn.innerHTML = '<i class="fas fa-check mr-1.5"></i> Confirm Payment';
+        } else {
+            actionBtn.innerHTML = '<i class="fas fa-check mr-1.5"></i> Approve Hours';
+        }
+        
+        const screenshotContainer = document.getElementById('viewScreenshot');
+        if (screenshot && screenshot !== '' && screenshot !== 'None') {
+            screenshotContainer.innerHTML = `<img src="${screenshot}" class="max-w-full max-h-48 rounded-lg" alt="Screenshot" onerror="this.parentElement.innerHTML='<p class=\\'text-slate-400 text-sm\\'>Failed to load image</p>'">`;
+        } else {
+            screenshotContainer.innerHTML = `<p class="text-slate-400 text-sm">No screenshot uploaded</p>`;
+        }
+        
+        document.getElementById('viewModal').style.display = 'flex';
+    }
+
+    function closeViewModal() {
+        document.getElementById('viewModal').style.display = 'none';
+        currentSubmissionId = null;
+        currentSubmissionType = null;
+    }
+
+    document.getElementById('viewModal').addEventListener('click', function(e) {
+        if (e.target === this) closeViewModal();
+    });
+
+    async function handleModalAction() {
+        if (!currentSubmissionId) return;
+        
+        if (currentSubmissionType === 'payment_proof') {
+            if (!confirm('Confirm this payment proof?')) return;
+            await confirmPaymentProof(currentSubmissionId);
+        } else {
+            if (!confirm('Approve these hours?')) return;
+            await processApproval(currentSubmissionId, 'approved');
+        }
+        closeViewModal();
+    }
+
+    async function handleModalReject() {
+        if (!currentSubmissionId) return;
+        
+        if (currentSubmissionType === 'payment_proof') {
+            const reason = prompt('Reason for rejecting:');
+            if (reason === null) return;
+            await rejectPaymentProof(currentSubmissionId, reason || 'Rejected');
+        } else {
+            const reason = prompt('Reason for rejecting:');
+            if (reason === null) return;
+            await processApproval(currentSubmissionId, 'rejected', reason || 'Rejected');
+        }
+        closeViewModal();
+    }
+
+    async function confirmPaymentProof(id) {
+        try {
+            const res = await fetch('/api/confirm-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ submission_id: id })
+            });
+            const result = await res.json();
+            if (result.success) {
+                showToast('✅ ' + result.message, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast('❌ ' + result.error, 'error');
+            }
+        } catch (error) {
+            showToast('❌ Error: ' + error.message, 'error');
+        }
+    }
+
+    async function rejectPaymentProof(id, reason) {
+        try {
+            const res = await fetch('/api/reject-payment-proof', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ submission_id: id, reason: reason })
+            });
+            const result = await res.json();
+            if (result.success) {
+                showToast('✅ ' + result.message, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast('❌ ' + result.error, 'error');
+            }
+        } catch (error) {
+            showToast('❌ Error: ' + error.message, 'error');
+        }
+    }
+
+    async function processApproval(id, status, notes) {
+        try {
+            const res = await fetch('/api/approvals', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id, status: status, notes: notes || '' })
+            });
+            const result = await res.json();
+            if (result.success) {
+                showToast('✅ ' + result.message, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast('❌ ' + result.error, 'error');
+            }
+        } catch (error) {
+            showToast('❌ Error: ' + error.message, 'error');
+        }
+    }
+
+    async function approveSubmission(id) {
+        if (!confirm('Approve these hours?')) return;
+        await processApproval(id, 'approved');
+    }
+
+    async function rejectSubmission(id) {
+        const reason = prompt('Reason for rejecting:');
+        if (reason === null) return;
+        await processApproval(id, 'rejected', reason || 'Rejected');
+    }
+
+    function showToast(message, type = 'success') {
+        const colors = {
+            success: 'bg-emerald-500',
+            error: 'bg-red-500',
+            warning: 'bg-amber-500'
+        };
+        
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 ${colors[type] || 'bg-slate-500'} text-white px-5 py-3.5 rounded-xl shadow-lg z-50 flex items-center gap-3 animate-slide-in max-w-md`;
+        toast.innerHTML = `
+            <span class="text-sm">${message}</span>
+            <button onclick="this.parentElement.remove()" class="ml-4 hover:opacity-80">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+    }
+</script>
+
+<style>
+    @keyframes slide-in {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    .animate-slide-in {
+        animation: slide-in 0.3s ease-out;
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal.show {
+        display: flex;
+    }
+    .modal-content {
+        background: white;
+        border-radius: 16px;
+        max-width: 580px;
+        width: 92%;
+        padding: 28px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 24px 64px rgba(0,0,0,0.15);
+    }
+</style>
+
+<!-- ===== VIEW SUBMISSION MODAL ===== -->
+<div id="viewModal" class="modal">
+    <div class="modal-content">
+        <div class="flex justify-between items-center mb-5">
+            <h2 class="text-lg font-semibold text-slate-800">Submission Details</h2>
+            <button onclick="closeViewModal()" class="text-slate-400 hover:text-slate-600 text-2xl transition-colors">&times;</button>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="bg-slate-50 p-3 rounded-xl">
+                <p class="text-[10px] text-slate-400 uppercase tracking-wider">Type</p>
+                <p class="font-medium text-slate-700 mt-0.5" id="viewType">-</p>
+            </div>
+            <div class="bg-slate-50 p-3 rounded-xl">
+                <p class="text-[10px] text-slate-400 uppercase tracking-wider">Worker</p>
+                <p class="font-medium text-slate-700 mt-0.5" id="viewWorkerName">-</p>
+            </div>
+            <div class="bg-slate-50 p-3 rounded-xl">
+                <p class="text-[10px] text-slate-400 uppercase tracking-wider">Account</p>
+                <p class="font-medium text-slate-700 mt-0.5" id="viewAccountName">-</p>
+            </div>
+            <div class="bg-slate-50 p-3 rounded-xl">
+                <p class="text-[10px] text-slate-400 uppercase tracking-wider">Date</p>
+                <p class="font-medium text-slate-700 mt-0.5" id="viewDate">-</p>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="bg-slate-50 p-3 rounded-xl">
+                <p class="text-[10px] text-slate-400 uppercase tracking-wider">Hours</p>
+                <p class="font-medium text-slate-700 mt-0.5" id="viewHours">-</p>
+            </div>
+            <div class="bg-slate-50 p-3 rounded-xl">
+                <p class="text-[10px] text-slate-400 uppercase tracking-wider">Client Paid</p>
+                <p class="font-medium text-slate-700 mt-0.5" id="viewTotalAmount">-</p>
+            </div>
+            <div class="bg-slate-50 p-3 rounded-xl">
+                <p class="text-[10px] text-slate-400 uppercase tracking-wider">Worker Gets</p>
+                <p class="font-medium text-slate-700 mt-0.5" id="viewWorkerPayout">-</p>
+            </div>
+            <div class="bg-slate-50 p-3 rounded-xl">
+                <p class="text-[10px] text-slate-400 uppercase tracking-wider">Your Revenue</p>
+                <p class="font-medium text-emerald-600 mt-0.5" id="viewCommission">-</p>
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <p class="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">Screenshot</p>
+            <div id="viewScreenshot" class="border border-slate-200 rounded-xl p-3 bg-slate-50 min-h-[80px] flex items-center justify-center">
+                <p class="text-slate-400 text-sm">No screenshot</p>
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <p class="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">Reference</p>
+            <p class="text-sm font-medium text-slate-700 bg-slate-50 p-2.5 rounded-xl border border-slate-100" id="viewPaymentReference">-</p>
+        </div>
+        
+        <div class="flex gap-2 mt-4 pt-4 border-t border-slate-100">
+            <button onclick="handleModalAction()" id="modalActionBtn" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-medium py-2.5 rounded-xl transition text-sm">
+                <i class="fas fa-check mr-1.5"></i> Confirm
+            </button>
+            <button onclick="handleModalReject()" id="modalRejectBtn" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 rounded-xl transition text-sm">
+                <i class="fas fa-times mr-1.5"></i> Reject
+            </button>
+            <button onclick="closeViewModal()" class="px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-600 font-medium rounded-xl border border-slate-200 transition text-sm">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Make sure modal functions work
+    function closeViewModal() {
+        document.getElementById('viewModal').classList.remove('show');
+        document.getElementById('viewModal').style.display = 'none';
+    }
+    
+    // Ensure modal is hidden on load
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('viewModal').style.display = 'none';
+    });
+</script>
+
+{% endblock %}

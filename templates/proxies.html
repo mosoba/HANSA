@@ -1,0 +1,540 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Proxies - Handshake Manager{% endblock %}
+
+{% block page_title %}Proxies{% endblock %}
+{% block page_subtitle %}Manage proxy IPs for your accounts{% endblock %}
+
+{% block content %}
+
+<div class="flex justify-between items-center mb-4 flex-wrap gap-3">
+    <div class="flex items-center gap-3 flex-wrap">
+        <span class="text-sm text-gray-500">Total: <strong>{{ proxies|length }}</strong> proxies</span>
+        <span class="text-sm text-gray-500">|</span>
+        <span class="text-sm text-gray-500">Active: <strong class="text-green-600">{{ proxies|selectattr('status', 'equalto', 'active')|list|length }}</strong></span>
+    </div>
+    <div class="flex gap-2">
+        <a href="https://iproyal.com/?ref=handshake" target="_blank" 
+           class="px-4 py-2 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition flex items-center gap-2 text-sm font-medium shadow-lg shadow-emerald-200">
+            <i class="fas fa-shopping-cart"></i> Buy Proxy
+            <span class="text-xs bg-white/20 px-2 py-0.5 rounded-full">IPRoyal</span>
+        </a>
+        <button onclick="openModal()" class="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition flex items-center gap-2 text-sm font-medium shadow-lg shadow-indigo-200">
+            <i class="fas fa-plus"></i> Add Proxy
+        </button>
+    </div>
+</div>
+
+<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-gray-700"><i class="fas fa-network-wired text-indigo-500 mr-2"></i>All Proxies</h3>
+        <span class="text-sm text-gray-400">{{ proxies|length }} total</span>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="bg-gray-50">
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">IP Address</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Port</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Provider</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Location</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% if proxies %}
+                    {% for proxy in proxies %}
+                    <tr class="hover:bg-gray-50 transition" data-id="{{ proxy.id }}">
+                        <td class="px-4 py-3 font-medium text-gray-800">{{ proxy.ip }}</td>
+                        <td class="px-4 py-3 text-gray-600">{{ proxy.port }}</td>
+                        <td class="px-4 py-3 text-gray-600">{{ proxy.provider or 'N/A' }}</td>
+                        <td class="px-4 py-3 text-gray-600">{{ proxy.location or 'N/A' }}</td>
+                        <td class="px-4 py-3">
+                            <span class="text-xs font-medium px-2.5 py-1 rounded-full 
+                                {% if proxy.status == 'active' %}bg-green-100 text-green-700
+                                {% elif proxy.status == 'expired' %}bg-red-100 text-red-700
+                                {% else %}bg-gray-100 text-gray-500{% endif %}">
+                                {{ proxy.status or 'active' }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="editProxy('{{ proxy.id }}')" class="p-1.5 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 transition" title="Edit Proxy">
+                                    <i class="fas fa-edit text-xs"></i>
+                                </button>
+                                <button onclick="deleteProxy('{{ proxy.id }}')" class="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition" title="Delete Proxy">
+                                    <i class="fas fa-trash text-xs"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="text-center py-12">
+                                <i class="fas fa-network-wired text-4xl text-gray-300 mb-3"></i>
+                                <p class="text-gray-500 font-medium">No proxies found</p>
+                                <p class="text-sm text-gray-400">Click "Buy Proxy" or "Add Proxy" to get started</p>
+                                <div class="flex justify-center gap-3 mt-4">
+                                    <a href="https://iproyal.com/?ref=handshake" target="_blank" 
+                                       class="px-4 py-2 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition flex items-center gap-2 text-sm font-medium">
+                                        <i class="fas fa-shopping-cart"></i> Buy Proxy
+                                    </a>
+                                    <button onclick="openModal()" class="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition flex items-center gap-2 text-sm font-medium">
+                                        <i class="fas fa-plus"></i> Add Proxy
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ===== ADD PROXY MODAL ===== -->
+<div id="addModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4" onclick="if(event.target===this) closeModal()">
+    <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl" style="animation: modalSlideIn 0.3s ease-out;">
+        <!-- Header -->
+        <div class="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+            <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <i class="fas fa-network-wired text-indigo-500"></i> Add Proxy
+            </h2>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-xl transition">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6">
+            <!-- Duplicate Warning -->
+            <div id="duplicateWarning" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                <span id="duplicateMessage">This proxy already exists!</span>
+            </div>
+            
+            <!-- IPRoyal Ad -->
+            <div class="mb-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-medium text-green-800">Need more proxies?</p>
+                        <p class="text-xs text-green-600">Get reliable proxies from IPRoyal</p>
+                    </div>
+                    <a href="https://iproyal.com/?ref=handshake" target="_blank" 
+                       class="px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-xs font-medium hover:bg-emerald-600 transition">
+                        <i class="fas fa-external-link-alt mr-1"></i> Visit IPRoyal
+                    </a>
+                </div>
+            </div>
+            
+            <form id="addProxyForm">
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">IP Address <span class="text-red-500">*</span></label>
+                    <input type="text" id="proxyIp" placeholder="e.g., 123.45.67.89" 
+                           class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none" required>
+                    <p class="text-xs text-gray-400 mt-1">Enter the proxy IP address</p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Port <span class="text-red-500">*</span></label>
+                    <input type="number" id="proxyPort" placeholder="e.g., 8080" 
+                           class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none" required>
+                    <p class="text-xs text-gray-400 mt-1">Enter the proxy port number</p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Provider</label>
+                    <input type="text" id="proxyProvider" placeholder="e.g., IPRoyal" 
+                           class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Location</label>
+                    <input type="text" id="proxyLocation" placeholder="e.g., USA-CA" 
+                           class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none">
+                </div>
+
+                <div class="mb-5">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Status</label>
+                    <select id="proxyStatus" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="expired">Expired</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:opacity-90 transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-200">
+                    <i class="fas fa-save"></i> Save Proxy
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===== EDIT PROXY MODAL ===== -->
+<div id="editModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4" onclick="if(event.target===this) closeModal()">
+    <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl" style="animation: modalSlideIn 0.3s ease-out;">
+        <!-- Header -->
+        <div class="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+            <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <i class="fas fa-edit text-indigo-500"></i> Edit Proxy
+            </h2>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-xl transition">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6">
+            <!-- Duplicate Warning -->
+            <div id="editDuplicateWarning" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                <span id="editDuplicateMessage">This proxy already exists!</span>
+            </div>
+            
+            <form id="editProxyForm">
+                <input type="hidden" id="editProxyId">
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">IP Address <span class="text-red-500">*</span></label>
+                    <input type="text" id="editProxyIp" placeholder="e.g., 123.45.67.89" 
+                           class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none" required>
+                    <p class="text-xs text-gray-400 mt-1">Enter the proxy IP address</p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Port <span class="text-red-500">*</span></label>
+                    <input type="number" id="editProxyPort" placeholder="e.g., 8080" 
+                           class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none" required>
+                    <p class="text-xs text-gray-400 mt-1">Enter the proxy port number</p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Provider</label>
+                    <input type="text" id="editProxyProvider" placeholder="e.g., IPRoyal" 
+                           class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Location</label>
+                    <input type="text" id="editProxyLocation" placeholder="e.g., USA-CA" 
+                           class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none">
+                </div>
+
+                <div class="mb-5">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Status</label>
+                    <select id="editProxyStatus" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="expired">Expired</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:opacity-90 transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-200">
+                    <i class="fas fa-save"></i> Update Proxy
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95) translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+    .modal-open {
+        overflow: hidden;
+    }
+</style>
+
+<script>
+    // ============================================================
+    // EXISTING PROXIES DATA
+    // ============================================================
+    const existingProxies = [
+        {% for proxy in proxies %}
+        {
+            id: '{{ proxy.id }}',
+            ip: '{{ proxy.ip }}',
+            port: {{ proxy.port }}
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    // ============================================================
+    // CHECK DUPLICATE PROXY
+    // ============================================================
+    function checkDuplicate(ip, port, excludeId = null) {
+        return existingProxies.some(p => 
+            p.ip === ip && 
+            p.port === port && 
+            p.id !== excludeId
+        );
+    }
+
+    // ============================================================
+    // VALIDATE PROXY
+    // ============================================================
+    function validateProxy(ip, port, excludeId = null) {
+        if (checkDuplicate(ip, port, excludeId)) {
+            return {
+                valid: false,
+                message: `Proxy ${ip}:${port} already exists! Each proxy must have a unique IP and Port combination.`
+            };
+        }
+        
+        const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+        if (!ipPattern.test(ip)) {
+            return {
+                valid: false,
+                message: 'Invalid IP address format. Please enter a valid IP (e.g., 123.45.67.89)'
+            };
+        }
+        
+        if (port < 1 || port > 65535) {
+            return {
+                valid: false,
+                message: 'Port must be between 1 and 65535'
+            };
+        }
+        
+        return { valid: true };
+    }
+
+    // ============================================================
+    // ADD PROXY - REAL-TIME DUPLICATE CHECK
+    // ============================================================
+    const proxyIp = document.getElementById('proxyIp');
+    const proxyPort = document.getElementById('proxyPort');
+    const duplicateWarning = document.getElementById('duplicateWarning');
+    const duplicateMessage = document.getElementById('duplicateMessage');
+
+    function checkAddDuplicate() {
+        const ip = proxyIp.value.trim();
+        const port = parseInt(proxyPort.value);
+        
+        if (ip && !isNaN(port)) {
+            if (checkDuplicate(ip, port)) {
+                duplicateWarning.classList.remove('hidden');
+                duplicateMessage.textContent = `⚠️ Proxy ${ip}:${port} already exists! Each proxy must have a unique IP and Port combination.`;
+                return false;
+            } else {
+                duplicateWarning.classList.add('hidden');
+                return true;
+            }
+        }
+        return true;
+    }
+
+    proxyIp.addEventListener('input', checkAddDuplicate);
+    proxyPort.addEventListener('input', checkAddDuplicate);
+
+    // ============================================================
+    // SUBMIT ADD PROXY
+    // ============================================================
+    document.getElementById('addProxyForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const ip = document.getElementById('proxyIp').value.trim();
+        const port = parseInt(document.getElementById('proxyPort').value);
+        
+        const validation = validateProxy(ip, port);
+        if (!validation.valid) {
+            alert('❌ ' + validation.message);
+            return;
+        }
+        
+        const data = {
+            ip: ip,
+            port: port,
+            provider: document.getElementById('proxyProvider').value,
+            location: document.getElementById('proxyLocation').value,
+            status: document.getElementById('proxyStatus').value
+        };
+
+        try {
+            const response = await fetch('/api/proxies', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                closeModal();
+                location.reload();
+            } else {
+                alert('❌ Error: ' + result.error);
+            }
+        } catch (error) {
+            alert('❌ Error: ' + error.message);
+        }
+    });
+
+    // ============================================================
+    // EDIT PROXY
+    // ============================================================
+    function editProxy(id) {
+        const proxy = existingProxies.find(p => p.id === id);
+        if (!proxy) {
+            alert('❌ Proxy not found');
+            return;
+        }
+        
+        document.getElementById('editProxyId').value = proxy.id;
+        document.getElementById('editProxyIp').value = proxy.ip;
+        document.getElementById('editProxyPort').value = proxy.port;
+        
+        fetch('/api/proxies')
+            .then(r => r.json())
+            .then(result => {
+                if (result.success) {
+                    const fullProxy = result.data.find(p => p.id === id);
+                    if (fullProxy) {
+                        document.getElementById('editProxyProvider').value = fullProxy.provider || '';
+                        document.getElementById('editProxyLocation').value = fullProxy.location || '';
+                        document.getElementById('editProxyStatus').value = fullProxy.status || 'active';
+                    }
+                }
+            })
+            .catch(err => console.error('Error fetching proxy data:', err));
+        
+        document.getElementById('editModal').classList.remove('hidden');
+        document.getElementById('editModal').style.display = 'flex';
+        document.body.classList.add('modal-open');
+        document.getElementById('editDuplicateWarning').classList.add('hidden');
+    }
+
+    // ============================================================
+    // EDIT PROXY - REAL-TIME DUPLICATE CHECK
+    // ============================================================
+    const editProxyIp = document.getElementById('editProxyIp');
+    const editProxyPort = document.getElementById('editProxyPort');
+    const editDuplicateWarning = document.getElementById('editDuplicateWarning');
+    const editDuplicateMessage = document.getElementById('editDuplicateMessage');
+
+    function checkEditDuplicate() {
+        const ip = editProxyIp.value.trim();
+        const port = parseInt(editProxyPort.value);
+        const excludeId = document.getElementById('editProxyId').value;
+        
+        if (ip && !isNaN(port) && excludeId) {
+            if (checkDuplicate(ip, port, excludeId)) {
+                editDuplicateWarning.classList.remove('hidden');
+                editDuplicateMessage.textContent = `⚠️ Proxy ${ip}:${port} already exists! Each proxy must have a unique IP and Port combination.`;
+                return false;
+            } else {
+                editDuplicateWarning.classList.add('hidden');
+                return true;
+            }
+        }
+        return true;
+    }
+
+    editProxyIp.addEventListener('input', checkEditDuplicate);
+    editProxyPort.addEventListener('input', checkEditDuplicate);
+
+    // ============================================================
+    // SUBMIT EDIT PROXY
+    // ============================================================
+    document.getElementById('editProxyForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const id = document.getElementById('editProxyId').value;
+        const ip = document.getElementById('editProxyIp').value.trim();
+        const port = parseInt(document.getElementById('editProxyPort').value);
+        
+        const validation = validateProxy(ip, port, id);
+        if (!validation.valid) {
+            alert('❌ ' + validation.message);
+            return;
+        }
+        
+        const data = {
+            id: id,
+            ip: ip,
+            port: port,
+            provider: document.getElementById('editProxyProvider').value,
+            location: document.getElementById('editProxyLocation').value,
+            status: document.getElementById('editProxyStatus').value
+        };
+
+        try {
+            const response = await fetch('/api/proxies', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                closeModal();
+                location.reload();
+            } else {
+                alert('❌ Error: ' + result.error);
+            }
+        } catch (error) {
+            alert('❌ Error: ' + error.message);
+        }
+    });
+
+    // ============================================================
+    // DELETE PROXY
+    // ============================================================
+    async function deleteProxy(id) {
+        if (!confirm('⚠️ Delete this proxy? This cannot be undone.')) return;
+        
+        try {
+            const response = await fetch(`/api/proxies?id=${id}`, {
+                method: 'DELETE'
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                location.reload();
+            } else {
+                alert('❌ Error: ' + result.error);
+            }
+        } catch (error) {
+            alert('❌ Error: ' + error.message);
+        }
+    }
+
+    // ============================================================
+    // MODAL FUNCTIONS
+    // ============================================================
+    function openModal() {
+        document.getElementById('addModal').classList.remove('hidden');
+        document.getElementById('addModal').style.display = 'flex';
+        document.body.classList.add('modal-open');
+        document.getElementById('addProxyForm').reset();
+        duplicateWarning.classList.add('hidden');
+    }
+    
+    function closeModal() {
+        document.getElementById('addModal').classList.add('hidden');
+        document.getElementById('addModal').style.display = 'none';
+        document.getElementById('editModal').classList.add('hidden');
+        document.getElementById('editModal').style.display = 'none';
+        document.body.classList.remove('modal-open');
+    }
+
+    document.getElementById('addModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+    document.getElementById('editModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+</script>
+
+{% endblock %}

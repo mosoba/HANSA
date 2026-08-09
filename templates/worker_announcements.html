@@ -1,0 +1,685 @@
+{% extends "worker_base.html" %}
+
+{% block title %}Announcements - Handshake Manager{% endblock %}
+
+{% block page_title %}
+<div class="flex items-center gap-3">
+    <i class="fas fa-bullhorn text-indigo-500 text-2xl"></i>
+    <span>Announcements</span>
+    <span class="text-sm font-normal text-slate-400 bg-white px-3 py-1 rounded-full border border-gray-200">
+        {{ announcements|length }} total
+    </span>
+</div>
+{% endblock %}
+
+{% block page_subtitle %}Stay updated with the latest announcements from your team{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ===== WORKER ANNOUNCEMENTS ===== */
+.announcements-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* ===== STATS BAR ===== */
+.stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+.stats-bar .stat-card {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    padding: 14px 18px;
+    text-align: center;
+    transition: all 0.2s;
+}
+.stats-bar .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+.stats-bar .stat-card .number {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
+}
+.stats-bar .stat-card .label {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 500;
+    margin-top: 2px;
+}
+.stats-bar .stat-card.unread .number { color: #ef4444; }
+.stats-bar .stat-card.high .number { color: #f59e0b; }
+.stats-bar .stat-card.total .number { color: #6366f1; }
+.stats-bar .stat-card.read .number { color: #22c55e; }
+
+/* ===== ANNOUNCEMENT ITEM ===== */
+.announcement-item {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    padding: 20px 24px;
+    margin-bottom: 12px;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+.announcement-item:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    border-color: #cbd5e1;
+}
+.announcement-item.unread {
+    border-left: 4px solid #6366f1;
+    background: #f8fafc;
+}
+.announcement-item.unread::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, transparent 50%, rgba(99, 102, 241, 0.05) 50%);
+    pointer-events: none;
+}
+.announcement-item.high-priority {
+    background: #fef2f2;
+    border-color: #fca5a5;
+}
+.announcement-item.high-priority.unread {
+    border-left: 4px solid #ef4444;
+    background: #fee2e2;
+}
+.announcement-item .item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+.announcement-item .item-header .title-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.announcement-item .item-header .title {
+    font-weight: 700;
+    font-size: 16px;
+    color: #0f172a;
+}
+.announcement-item .item-header .new-badge {
+    background: #ef4444;
+    color: white;
+    font-size: 9px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    animation: pulse-badge 2s infinite;
+}
+@keyframes pulse-badge {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+.announcement-item .item-header .priority-badge {
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    background: #fee2e2;
+    color: #991b1b;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.announcement-item .item-header .meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+.announcement-item .item-header .meta .sender {
+    font-weight: 500;
+    color: #6366f1;
+}
+.announcement-item .item-body {
+    font-size: 14px;
+    color: #334155;
+    line-height: 1.7;
+    margin: 8px 0 12px 0;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #f1f5f9;
+}
+.announcement-item .item-body .message-content {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+.announcement-item .item-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.announcement-item .item-footer .read-status {
+    font-size: 12px;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.announcement-item .item-footer .read-status .read { color: #22c55e; }
+.announcement-item .item-footer .read-status .unread { color: #f59e0b; }
+.announcement-item .item-footer .read-status .time-ago {
+    color: #94a3b8;
+    font-size: 11px;
+}
+.announcement-item .item-footer .actions {
+    display: flex;
+    gap: 6px;
+}
+.announcement-item .item-footer .actions button {
+    padding: 5px 16px;
+    border-radius: 8px;
+    border: none;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #eef2ff;
+    color: #4f46e5;
+}
+.announcement-item .item-footer .actions button:hover {
+    background: #e0e7ff;
+    transform: scale(1.02);
+}
+.announcement-item .item-footer .actions button.marked-read {
+    background: #d1fae5;
+    color: #065f46;
+    cursor: default;
+}
+.announcement-item .item-footer .actions button.marked-read:hover {
+    transform: none;
+}
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    padding: 60px 20px;
+    text-align: center;
+    color: #94a3b8;
+}
+.empty-state i {
+    font-size: 56px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+    color: #6366f1;
+}
+.empty-state h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 4px;
+}
+.empty-state p {
+    font-size: 14px;
+    max-width: 350px;
+    margin: 0 auto;
+}
+
+/* ===== FILTER BAR ===== */
+.filter-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+    background: white;
+    padding: 12px 20px;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+}
+.filter-bar .filter-group {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+.filter-bar .filter-group button {
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.filter-bar .filter-group button:hover {
+    border-color: #6366f1;
+    color: #4f46e5;
+    background: #eef2ff;
+}
+.filter-bar .filter-group button.active {
+    background: #eef2ff;
+    border-color: #6366f1;
+    color: #4f46e5;
+}
+.filter-bar .search-box {
+    position: relative;
+}
+.filter-bar .search-box input {
+    padding: 6px 14px 6px 34px;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    font-size: 13px;
+    background: #f8fafc;
+    transition: all 0.2s;
+    width: 200px;
+}
+.filter-bar .search-box input:focus {
+    outline: none;
+    border-color: #6366f1;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+.filter-bar .search-box i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+/* ===== TOAST ===== */
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 99999;
+    padding: 14px 24px;
+    border-radius: 12px;
+    color: white;
+    font-weight: 500;
+    font-size: 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    animation: slideInRight 0.4s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 400px;
+}
+.toast.success { background: #22c55e; }
+.toast.error { background: #ef4444; }
+.toast.warning { background: #f59e0b; }
+.toast.info { background: #3b82f6; }
+.toast .close {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: 0.2s;
+}
+.toast .close:hover { opacity: 1; }
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .stats-bar {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .filter-bar .search-box input {
+        width: 100%;
+    }
+    .announcement-item .item-header {
+        flex-direction: column;
+    }
+    .announcement-item .item-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .announcement-item .item-footer .actions {
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-bar {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .stats-bar .stat-card {
+        padding: 10px 12px;
+    }
+    .stats-bar .stat-card .number {
+        font-size: 18px;
+    }
+    .announcement-item {
+        padding: 14px 16px;
+    }
+    .announcement-item .item-body {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="announcements-container">
+
+    <!-- ===== STATS BAR ===== -->
+    <div class="stats-bar">
+        <div class="stat-card total">
+            <div class="number">{{ announcements|length }}</div>
+            <div class="label">📬 Total</div>
+        </div>
+        <div class="stat-card unread">
+            <div class="number">{{ announcements|selectattr('is_read', 'equalto', False)|list|length }}</div>
+            <div class="label">🔴 Unread</div>
+        </div>
+        <div class="stat-card read">
+            <div class="number">{{ announcements|selectattr('is_read', 'equalto', True)|list|length }}</div>
+            <div class="label">✅ Read</div>
+        </div>
+        <div class="stat-card high">
+            <div class="number">{{ announcements|selectattr('priority', 'equalto', 'high')|list|length }}</div>
+            <div class="label">⚠️ High Priority</div>
+        </div>
+    </div>
+
+    <!-- ===== FILTER BAR ===== -->
+    <div class="filter-bar">
+        <div class="filter-group" id="filterGroup">
+            <button class="active" data-filter="all" onclick="filterAnnouncements('all', this)">All</button>
+            <button data-filter="unread" onclick="filterAnnouncements('unread', this)">Unread</button>
+            <button data-filter="read" onclick="filterAnnouncements('read', this)">Read</button>
+            <button data-filter="high" onclick="filterAnnouncements('high', this)">⚠️ High</button>
+        </div>
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search announcements..." id="searchInput" onkeyup="searchAnnouncements()">
+        </div>
+    </div>
+
+    <!-- ===== ANNOUNCEMENTS LIST ===== -->
+    <div id="announcementsList">
+        {% if announcements %}
+            {% for announcement in announcements %}
+            <div class="announcement-item 
+                        {% if not announcement.is_read %}unread{% endif %}
+                        {% if announcement.priority == 'high' %}high-priority{% endif %}"
+                 id="announcement-{{ announcement.id }}"
+                 data-read="{% if announcement.is_read %}read{% else %}unread{% endif %}"
+                 data-priority="{{ announcement.priority }}"
+                 data-title="{{ announcement.title|lower }}"
+                 data-message="{{ announcement.message|lower }}">
+                
+                <div class="item-header">
+                    <div class="title-section">
+                        <span class="title">{{ announcement.title }}</span>
+                        {% if not announcement.is_read %}
+                        <span class="new-badge">New</span>
+                        {% endif %}
+                        {% if announcement.priority == 'high' %}
+                        <span class="priority-badge"><i class="fas fa-exclamation-triangle"></i> High Priority</span>
+                        {% endif %}
+                    </div>
+                    <div class="meta">
+                        <span><i class="far fa-user"></i> <span class="sender">{{ announcement.sender_name or 'System' }}</span></span>
+                        <span><i class="far fa-clock"></i> {{ announcement.created_at[:16]|replace('T', ' ') if announcement.created_at else 'Just now' }}</span>
+                    </div>
+                </div>
+                
+                <div class="item-body">
+                    <div class="message-content">{{ announcement.message }}</div>
+                </div>
+                
+                <div class="item-footer">
+                    <div class="read-status">
+                        {% if announcement.is_read %}
+                            <span class="read"><i class="fas fa-check-circle"></i> Read</span>
+                        {% else %}
+                            <span class="unread"><i class="fas fa-circle"></i> Unread</span>
+                        {% endif %}
+                        <span class="time-ago">
+                            • {{ announcement.created_at|time_since if announcement.created_at else 'Just now' }}
+                        </span>
+                    </div>
+                    <div class="actions">
+                        {% if not announcement.is_read %}
+                        <button onclick="markRead('{{ announcement.id }}')">
+                            <i class="fas fa-check"></i> Mark Read
+                        </button>
+                        {% else %}
+                        <button class="marked-read" disabled>
+                            <i class="fas fa-check-circle"></i> Read
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-bullhorn"></i>
+                <h3>No announcements yet</h3>
+                <p>Check back later for updates from your team</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// ============================================================
+// FILTER ANNOUNCEMENTS
+// ============================================================
+function filterAnnouncements(filter, btn) {
+    // Update active button
+    document.querySelectorAll('#filterGroup button').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    
+    const items = document.querySelectorAll('.announcement-item');
+    const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+    let visibleCount = 0;
+    
+    items.forEach(item => {
+        let show = true;
+        const isRead = item.dataset.read === 'read';
+        const priority = item.dataset.priority || 'normal';
+        const title = item.dataset.title || '';
+        const message = item.dataset.message || '';
+        
+        // Apply filter
+        if (filter === 'unread' && isRead) show = false;
+        if (filter === 'read' && !isRead) show = false;
+        if (filter === 'high' && priority !== 'high') show = false;
+        
+        // Apply search
+        if (searchQuery && !title.includes(searchQuery) && !message.includes(searchQuery)) {
+            show = false;
+        }
+        
+        item.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
+    });
+}
+
+// ============================================================
+// SEARCH ANNOUNCEMENTS
+// ============================================================
+function searchAnnouncements() {
+    const activeFilter = document.querySelector('#filterGroup button.active');
+    const filter = activeFilter ? activeFilter.dataset.filter : 'all';
+    filterAnnouncements(filter, activeFilter);
+}
+
+// ============================================================
+// MARK AS READ
+// ============================================================
+async function markRead(id) {
+    try {
+        const response = await fetch(`/api/announcements/${id}/read`, {
+            method: 'PATCH'
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            const card = document.getElementById(`announcement-${id}`);
+            if (card) {
+                // Update card styling
+                card.classList.remove('unread');
+                card.dataset.read = 'read';
+                
+                // Update read status
+                const status = card.querySelector('.read-status');
+                if (status) {
+                    status.innerHTML = `<span class="read"><i class="fas fa-check-circle"></i> Read</span>`;
+                }
+                
+                // Remove new badge
+                const newBadge = card.querySelector('.new-badge');
+                if (newBadge) newBadge.remove();
+                
+                // Update action button
+                const actions = card.querySelector('.actions');
+                if (actions) {
+                    actions.innerHTML = `
+                        <button class="marked-read" disabled>
+                            <i class="fas fa-check-circle"></i> Read
+                        </button>
+                    `;
+                }
+                
+                // Update stats
+                updateStats();
+            }
+            showToast('✅ Marked as read', 'success');
+        }
+    } catch (error) {
+        showToast('❌ Error: ' + error.message, 'error');
+    }
+}
+
+// ============================================================
+// UPDATE STATS
+// ============================================================
+function updateStats() {
+    const items = document.querySelectorAll('.announcement-item');
+    let total = items.length;
+    let unread = 0;
+    let read = 0;
+    let high = 0;
+    
+    items.forEach(item => {
+        if (item.dataset.read === 'unread') unread++;
+        else read++;
+        if (item.dataset.priority === 'high') high++;
+    });
+    
+    document.querySelector('.stat-card.total .number').textContent = total;
+    document.querySelector('.stat-card.unread .number').textContent = unread;
+    document.querySelector('.stat-card.read .number').textContent = read;
+    document.querySelector('.stat-card.high .number').textContent = high;
+}
+
+// ============================================================
+// TIME SINCE FILTER (Add to context processor if needed)
+// ============================================================
+// In your app.py, add this context processor:
+/*
+@app.context_processor
+def utility_processor():
+    def time_since(date_str):
+        if not date_str:
+            return 'Just now'
+        try:
+            from datetime import datetime
+            dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+            now = datetime.now(dt.tzinfo)
+            diff = now - dt
+            seconds = diff.total_seconds()
+            if seconds < 60: return 'Just now'
+            if seconds < 3600: return f'{int(seconds/60)}m ago'
+            if seconds < 86400: return f'{int(seconds/3600)}h ago'
+            if seconds < 604800: return f'{int(seconds/86400)}d ago'
+            return dt.strftime('%b %d')
+        except:
+            return 'Just now'
+    return {'time_since': time_since}
+*/
+
+// ============================================================
+// SHOW TOAST
+// ============================================================
+function showToast(message, type = 'success') {
+    document.querySelectorAll('.toast').forEach(el => el.remove());
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <span>${message}</span>
+        <span class="close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></span>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+}
+
+// ============================================================
+// KEYBOARD SHORTCUTS
+// ============================================================
+document.addEventListener('keydown', function(e) {
+    // Ctrl+F or Cmd+F to focus search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        document.getElementById('searchInput').focus();
+    }
+    // Escape to clear search
+    if (e.key === 'Escape') {
+        const search = document.getElementById('searchInput');
+        if (document.activeElement === search) {
+            search.value = '';
+            searchAnnouncements();
+            search.blur();
+        }
+    }
+});
+
+// ============================================================
+// INITIALIZE
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Show any flash messages
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                showToast('{{ message }}', '{{ category }}');
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+});
+</script>
+
+{% endblock %}

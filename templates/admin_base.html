@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>{% block title %}Admin Dashboard - Handshake Manager{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    <style>
+        * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+        body { background: #f0f4f9; margin: 0; min-height: 100vh; }
+        
+        /* Sidebar - INDIGO GRADIENT */
+        .sidebar {
+            transform: translateX(-100%);
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
+            background: linear-gradient(180deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+            height: 100vh;
+            overflow-y: auto;
+        }
+        .sidebar.open { transform: translateX(0); box-shadow: 8px 0 30px rgba(0,0,0,0.08); }
+        @media (min-width: 768px) { .sidebar { transform: translateX(0) !important; } }
+        .sidebar-link {
+            border-radius: 12px;
+            transition: all 0.15s;
+            font-weight: 500;
+            color: #a5b4fc;
+        }
+        .sidebar-link:hover { background: rgba(255,255,255,0.1); color: #ffffff; }
+        .sidebar-link.active { background: rgba(255,255,255,0.15); color: #ffffff; font-weight: 600; }
+        .sidebar-link i { width: 20px; text-align: center; }
+        
+        .badge-pulse {
+            animation: pulse-badge 2s infinite;
+        }
+        @keyframes pulse-badge {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        
+        .glass-card { background: rgba(255,255,255,0.85); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.06); }
+        .stat-card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #eef2f6; transition: all 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+        .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .avatar { width: 44px; height: 44px; border-radius: 14px; background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 18px; }
+        .empty-state { text-align: center; padding: 40px 20px; color: #94a3b8; }
+        .empty-state i { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
+        .sidebar-brand { border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .sidebar-divider { border-color: rgba(255,255,255,0.08); }
+        .sidebar-user { border-top: 1px solid rgba(255,255,255,0.08); }
+        .sidebar-user .text-muted { color: #a5b4fc; }
+        
+        .badge-status { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .badge-pending { background: #fef3c7; color: #d97706; }
+        .badge-approved { background: #d1fae5; color: #059669; }
+        .badge-rejected { background: #fee2e2; color: #dc2626; }
+        .badge-paid { background: #dbeafe; color: #2563eb; }
+        
+        .scrollable { scrollbar-width: thin; scrollbar-color: #d1d9e6 transparent; }
+        .scrollable::-webkit-scrollbar { width: 4px; }
+        .scrollable::-webkit-scrollbar-thumb { background: #d1d9e6; border-radius: 40px; }
+        
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .gradient-text { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .card { background: white; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.04); overflow: hidden; }
+        .card:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.05); }
+        .card-header { padding: 16px 24px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+        .card-header h3 { font-size: 15px; font-weight: 600; color: #0f172a; }
+        .card-body { padding: 16px 24px; }
+        
+        .btn { padding: 8px 20px; border-radius: 10px; font-weight: 500; font-size: 14px; transition: all 0.2s; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary { background: #4f46e5; color: white; }
+        .btn-primary:hover { background: #4338ca; }
+        .btn-success { background: #22c55e; color: white; }
+        .btn-success:hover { background: #16a34a; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-warning:hover { background: #d97706; }
+        .btn-sm { padding: 4px 10px; font-size: 12px; }
+        .btn-secondary { background: #e5e7eb; color: #374151; }
+        .btn-secondary:hover { background: #d1d5db; }
+        
+        /* WhatsApp-style message bubbles */
+        .message-bubble.sent {
+            background: #6366f1;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .message-bubble.received {
+            background: white;
+            color: #0f172a;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+        }
+        .message-bubble.sent.single { border-radius: 14px 4px 14px 14px; }
+        .message-bubble.sent.first { border-radius: 14px 4px 4px 14px; }
+        .message-bubble.sent.middle { border-radius: 4px 4px 4px 14px; }
+        .message-bubble.sent.last { border-radius: 14px 4px 14px 14px; }
+        .message-bubble.received.single { border-radius: 4px 14px 14px 14px; }
+        .message-bubble.received.first { border-radius: 4px 14px 14px 4px; }
+        .message-bubble.received.middle { border-radius: 4px 14px 4px 4px; }
+        .message-bubble.received.last { border-radius: 4px 14px 14px 14px; }
+        
+        .sender-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #6366f1;
+            margin-bottom: 2px;
+            padding-left: 4px;
+        }
+        
+        .message-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            max-width: 80%;
+            margin-bottom: 4px;
+        }
+        .message-group.sent { align-self: flex-end; align-items: flex-end; }
+        .message-group.received { align-self: flex-start; align-items: flex-start; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ========== SIDEBAR - INDIGO GRADIENT ========== -->
+<aside class="sidebar fixed top-0 left-0 z-50 w-[280px] px-5 py-6 flex flex-col shadow-xl" id="sidebar">
+    <div class="sidebar-brand flex items-center gap-3 px-1 pb-5 mb-5">
+        <i class="fas fa-handshake text-2xl text-indigo-300"></i>
+        <span class="font-extrabold text-xl tracking-tight text-white">Handshake</span>
+        <span class="ml-auto text-[10px] font-bold bg-white/10 text-indigo-200 px-3 py-0.5 rounded-full uppercase tracking-wide">admin</span>
+    </div>
+    <nav class="flex-1 space-y-1.5 overflow-y-auto pr-1">
+        <!-- Admin Links -->
+        <a href="/admin-dashboard" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+            <i class="fas fa-th-large w-5 text-center"></i> Dashboard
+        </a>
+        <a href="/accounts" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm {% if request.endpoint == 'accounts' %}active{% endif %}">
+            <i class="fas fa-building w-5 text-center"></i> Accounts
+        </a>
+        <a href="/proxies" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm {% if request.endpoint == 'proxies' %}active{% endif %}">
+            <i class="fas fa-network-wired w-5 text-center"></i> Proxies
+        </a>
+        <a href="/workers" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm {% if request.endpoint == 'workers' %}active{% endif %}">
+            <i class="fas fa-users w-5 text-center"></i> Workers
+        </a>
+        <a href="/assignments" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm {% if request.endpoint == 'assignments' %}active{% endif %}">
+            <i class="fas fa-link w-5 text-center"></i> Assignments
+        </a>
+        <a href="/managers" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm {% if request.endpoint == 'managers' %}active{% endif %}">
+            <i class="fas fa-user-tie w-5 text-center"></i> Managers
+        </a>
+        
+        <div class="sidebar-divider border-t my-3"></div>
+        
+        <a href="/payments" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm {% if request.endpoint == 'payments' %}active{% endif %}">
+            <i class="fas fa-credit-card w-5 text-center"></i> Payments
+            {% if stats and stats.payment_proofs|default(0) > 0 %}
+                <span class="ml-auto text-[10px] font-bold bg-red-500 text-white px-2.5 py-0.5 rounded-full">{{ stats.payment_proofs }}</span>
+            {% endif %}
+        </a>
+        <a href="/approvals" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm {% if request.endpoint == 'approvals' %}active{% endif %}">
+            <i class="fas fa-check-double w-5 text-center"></i> Approvals
+            {% if stats and stats.pending|default(0) > 0 %}
+                <span class="ml-auto text-[10px] font-bold bg-red-500 text-white px-2.5 py-0.5 rounded-full">{{ stats.pending }}</span>
+            {% endif %}
+        </a>
+        <a href="/reports" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm {% if request.endpoint == 'reports' %}active{% endif %}">
+            <i class="fas fa-chart-bar w-5 text-center"></i> Reports
+        </a>
+        <a href="/verification" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm {% if request.endpoint == 'verification' %}active{% endif %}">
+            <i class="fas fa-shield-alt w-5 text-center"></i> Verification
+        </a>
+        <a href="/settings" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm {% if request.endpoint == 'settings' %}active{% endif %}">
+            <i class="fas fa-cog w-5 text-center"></i> Settings
+        </a>
+        
+        <div class="sidebar-divider border-t my-3"></div>
+        
+        <!-- 🔥 MESSAGES - WhatsApp-style Chat -->
+        <a href="/admin-messages" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm {% if request.endpoint == 'admin_messages' %}active{% endif %}">
+            <i class="fas fa-comments w-5 text-center"></i> Messages
+            {% if stats and stats.unread_announcements|default(0) > 0 %}
+                <span class="ml-auto text-[10px] font-bold bg-red-500 text-white px-2.5 py-0.5 rounded-full badge-pulse">{{ stats.unread_announcements }}</span>
+            {% endif %}
+        </a>
+        
+        <!-- 🔥 ANNOUNCEMENTS -->
+        <a href="/announcements" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm {% if request.endpoint == 'announcements' %}active{% endif %}">
+            <i class="fas fa-bullhorn w-5 text-center"></i> Announcements
+            {% if stats and stats.unread_announcements|default(0) > 0 %}
+                <span class="ml-auto text-[10px] font-bold bg-red-500 text-white px-2.5 py-0.5 rounded-full badge-pulse">{{ stats.unread_announcements }}</span>
+            {% endif %}
+        </a>
+        
+        <div class="sidebar-divider border-t my-3"></div>
+        
+        <a href="/logout" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm text-red-300 hover:bg-red-500/10 hover:text-red-200">
+            <i class="fas fa-sign-out-alt w-5 text-center"></i> Logout
+        </a>
+    </nav>
+    
+    <div class="sidebar-user mt-6 pt-5 flex items-center gap-3 px-1">
+        <div class="avatar w-10 h-10 text-sm"><span>{{ (user_name or 'Admin')[0]|upper }}</span></div>
+        <div class="flex-1 min-w-0">
+            <p class="text-sm font-bold text-white truncate">{{ user_name or 'Admin' }}</p>
+            <p class="text-xs text-indigo-300 truncate">{{ user_email or 'admin@handshake.com' }}</p>
+        </div>
+    </div>
+</aside>
+
+<!-- overlay for mobile -->
+<div class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden" id="overlay" onclick="toggleSidebar()"></div>
+
+<!-- ========== MAIN CONTENT ========== -->
+<main class="md:ml-[280px] min-h-screen p-4 md:p-6 lg:p-8 transition-all">
+    
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-3xl font-extrabold text-slate-800 flex items-center gap-3">
+                {% block page_icon %}{% endblock %}
+                {% block page_title %}Admin Dashboard{% endblock %}
+                <span class="text-sm font-normal text-slate-400 bg-white px-3 py-1 rounded-full border border-gray-200">
+                    {{ now.strftime('%b %d, %Y') if now else 'Today' }}
+                </span>
+            </h1>
+            <p class="text-slate-500 mt-1">{% block page_subtitle %}Welcome back, {{ user_name or 'Admin' }}!{% endblock %}</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-sm text-slate-500 bg-white/80 px-4 py-2 rounded-full border border-gray-200 shadow-sm flex items-center gap-2 backdrop-blur-sm">
+                <i class="far fa-calendar-alt text-indigo-400"></i> {{ now.strftime('%b %d, %Y') if now else 'Today' }}
+            </span>
+            <span class="text-sm text-slate-500 bg-white/80 px-4 py-2 rounded-full border border-gray-200 shadow-sm flex items-center gap-2 backdrop-blur-sm">
+                <i class="far fa-clock text-indigo-400"></i> {{ now.strftime('%I:%M %p') if now else 'Now' }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="mb-5 p-4 rounded-2xl flex items-center gap-3 border backdrop-blur-sm
+                    {% if category == 'success' %}bg-green-50/90 text-green-700 border-green-200
+                    {% elif category == 'danger' %}bg-red-50/90 text-red-700 border-red-200
+                    {% elif category == 'warning' %}bg-yellow-50/90 text-yellow-700 border-yellow-200
+                    {% else %}bg-blue-50/90 text-blue-700 border-blue-200{% endif %}">
+                    <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-circle{% elif category == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} text-xl"></i>
+                    <span>{{ message }}</span>
+                    <button onclick="this.parentElement.remove()" class="ml-auto text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Page Content -->
+    {% block content %}{% endblock %}
+
+    <!-- Footer -->
+    <div class="mt-8 text-center text-xs text-gray-400 border-t border-gray-200 pt-6">
+        Handshake Manager v2.0 • Built with <i class="fas fa-heart text-red-400"></i> • {{ now.strftime('%Y') if now else '2026' }}
+    </div>
+
+</main>
+
+<script>
+    // ========== SIDEBAR TOGGLE ==========
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+        document.getElementById('overlay').classList.toggle('hidden');
+    }
+    document.getElementById('overlay')?.addEventListener('click', toggleSidebar);
+
+    // ========== SHOW TOAST ==========
+    function showToast(message, type = 'success') {
+        const colors = {
+            success: 'bg-emerald-500',
+            error: 'bg-red-500',
+            warning: 'bg-amber-500',
+            info: 'bg-blue-500'
+        };
+        
+        document.querySelectorAll('.toast-notification').forEach(el => el.remove());
+        
+        const toast = document.createElement('div');
+        toast.className = `toast-notification fixed top-4 right-4 ${colors[type] || 'bg-slate-500'} text-white px-5 py-3.5 rounded-xl shadow-lg z-50 flex items-center gap-3 max-w-md`;
+        toast.innerHTML = `
+            <span class="text-sm">${message}</span>
+            <button onclick="this.parentElement.remove()" class="ml-4 hover:opacity-80">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+    }
+
+    console.log('🏠 Admin Dashboard Loaded');
+    console.log('👤 User:', '{{ user_name }}');
+    console.log('👔 Role:', '{{ user_role }}');
+</script>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Dashboard - Handshake Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #f0f2f5; }
+        .stat-card { transition: all 0.3s ease; cursor: pointer; }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.1); }
+        .nav-link:hover { background: #f0f4ff; color: #2563eb; }
+        .badge-pending { background: #fef3c7; color: #d97706; }
+        .badge-approved { background: #d1fae5; color: #059669; }
+        .badge-rejected { background: #fee2e2; color: #dc2626; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-8">
+                    <a href="/manager-dashboard" class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        <i class="fas fa-handshake text-blue-600"></i>
+                        <span>Handshake</span>
+                        <span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">Manager</span>
+                    </a>
+                    <div class="hidden lg:flex space-x-1">
+                        <a href="/manager-dashboard" class="nav-link px-3 py-2 rounded-lg text-sm font-medium bg-blue-50 text-blue-700">Dashboard</a>
+                        <a href="/approvals" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">Approvals</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-600 hidden sm:inline">{{ user_name or 'Manager' }}</span>
+                    <a href="/logout" class="text-sm text-red-600 hover:text-red-800">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-4 p-4 rounded-xl flex items-center gap-3 border
+                        {% if category == 'success' %}bg-green-50 text-green-700 border-green-200
+                        {% elif category == 'danger' %}bg-red-50 text-red-700 border-red-200
+                        {% elif category == 'warning' %}bg-yellow-50 text-yellow-700 border-yellow-200
+                        {% else %}bg-blue-50 text-blue-700 border-blue-200{% endif %}">
+                        <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-circle{% elif category == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} text-xl"></i>
+                        <span>{{ message }}</span>
+                        <button onclick="this.parentElement.remove()" class="ml-auto text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Welcome Banner -->
+        <div class="gradient-bg rounded-2xl p-6 mb-6 text-white">
+            <h1 class="text-2xl font-bold">Welcome, {{ user_name or 'Manager' }}! 👋</h1>
+            <p class="text-blue-100 mt-1">Review and approve worker hour submissions</p>
+            <div class="flex gap-4 mt-4">
+                <span class="bg-white/20 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                    <i class="fas fa-calendar"></i> {{ now.strftime('%B %d, %Y') if now else 'Today' }}
+                </span>
+                <span class="bg-white/20 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                    <i class="fas fa-clock"></i> {{ now.strftime('%H:%M') if now else 'Now' }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div class="stat-card bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Pending</p>
+                        <p class="text-3xl font-bold text-amber-600 mt-1">{{ pending|default(0) }}</p>
+                    </div>
+                    <div class="w-14 h-14 bg-amber-100 rounded-2xl flex items-center justify-center">
+                        <i class="fas fa-clock text-2xl text-amber-600"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Approved</p>
+                        <p class="text-3xl font-bold text-emerald-600 mt-1">{{ approved|default(0) }}</p>
+                    </div>
+                    <div class="w-14 h-14 bg-emerald-100 rounded-2xl flex items-center justify-center">
+                        <i class="fas fa-check-circle text-2xl text-emerald-600"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Rejected</p>
+                        <p class="text-3xl font-bold text-red-600 mt-1">{{ rejected|default(0) }}</p>
+                    </div>
+                    <div class="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center">
+                        <i class="fas fa-times-circle text-2xl text-red-600"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+            <a href="/approvals" class="bg-blue-50 hover:bg-blue-100 text-blue-700 p-4 rounded-xl text-center transition">
+                <i class="fas fa-check-double text-xl block mb-1"></i>
+                <span class="text-sm font-medium">Review Pending Approvals</span>
+                {% if pending|default(0) > 0 %}
+                    <span class="inline-block ml-2 bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{{ pending }}</span>
+                {% endif %}
+            </a>
+        </div>
+
+        <!-- Assigned Accounts -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h3 class="font-semibold text-gray-900"><i class="fas fa-building text-blue-500 mr-2"></i>Assigned Accounts</h3>
+            </div>
+            <div class="divide-y divide-gray-100">
+                {% if accounts and accounts|length > 0 %}
+                    {% for account in accounts %}
+                    <div class="px-6 py-3 flex items-center justify-between hover:bg-gray-50">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">{{ account.name }}</p>
+                                <p class="text-xs text-gray-500">{{ account.platform or 'N/A' }} • {{ account.location or 'N/A' }}</p>
+                            </div>
+                        </div>
+                        <span class="text-xs px-2 py-1 rounded-full 
+                            {% if account.status == 'active' %}bg-green-100 text-green-700
+                            {% else %}bg-gray-100 text-gray-700{% endif %}">
+                            {{ account.status or 'active' }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="px-6 py-8 text-center text-gray-400">
+                        <i class="fas fa-inbox text-3xl block mb-2"></i>
+                        <p>No accounts assigned to you</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!-- templates/my_submissions.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Submissions - Handshake Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #f4f6fb; }
+        
+        /* Sidebar - INDIGO GRADIENT */
+        .sidebar {
+            transition: transform 0.25s ease;
+            background: linear-gradient(180deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+        }
+        .sidebar-link { 
+            border-radius: 12px; 
+            transition: all 0.15s; 
+            color: #a5b4fc;
+        }
+        .sidebar-link:hover { background: rgba(255,255,255,0.1); color: #ffffff; }
+        .sidebar-link.active { background: rgba(255,255,255,0.15); color: #ffffff; font-weight: 600; }
+        .sidebar-link i { width: 20px; text-align: center; }
+        .sidebar-brand { border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .sidebar-divider { border-color: rgba(255,255,255,0.08); }
+        .sidebar-user { border-top: 1px solid rgba(255,255,255,0.08); }
+        
+        .card { background: white; border-radius: 24px; border: 1px solid #eef2f6; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+        .card-header { border-bottom: 1px solid #f1f5f9; }
+        
+        .btn { transition: all 0.15s; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary { background: #4f46e5; color: white; }
+        .btn-primary:hover { background: #4338ca; box-shadow: 0 4px 10px -2px rgba(79,70,229,0.3); }
+        .btn-success { background: #22c55e; color: white; }
+        .btn-success:hover { background: #16a34a; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-warning:hover { background: #d97706; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        
+        .table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .table th { 
+            font-weight: 600; 
+            color: #475569; 
+            font-size: 11px; 
+            letter-spacing: 0.4px; 
+            text-transform: uppercase; 
+            background: #f8fafc; 
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 2px solid #e9edf2;
+        }
+        .table td { 
+            padding: 14px 16px; 
+            border-bottom: 1px solid #f1f5f9; 
+            vertical-align: middle;
+        }
+        .table tbody tr:hover { background: #fafbfc; }
+        .table tbody tr:last-child td { border-bottom: none; }
+        
+        .status-badge { font-size: 11px; padding: 4px 14px; border-radius: 20px; font-weight: 600; }
+        .status-pending { background: #fef3c7; color: #d97706; }
+        .status-approved { background: #d1fae5; color: #059669; }
+        .status-rejected { background: #fee2e2; color: #dc2626; }
+        .status-paid { background: #dbeafe; color: #2563eb; }
+        
+        .avatar { 
+            width: 44px; 
+            height: 44px; 
+            border-radius: 14px; 
+            background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: white; 
+            font-weight: 700; 
+            font-size: 18px; 
+        }
+        
+        @media (max-width: 768px) { .sidebar { transform: translateX(-100%); } .sidebar.open { transform: translateX(0); } }
+        
+        .empty-state { text-align: center; padding: 40px 20px; color: #94a3b8; }
+        .empty-state i { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+        
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        
+        .stat-card { transition: all 0.2s; border: 1px solid #f1f5f9; }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px -8px rgba(0,0,0,0.07); }
+        
+        .badge-type { padding: 4px 12px; border-radius: 40px; font-weight: 500; font-size: 11px; letter-spacing: 0.3px; }
+        .badge-hours { background: #dbeafe; color: #1e40af; }
+        .badge-payment { background: #f3e8ff; color: #6d28d9; }
+        
+        .text-white-80 { color: rgba(255,255,255,0.8); }
+        .text-indigo-200 { color: #a5b4fc; }
+        
+        /* Scrollbar */
+        .scrollable { scrollbar-width: thin; scrollbar-color: #6366f1 transparent; }
+        .scrollable::-webkit-scrollbar { width: 4px; }
+        .scrollable::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 40px; }
+    </style>
+</head>
+<body>
+
+<!-- ========== SIDEBAR - INDIGO GRADIENT ========== -->
+<aside class="sidebar fixed top-0 left-0 z-50 h-full w-[270px] px-4 py-6 flex flex-col shadow-lg" id="sidebar">
+    <div class="sidebar-brand flex items-center gap-2.5 px-1 pb-5 mb-5">
+        <i class="fas fa-handshake text-2xl text-indigo-300"></i>
+        <span class="font-bold text-xl tracking-tight text-white">Handshake</span>
+        <span class="ml-auto text-[10px] font-medium bg-white/10 text-indigo-200 px-2.5 py-0.5 rounded-full">worker</span>
+    </div>
+    <nav class="flex-1 space-y-1.5 overflow-y-auto pr-1">
+        <a href="/worker-dashboard" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm font-medium">
+            <i class="fas fa-th-large w-5 text-center"></i> Dashboard
+        </a>
+        <a href="/submit-hours" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm font-medium">
+            <i class="fas fa-clock w-5 text-center"></i> Submit Hours
+        </a>
+        <a href="/my-submissions" class="sidebar-link active flex items-center gap-3 px-4 py-2.5 text-sm font-medium">
+            <i class="fas fa-list-ul w-5 text-center"></i> My Submissions
+        </a>
+        <div class="sidebar-divider border-t my-4"></div>
+        <a href="/logout" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-300 hover:bg-red-500/10 hover:text-red-200">
+            <i class="fas fa-sign-out-alt w-5 text-center"></i> Logout
+        </a>
+    </nav>
+    <div class="sidebar-user mt-6 pt-4 flex items-center gap-3 px-1">
+        <div class="avatar w-10 h-10 text-sm"><span>{{ (user_name or 'Worker')[0]|upper }}</span></div>
+        <div>
+            <p class="text-sm font-semibold text-white">{{ user_name or 'Worker' }}</p>
+            <p class="text-xs text-indigo-300">{{ user_email or 'worker@handshake.com' }}</p>
+        </div>
+    </div>
+</aside>
+
+<!-- overlay for mobile -->
+<div class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden" id="overlay" onclick="toggleSidebar()"></div>
+
+<!-- ========== MAIN ========== -->
+<main class="md:ml-[270px] min-h-screen p-4 md:p-6 lg:p-8 transition-all">
+
+    <!-- top bar -->
+    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <div class="flex items-center gap-3">
+            <button onclick="toggleSidebar()" class="md:hidden text-slate-600 bg-white p-2 rounded-xl shadow-sm border border-gray-200">
+                <i class="fas fa-bars text-lg"></i>
+            </button>
+            <div>
+                <h1 class="text-xl font-bold text-slate-800">My Submissions</h1>
+                <p class="text-sm text-slate-400 hidden sm:block">View all your submitted hours and payment proofs</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="text-sm text-slate-500 bg-white px-3 py-1.5 rounded-full border border-gray-200 shadow-sm hidden sm:flex items-center gap-2">
+                <i class="far fa-calendar-alt text-indigo-400"></i> {{ now.strftime('%B %d, %Y') if now else 'Today' }}
+            </span>
+            <span class="text-sm text-slate-500 bg-white px-3 py-1.5 rounded-full border border-gray-200 shadow-sm flex items-center gap-2">
+                <i class="far fa-clock text-indigo-400"></i> {{ now.strftime('%I:%M %p') if now else 'Now' }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="mb-4 p-4 rounded-xl flex items-center gap-3 border
+                    {% if category == 'success' %}bg-green-50 text-green-700 border-green-200
+                    {% elif category == 'danger' %}bg-red-50 text-red-700 border-red-200
+                    {% elif category == 'warning' %}bg-yellow-50 text-yellow-700 border-yellow-200
+                    {% else %}bg-blue-50 text-blue-700 border-blue-200{% endif %}">
+                    <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-circle{% elif category == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} text-xl"></i>
+                    <span>{{ message }}</span>
+                    <button onclick="this.parentElement.remove()" class="ml-auto text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Stats Summary -->
+    {% set total_submissions = submissions|length %}
+    {% set approved_count = submissions|selectattr('status', 'equalto', 'approved')|list|length %}
+    {% set pending_count = submissions|selectattr('status', 'equalto', 'pending')|list|length %}
+    {% set paid_count = submissions|selectattr('status', 'equalto', 'paid')|list|length %}
+    {% set rejected_count = submissions|selectattr('status', 'equalto', 'rejected')|list|length %}
+
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <div class="stat-card bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Total</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ total_submissions }}</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
+                    <i class="fas fa-file-alt text-xl text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Approved</p>
+                    <p class="text-2xl font-bold text-emerald-600 mt-1">{{ approved_count }}</p>
+                </div>
+                <div class="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center">
+                    <i class="fas fa-check-circle text-xl text-emerald-600"></i>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Pending</p>
+                    <p class="text-2xl font-bold text-amber-600 mt-1">{{ pending_count }}</p>
+                </div>
+                <div class="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center">
+                    <i class="fas fa-clock text-xl text-amber-600"></i>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Paid</p>
+                    <p class="text-2xl font-bold text-purple-600 mt-1">{{ paid_count }}</p>
+                </div>
+                <div class="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center">
+                    <i class="fas fa-dollar-sign text-xl text-purple-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- All Submissions Table -->
+    <div class="card overflow-hidden">
+        <div class="card-header px-6 py-4 flex items-center justify-between flex-wrap gap-3">
+            <h3 class="font-semibold text-slate-800 flex items-center gap-2 text-lg">
+                <i class="fas fa-list-ul text-indigo-500"></i> All Submissions
+                <span class="text-sm font-normal text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full">{{ total_submissions }}</span>
+            </h3>
+            <a href="/submit-hours" class="btn btn-primary px-4 py-2 rounded-xl text-sm"><i class="fas fa-plus"></i> New Submission</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="width: 12%;">Type</th>
+                        <th style="width: 18%;">Account</th>
+                        <th style="width: 15%;">Date</th>
+                        <th style="width: 10%;">Hours</th>
+                        <th style="width: 15%;">Amount</th>
+                        <th style="width: 15%;">Worker Payout</th>
+                        <th style="width: 15%;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if submissions and submissions|length > 0 %}
+                        {% for s in submissions|sort(attribute='date', reverse=true) %}
+                        <tr>
+                            <td>
+                                {% if s.submission_type == 'hours' %}
+                                    <span class="badge-type badge-hours"><i class="fas fa-clock mr-1"></i> Hours</span>
+                                {% else %}
+                                    <span class="badge-type badge-payment"><i class="fas fa-receipt mr-1"></i> Payment</span>
+                                {% endif %}
+                            </td>
+                            <td class="font-medium text-slate-800">{{ s.account_name or 'Unknown' }}</td>
+                            <td class="text-slate-600">{{ s.date or 'N/A' }}</td>
+                            <td class="text-slate-700">{{ s.hours|default(0) }}h</td>
+                            <td class="text-slate-700">${{ "%.2f"|format(s.total_earnings_usd|default(0)) }}</td>
+                            <td class="font-semibold text-emerald-600">${{ "%.2f"|format(s.worker_payout_usd|default(0)) }}</td>
+                            <td>
+                                <span class="status-badge 
+                                    {% if s.status == 'pending' %}status-pending
+                                    {% elif s.status == 'approved' %}status-approved
+                                    {% elif s.status == 'paid' %}status-paid
+                                    {% else %}status-rejected{% endif %}">
+                                    {% if s.status == 'approved' %}✅ Approved
+                                    {% elif s.status == 'rejected' %}❌ Rejected
+                                    {% elif s.status == 'paid' %}💰 Paid
+                                    {% else %}⏳ Pending{% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7">
+                                <div class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p class="font-medium text-slate-600">No submissions yet</p>
+                                    <div class="text-sm text-slate-400">Click "New Submission" to log your work</div>
+                                    <a href="/submit-hours" class="inline-block mt-4 bg-indigo-600 text-white px-5 py-2 rounded-xl hover:bg-indigo-700 transition text-sm font-medium">
+                                        <i class="fas fa-plus mr-2"></i>Submit Now
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        {% if submissions|length > 0 %}
+        <div class="px-6 py-3 border-t border-gray-100 flex items-center justify-between text-xs text-slate-400">
+            <span>Showing {{ submissions|length }} submissions</span>
+            <span>Total: {{ total_submissions }} submissions</span>
+        </div>
+        {% endif %}
+    </div>
+
+</main>
+
+<script>
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+        document.getElementById('overlay').classList.toggle('hidden');
+    }
+    document.getElementById('overlay')?.addEventListener('click', toggleSidebar);
+</script>
+</body>
+</html>

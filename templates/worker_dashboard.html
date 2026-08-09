@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+  <title>Worker Dashboard · Handshake</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+  <style>
+    * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    body { background: #f0f4f9; margin: 0; min-height: 100vh; }
+    
+    /* Sidebar - INDIGO GRADIENT (MATCHES ADMIN) */
+    .sidebar {
+      transform: translateX(-100%);
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: transform;
+      background: linear-gradient(180deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .sidebar.open { transform: translateX(0); box-shadow: 8px 0 30px rgba(0,0,0,0.08); }
+    @media (min-width: 768px) { .sidebar { transform: translateX(0) !important; } }
+    
+    .sidebar-link {
+      border-radius: 12px;
+      transition: all 0.15s;
+      font-weight: 500;
+      color: #a5b4fc;
+    }
+    .sidebar-link:hover { background: rgba(255,255,255,0.1); color: #ffffff; }
+    .sidebar-link.active { background: rgba(255,255,255,0.15); color: #ffffff; font-weight: 600; }
+    .sidebar-link i { width: 20px; text-align: center; }
+    
+    .sidebar-brand { border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .sidebar-divider { border-color: rgba(255,255,255,0.08); }
+    .sidebar-user { border-top: 1px solid rgba(255,255,255,0.08); }
+    
+    .badge-pulse {
+      animation: pulse-badge 2s infinite;
+    }
+    @keyframes pulse-badge {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+    }
+    
+    .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 18px;
+    }
+    
+    /* Cards */
+    .glass-card { background: rgba(255,255,255,0.85); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.06); }
+    .stat-card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #eef2f6; transition: all 0.2s; }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+    .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    
+    /* Badges */
+    .badge-status { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .badge-pending { background: #fef3c7; color: #d97706; }
+    .badge-approved { background: #d1fae5; color: #059669; }
+    .badge-rejected { background: #fee2e2; color: #dc2626; }
+    .badge-paid { background: #dbeafe; color: #2563eb; }
+    
+    .empty-state { text-align: center; padding: 40px 20px; color: #94a3b8; }
+    .empty-state i { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
+    
+    main { min-height: 100vh; }
+    .sidebar { height: 100vh; overflow-y: auto; }
+    
+    .currency-value { font-weight: 700; }
+    .no-data { color: #94a3b8; font-style: italic; }
+    .kes-amount { font-weight: 700; color: #d97706; }
+    .usd-amount { font-weight: 700; color: #059669; }
+  </style>
+</head>
+<body>
+
+<!-- ========== SIDEBAR - INDIGO GRADIENT (MATCHES ADMIN) ========== -->
+<aside class="sidebar fixed top-0 left-0 z-50 h-full w-[280px] px-5 py-6 flex flex-col shadow-xl" id="sidebar">
+  <div class="sidebar-brand flex items-center gap-3 px-1 pb-5 mb-5">
+    <i class="fas fa-handshake text-2xl text-indigo-300"></i>
+    <span class="font-extrabold text-xl tracking-tight text-white">Handshake</span>
+    <span class="ml-auto text-[10px] font-bold bg-white/10 text-indigo-200 px-3 py-0.5 rounded-full uppercase tracking-wide">worker</span>
+  </div>
+  <nav class="flex-1 space-y-1.5 overflow-y-auto pr-1">
+    <a href="/worker-dashboard" class="sidebar-link active flex items-center gap-3 px-4 py-2.5 text-sm">
+      <i class="fas fa-th-large w-5 text-center"></i> Dashboard
+    </a>
+    <a href="/submit-hours" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm">
+      <i class="fas fa-clock w-5 text-center"></i> Submit Hours
+    </a>
+    <a href="/my-submissions" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm">
+      <i class="fas fa-list-ul w-5 text-center"></i> My Submissions
+    </a>
+    <div class="sidebar-divider border-t my-3"></div>
+    <a href="/announcements" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm">
+      <i class="fas fa-bullhorn w-5 text-center"></i> Announcements
+      {% if stats and stats.unread_announcements|default(0) > 0 %}
+        <span class="ml-auto text-[10px] font-bold bg-red-500 text-white px-2.5 py-0.5 rounded-full badge-pulse">{{ stats.unread_announcements }}</span>
+      {% endif %}
+    </a>
+    <div class="sidebar-divider border-t my-3"></div>
+    <a href="/logout" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm text-red-300 hover:bg-red-500/10 hover:text-red-200">
+      <i class="fas fa-sign-out-alt w-5 text-center"></i> Logout
+    </a>
+  </nav>
+  <div class="sidebar-user mt-6 pt-5 flex items-center gap-3 px-1">
+    <div class="avatar w-10 h-10 text-sm"><span>{{ (user_name or 'Worker')[0]|upper }}</span></div>
+    <div class="flex-1 min-w-0">
+      <p class="text-sm font-bold text-white truncate">{{ user_name or 'Worker' }}</p>
+      <p class="text-xs text-indigo-300 truncate">{{ user_email or 'worker@handshake.com' }}</p>
+    </div>
+  </div>
+</aside>
+
+<!-- overlay for mobile -->
+<div class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden" id="overlay" onclick="toggleSidebar()"></div>
+
+<!-- ========== MAIN ========== -->
+<main class="md:ml-[280px] min-h-screen p-4 md:p-6 lg:p-8 transition-all">
+
+  <!-- ===== HEADER ===== -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div>
+      <h1 class="text-3xl font-extrabold text-slate-800 flex items-center gap-3">
+        <i class="fas fa-user-graduate text-indigo-500"></i>
+        Worker Dashboard
+        <span class="text-sm font-normal text-slate-400 bg-white px-3 py-1 rounded-full border border-gray-200">
+          {{ now.strftime('%b %d, %Y') if now else 'Today' }}
+        </span>
+      </h1>
+      <p class="text-slate-500 mt-1">Welcome back, {{ user_name or 'Worker' }}! Here's your summary.</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-sm text-slate-500 bg-white/80 px-4 py-2 rounded-full border border-gray-200 shadow-sm flex items-center gap-2 backdrop-blur-sm">
+        <i class="far fa-calendar-alt text-indigo-400"></i> {{ now.strftime('%b %d, %Y') if now else 'Today' }}
+      </span>
+      <span class="text-sm text-slate-500 bg-white/80 px-4 py-2 rounded-full border border-gray-200 shadow-sm flex items-center gap-2 backdrop-blur-sm">
+        <i class="far fa-clock text-indigo-400"></i> {{ now.strftime('%I:%M %p') if now else 'Now' }}
+      </span>
+    </div>
+  </div>
+
+  <!-- ===== FLASH MESSAGES ===== -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="mb-5 p-4 rounded-2xl flex items-center gap-3 border backdrop-blur-sm
+          {% if category == 'success' %}bg-green-50/90 text-green-700 border-green-200
+          {% elif category == 'danger' %}bg-red-50/90 text-red-700 border-red-200
+          {% elif category == 'warning' %}bg-yellow-50/90 text-yellow-700 border-yellow-200
+          {% else %}bg-blue-50/90 text-blue-700 border-blue-200{% endif %}">
+          <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-circle{% elif category == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} text-xl"></i>
+          <span>{{ message }}</span>
+          <button onclick="this.parentElement.remove()" class="ml-auto text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- ===== STATS ROW WITH USD + KES ===== -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="stat-card">
+      <div class="flex items-center gap-3">
+        <div class="stat-icon bg-blue-50 text-blue-600"><i class="fas fa-clock"></i></div>
+        <div>
+          <p class="text-sm text-slate-500 font-medium">Total Hours</p>
+          <p class="font-extrabold text-slate-800 text-xl">{{ total_hours|default(0) }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="flex items-center gap-3">
+        <div class="stat-icon bg-green-50 text-green-600"><i class="fas fa-dollar-sign"></i></div>
+        <div>
+          <p class="text-sm text-slate-500 font-medium">Earnings (USD)</p>
+          <p class="font-extrabold text-emerald-600 text-xl">${{ "%.2f"|format(total_earnings_usd|default(0)) }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="flex items-center gap-3">
+        <div class="stat-icon bg-amber-50 text-amber-600"><i class="fas fa-coins"></i></div>
+        <div>
+          <p class="text-sm text-slate-500 font-medium">Earnings (KES)</p>
+          <p class="font-extrabold text-amber-600 text-xl">KSh {{ "{:,.2f}".format(total_earnings_kes|default(0)) }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="flex items-center gap-3">
+        <div class="stat-icon bg-purple-50 text-purple-600"><i class="fas fa-exchange-alt"></i></div>
+        <div>
+          <p class="text-sm text-slate-500 font-medium">Exchange Rate</p>
+          <p class="font-extrabold text-slate-800 text-xl">1 USD = KSh {{ exchange_rate|default(150) }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SECONDARY STATS ROW ===== -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="stat-card">
+      <div class="flex items-center gap-3">
+        <div class="stat-icon bg-yellow-50 text-yellow-600"><i class="fas fa-spinner"></i></div>
+        <div>
+          <p class="text-sm text-slate-500 font-medium">Pending</p>
+          <p class="font-extrabold text-slate-800 text-xl">{{ pending_submissions|default(0) }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="flex items-center gap-3">
+        <div class="stat-icon bg-emerald-50 text-emerald-600"><i class="fas fa-check-circle"></i></div>
+        <div>
+          <p class="text-sm text-slate-500 font-medium">Approved</p>
+          <p class="font-extrabold text-slate-800 text-xl">{{ approved_submissions|default(0) }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="flex items-center gap-3">
+        <div class="stat-icon bg-red-50 text-red-600"><i class="fas fa-times-circle"></i></div>
+        <div>
+          <p class="text-sm text-slate-500 font-medium">Rejected</p>
+          <p class="font-extrabold text-slate-800 text-xl">{{ rejected_submissions|default(0) }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="flex items-center gap-3">
+        <div class="stat-icon bg-blue-50 text-blue-600"><i class="fas fa-check-double"></i></div>
+        <div>
+          <p class="text-sm text-slate-500 font-medium">Paid</p>
+          <p class="font-extrabold text-slate-800 text-xl">{{ paid_submissions|default(0) }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== EXCHANGE RATE INFO CARD ===== -->
+  <div class="glass-card rounded-2xl p-4 mb-6 border border-white/30 bg-gradient-to-r from-blue-50 to-indigo-50">
+    <div class="flex items-center justify-between flex-wrap gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
+          <i class="fas fa-coins text-indigo-600"></i>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-slate-700">Current Exchange Rate</p>
+          <p class="text-xs text-slate-500">All earnings are converted using this rate</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="text-right">
+          <p class="text-xs text-slate-500">1 USD</p>
+          <p class="text-lg font-bold text-indigo-600">=</p>
+        </div>
+        <div class="text-right">
+          <p class="text-xs text-slate-500">Kenyan Shilling</p>
+          <p class="text-xl font-extrabold text-amber-600">KSh {{ exchange_rate|default(150) }}</p>
+        </div>
+        <div class="text-right">
+          <p class="text-xs text-slate-500">Last Updated</p>
+          <p class="text-sm font-medium text-slate-700">{{ settings_updated|default('Today') }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ACCOUNTS CARD ===== -->
+  <div class="glass-card rounded-2xl p-6 mb-6 border border-white/30">
+    <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+      <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+        <i class="fas fa-building text-blue-500"></i> 
+        Your Accounts
+        <span class="text-sm font-normal text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full">{{ accounts|length }}</span>
+      </h2>
+      <a href="/submit-hours" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center gap-1">
+        Submit hours <i class="fas fa-arrow-right text-xs"></i>
+      </a>
+    </div>
+
+    {% if accounts and accounts|length > 0 %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {% for account in accounts %}
+          <div class="bg-white rounded-xl p-4 border border-gray-200 hover:border-indigo-200 hover:shadow-md transition-all">
+            <div class="flex items-start justify-between">
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-slate-800 truncate">{{ account.name }}</p>
+                <p class="text-sm text-slate-500">{{ account.platform or 'No platform' }}</p>
+                <p class="text-xs text-slate-400 font-mono truncate mt-1">ID: {{ account.id[:12] }}...</p>
+              </div>
+              <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">{{ account.status or 'active' }}</span>
+            </div>
+            {% if account.location %}
+              <p class="text-xs text-slate-400 mt-2"><i class="fas fa-map-marker-alt mr-1"></i> {{ account.location }}</p>
+            {% endif %}
+            {% if account.client_rate %}
+              <p class="text-xs text-slate-400 mt-1"><i class="fas fa-dollar-sign mr-1"></i> ${{ "%.2f"|format(account.client_rate) }}/hr</p>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <p class="font-medium">No Accounts Assigned</p>
+        <p class="text-sm">You don't have any accounts yet. Contact your manager for assignments.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- ===== RECENT SUBMISSIONS WITH USD + KES ===== -->
+  <div class="glass-card rounded-2xl p-6 border border-white/30">
+    <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+      <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+        <i class="fas fa-history text-orange-500"></i> 
+        Recent Submissions
+        <span class="text-sm font-normal text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full">{{ submissions|length }}</span>
+      </h2>
+      <a href="/my-submissions" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center gap-1">
+        View all <i class="fas fa-arrow-right text-xs"></i>
+      </a>
+    </div>
+
+    {% if submissions and submissions|length > 0 %}
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-gray-200">
+              <th class="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Date</th>
+              <th class="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Account</th>
+              <th class="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Hours</th>
+              <th class="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Type</th>
+              <th class="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Status</th>
+              <th class="text-right py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Payout (USD)</th>
+              <th class="text-right py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Payout (KES)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in submissions[:10] %}
+              <tr class="border-b border-gray-100 hover:bg-slate-50/70 transition">
+                <td class="py-3 px-4 text-sm text-slate-600">{{ s.date or 'N/A' }}</td>
+                <td class="py-3 px-4 text-sm font-medium text-slate-800">{{ s.account_name or 'Unknown' }}</td>
+                <td class="py-3 px-4 text-sm text-slate-600">{{ s.hours or 0 }}h</td>
+                <td class="py-3 px-4">
+                  <span class="text-xs font-medium px-2.5 py-1 rounded-full 
+                    {% if s.submission_type == 'payment_proof' %}bg-purple-100 text-purple-700
+                    {% else %}bg-blue-100 text-blue-700{% endif %}">
+                    {% if s.submission_type == 'payment_proof' %}💰 Proof{% else %}📋 Hours{% endif %}
+                  </span>
+                </td>
+                <td class="py-3 px-4">
+                  <span class="badge-status 
+                    {% if s.status == 'pending' %}badge-pending
+                    {% elif s.status == 'approved' %}badge-approved
+                    {% elif s.status == 'rejected' %}badge-rejected
+                    {% elif s.status == 'paid' %}badge-paid
+                    {% else %}bg-gray-100 text-gray-700{% endif %}">
+                    {% if s.status == 'approved' %}✅ Approved
+                    {% elif s.status == 'rejected' %}❌ Rejected
+                    {% elif s.status == 'paid' %}💰 Paid
+                    {% else %}⏳ Pending{% endif %}
+                  </span>
+                </td>
+                <td class="py-3 px-4 text-right">
+                  <span class="usd-amount">
+                    ${% if s.worker_payout_usd is not none %}{{ "%.2f"|format(s.worker_payout_usd) }}{% else %}0.00{% endif %}
+                  </span>
+                </td>
+                <td class="py-3 px-4 text-right">
+                  <span class="kes-amount">
+                    KSh {% if s.worker_payout_kes is not none %}{{ "{:,.2f}".format(s.worker_payout_kes) }}{% else %}0.00{% endif %}
+                  </span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if submissions|length > 10 %}
+        <p class="text-sm text-slate-400 mt-3">Showing 10 of {{ submissions|length }} submissions</p>
+      {% endif %}
+    {% else %}
+      <div class="empty-state">
+        <i class="fas fa-file-alt"></i>
+        <p class="font-medium">No Submissions Yet</p>
+        <p class="text-sm">Start by submitting your hours or payment proofs.</p>
+        <a href="/submit-hours" class="inline-block mt-4 bg-indigo-600 text-white px-6 py-2.5 rounded-xl hover:bg-indigo-700 transition font-medium text-sm">
+          <i class="fas fa-plus mr-2"></i>Submit Now
+        </a>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- ===== QUICK ACTIONS ===== -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+    <a href="/submit-hours" class="glass-card rounded-xl p-4 text-center hover:shadow-lg transition border border-white/30">
+      <div class="bg-indigo-50 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2">
+        <i class="fas fa-clock text-indigo-600 text-xl"></i>
+      </div>
+      <p class="font-semibold text-slate-800 text-sm">Submit Hours</p>
+      <p class="text-xs text-slate-400">Log your daily work</p>
+    </a>
+    <a href="/my-submissions" class="glass-card rounded-xl p-4 text-center hover:shadow-lg transition border border-white/30">
+      <div class="bg-green-50 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2">
+        <i class="fas fa-list-ul text-green-600 text-xl"></i>
+      </div>
+      <p class="font-semibold text-slate-800 text-sm">My Submissions</p>
+      <p class="text-xs text-slate-400">View all history</p>
+    </a>
+    <a href="/worker-dashboard" class="glass-card rounded-xl p-4 text-center hover:shadow-lg transition border border-white/30">
+      <div class="bg-purple-50 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2">
+        <i class="fas fa-sync-alt text-purple-600 text-xl"></i>
+      </div>
+      <p class="font-semibold text-slate-800 text-sm">Refresh</p>
+      <p class="text-xs text-slate-400">Update dashboard</p>
+    </a>
+    <a href="/logout" class="glass-card rounded-xl p-4 text-center hover:shadow-lg transition border border-white/30">
+      <div class="bg-red-50 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2">
+        <i class="fas fa-sign-out-alt text-red-600 text-xl"></i>
+      </div>
+      <p class="font-semibold text-slate-800 text-sm">Logout</p>
+      <p class="text-xs text-slate-400">Sign out safely</p>
+    </a>
+  </div>
+
+</main>
+
+<script>
+  // ========== SIDEBAR TOGGLE ==========
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('overlay').classList.toggle('hidden');
+  }
+  document.getElementById('overlay')?.addEventListener('click', toggleSidebar);
+
+  console.log('🏠 Worker Dashboard Loaded');
+  console.log('📊 Accounts:', {{ accounts|length }});
+  console.log('📝 Submissions:', {{ submissions|length }});
+  console.log('⏱️ Total Hours:', {{ total_hours|default(0) }});
+  console.log('💰 Earnings USD: ${{ "%.2f"|format(total_earnings_usd|default(0)) }}');
+  console.log('💰 Earnings KES: KSh {{ "{:,.2f}".format(total_earnings_kes|default(0)) }}');
+</script>
+
+</body>
+</html>

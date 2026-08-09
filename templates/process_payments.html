@@ -1,0 +1,405 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Process Payments - Handshake Manager{% endblock %}
+
+{% block page_title %}Process Payments{% endblock %}
+{% block page_subtitle %}Review and process worker payments{% endblock %}
+
+{% block content %}
+
+<!-- Summary Stats -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+        <div class="text-sm text-gray-500 font-medium">Pending Payments</div>
+        <div class="text-2xl font-bold text-amber-600 mt-1">{{ pending_count|default(0) }}</div>
+    </div>
+    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+        <div class="text-sm text-gray-500 font-medium">Total Pending Amount</div>
+        <div class="text-2xl font-bold text-blue-600 mt-1">${{ "%.2f"|format(total_pending_amount|default(0)) }}</div>
+    </div>
+    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+        <div class="text-sm text-gray-500 font-medium">Payment History</div>
+        <div class="text-2xl font-bold text-green-600 mt-1">{{ payment_history|length }}</div>
+    </div>
+    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+        <div class="text-sm text-gray-500 font-medium">Avg Payment</div>
+        <div class="text-2xl font-bold text-purple-600 mt-1">
+            ${{ "%.2f"|format((total_pending_amount / pending_count) if pending_count > 0 else 0) }}
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Actions -->
+{% if pending_payments %}
+<div class="card mb-6">
+    <div class="card-header">
+        <h3><i class="fas fa-check-double text-blue-500 mr-2"></i>Bulk Actions</h3>
+    </div>
+    <div class="card-body">
+        <div class="flex flex-wrap items-center gap-3">
+            <button onclick="selectAll()" class="btn btn-sm btn-primary">
+                <i class="fas fa-check-double"></i> Select All
+            </button>
+            <button onclick="deselectAll()" class="btn btn-sm btn-secondary">
+                <i class="fas fa-times"></i> Deselect All
+            </button>
+            <button onclick="processSelected()" class="btn btn-sm btn-success">
+                <i class="fas fa-dollar-sign"></i> Process Selected
+            </button>
+            <select id="bulkPaymentMethod" class="px-3 py-1 border border-gray-300 rounded-lg text-sm">
+                <option value="bank">🏦 Bank Transfer</option>
+                <option value="mpesa">📱 M-PESA</option>
+                <option value="paypal">💳 PayPal</option>
+                <option value="cash">💵 Cash</option>
+            </select>
+            <span class="text-sm text-gray-500">
+                <span id="selectedCount">0</span> selected
+            </span>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Pending Payments Table -->
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-clock text-amber-500 mr-2"></i>Pending Payments</h3>
+        <span class="text-sm text-gray-500">{{ pending_payments|length }} pending</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAllCheckbox" onchange="toggleAllCheckboxes()"></th>
+                        <th>Worker</th>
+                        <th>Account</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Worker Gets</th>
+                        <th>Commission</th>
+                        <th>Reference</th>
+                        <th>Proof</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if pending_payments %}
+                        {% for p in pending_payments %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="payment-checkbox" value="{{ p.id }}" onchange="updateSelectedCount()">
+                            </td>
+                            <td class="font-medium">
+                                {{ p.worker_name }}
+                                {% if p.whatsapp %}
+                                    <br><span class="text-xs text-gray-400">
+                                        <i class="fab fa-whatsapp text-green-500"></i>
+                                        <a href="https://wa.me/{{ p.whatsapp }}" target="_blank" class="text-green-600 hover:underline">{{ p.whatsapp }}</a>
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ p.account_name }}</td>
+                            <td>{{ p.date }}</td>
+                            <td class="text-blue-600 font-medium">${{ "%.2f"|format(p.amount) }}</td>
+                            <td class="text-emerald-600 font-medium">${{ "%.2f"|format(p.worker_payout) }}</td>
+                            <td class="text-indigo-600 font-medium">${{ "%.2f"|format(p.commission) }}</td>
+                            <td><span class="text-xs text-gray-500">{{ p.payment_reference }}</span></td>
+                            <td>
+                                {% if p.payment_proof_url %}
+                                    <a href="{{ p.payment_proof_url }}" target="_blank" class="text-blue-500 hover:text-blue-700">
+                                        <i class="fas fa-image"></i>
+                                    </a>
+                                {% else %}
+                                    <span class="text-xs text-gray-400">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button onclick="processPayment('{{ p.id }}')" class="btn btn-success btn-sm">
+                                    <i class="fas fa-dollar-sign"></i> Pay
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="10">
+                                <div class="empty-state">
+                                    <i class="fas fa-check-circle text-green-500"></i>
+                                    <p>No pending payments</p>
+                                    <div class="sub">All caught up! 🎉</div>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Payment History -->
+<div class="card mt-6">
+    <div class="card-header cursor-pointer" onclick="toggleHistory()">
+        <h3><i class="fas fa-history text-blue-500 mr-2"></i>Payment History</h3>
+        <span class="text-sm text-gray-500">{{ payment_history|length }} payments</span>
+        <span id="historyIcon" class="text-gray-400"><i class="fas fa-chevron-down"></i></span>
+    </div>
+    <div id="historyTable" class="card-body p-0 hidden">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Worker</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Reference</th>
+                        <th>Paid At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if payment_history %}
+                        {% for p in payment_history %}
+                        <tr>
+                            <td class="font-medium">{{ p.worker_name }}</td>
+                            <td>{{ p.date }}</td>
+                            <td class="text-emerald-600 font-medium">${{ "%.2f"|format(p.amount) }}</td>
+                            <td>{{ p.payment_reference }}</td>
+                            <td>{{ p.paid_at }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5">
+                                <div class="empty-state">
+                                    <i class="fas fa-inbox text-gray-300"></i>
+                                    <p>No payment history</p>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Process Payment Modal -->
+<div id="paymentModal" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="modal-content" style="background: white; border-radius: 16px; max-width: 500px; width: 95%; padding: 30px; max-height: 90vh; overflow-y: auto;">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-gray-900">
+                <i class="fas fa-dollar-sign text-green-500 mr-2"></i>Process Payment
+            </h2>
+            <button onclick="closePaymentModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+        </div>
+        
+        <div id="paymentDetails" class="space-y-3 mb-4">
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <p class="text-xs text-gray-500">Worker</p>
+                    <p class="font-medium" id="modalWorkerName">-</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Amount</p>
+                    <p class="font-medium text-emerald-600 text-xl" id="modalAmount">-</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Account</p>
+                    <p class="font-medium" id="modalAccount">-</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Reference</p>
+                    <p class="font-medium" id="modalReference">-</p>
+                </div>
+            </div>
+        </div>
+        
+        <form id="paymentForm">
+            <input type="hidden" id="modalSubmissionId">
+            
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                <select id="modalPaymentMethod" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    <option value="bank">🏦 Bank Transfer</option>
+                    <option value="mpesa">📱 M-PESA</option>
+                    <option value="paypal">💳 PayPal</option>
+                    <option value="cash">💵 Cash</option>
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea id="modalPaymentNotes" class="w-full px-3 py-2 border border-gray-300 rounded-lg" rows="2" placeholder="Payment notes..."></textarea>
+            </div>
+            
+            <div class="flex gap-3 mt-4">
+                <button type="button" onclick="confirmPayment()" class="btn btn-success flex-1 justify-center">
+                    <i class="fas fa-check mr-2"></i> Confirm Payment
+                </button>
+                <button type="button" onclick="closePaymentModal()" class="btn btn-secondary">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let selectedPaymentIds = [];
+    let currentPaymentId = null;
+
+    // ============================================================
+    // SELECT ALL / DESELECT ALL
+    // ============================================================
+    function toggleAllCheckboxes() {
+        const checked = document.getElementById('selectAllCheckbox').checked;
+        document.querySelectorAll('.payment-checkbox').forEach(cb => {
+            cb.checked = checked;
+        });
+        updateSelectedCount();
+    }
+
+    function selectAll() {
+        document.querySelectorAll('.payment-checkbox').forEach(cb => {
+            cb.checked = true;
+        });
+        document.getElementById('selectAllCheckbox').checked = true;
+        updateSelectedCount();
+    }
+
+    function deselectAll() {
+        document.querySelectorAll('.payment-checkbox').forEach(cb => {
+            cb.checked = false;
+        });
+        document.getElementById('selectAllCheckbox').checked = false;
+        updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+        const checked = document.querySelectorAll('.payment-checkbox:checked');
+        document.getElementById('selectedCount').textContent = checked.length;
+    }
+
+    // ============================================================
+    // PROCESS SINGLE PAYMENT
+    // ============================================================
+    function processPayment(id) {
+        currentPaymentId = id;
+        
+        // Find the payment data
+        const payments = {{ pending_payments|tojson|safe }};
+        const payment = payments.find(p => p.id === id);
+        
+        if (payment) {
+            document.getElementById('modalSubmissionId').value = id;
+            document.getElementById('modalWorkerName').textContent = payment.worker_name;
+            document.getElementById('modalAmount').textContent = '$' + payment.worker_payout.toFixed(2);
+            document.getElementById('modalAccount').textContent = payment.account_name;
+            document.getElementById('modalReference').textContent = payment.payment_reference;
+            document.getElementById('modalPaymentMethod').value = 'bank';
+            document.getElementById('modalPaymentNotes').value = '';
+            
+            document.getElementById('paymentModal').style.display = 'flex';
+        }
+    }
+
+    function closePaymentModal() {
+        document.getElementById('paymentModal').style.display = 'none';
+        currentPaymentId = null;
+    }
+
+    document.getElementById('paymentModal').addEventListener('click', function(e) {
+        if (e.target === this) closePaymentModal();
+    });
+
+    // ============================================================
+    // CONFIRM PAYMENT
+    // ============================================================
+    async function confirmPayment() {
+        const submissionId = document.getElementById('modalSubmissionId').value;
+        const paymentMethod = document.getElementById('modalPaymentMethod').value;
+        const paymentNotes = document.getElementById('modalPaymentNotes').value;
+        
+        if (!submissionId) return;
+        
+        if (!confirm('Confirm payment for this worker?')) return;
+        
+        try {
+            const response = await fetch('/api/process-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    submission_id: submissionId,
+                    payment_method: paymentMethod,
+                    payment_notes: paymentNotes
+                })
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                alert('✅ ' + result.message);
+                location.reload();
+            } else {
+                alert('❌ Error: ' + result.error);
+            }
+        } catch (error) {
+            alert('❌ Error: ' + error.message);
+        }
+    }
+
+    // ============================================================
+    // PROCESS SELECTED (BULK)
+    // ============================================================
+    async function processSelected() {
+        const selected = document.querySelectorAll('.payment-checkbox:checked');
+        if (selected.length === 0) {
+            alert('Please select at least one payment to process');
+            return;
+        }
+        
+        const ids = Array.from(selected).map(cb => cb.value);
+        const paymentMethod = document.getElementById('bulkPaymentMethod').value;
+        
+        if (!confirm(`Process ${ids.length} payments?`)) return;
+        
+        try {
+            const response = await fetch('/api/bulk-process-payments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    submission_ids: ids,
+                    payment_method: paymentMethod,
+                    payment_notes: 'Bulk payment processed'
+                })
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                alert('✅ ' + result.message);
+                location.reload();
+            } else {
+                alert('❌ Error: ' + result.error);
+            }
+        } catch (error) {
+            alert('❌ Error: ' + error.message);
+        }
+    }
+
+    // ============================================================
+    // TOGGLE HISTORY
+    // ============================================================
+    function toggleHistory() {
+        const table = document.getElementById('historyTable');
+        const icon = document.getElementById('historyIcon');
+        if (table.classList.contains('hidden')) {
+            table.classList.remove('hidden');
+            icon.innerHTML = '<i class="fas fa-chevron-up"></i>';
+        } else {
+            table.classList.add('hidden');
+            icon.innerHTML = '<i class="fas fa-chevron-down"></i>';
+        }
+    }
+</script>
+
+{% endblock %}

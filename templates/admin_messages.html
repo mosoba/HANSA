@@ -1,0 +1,1333 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Messages - Handshake Manager{% endblock %}
+
+{% block page_title %}
+<div class="flex items-center gap-3">
+    <i class="fas fa-comments text-indigo-500 text-2xl"></i>
+    <span>Messages</span>
+    <span class="text-sm font-normal text-slate-400 bg-white px-3 py-1 rounded-full border border-gray-200">
+        {{ users|length }} contacts
+    </span>
+</div>
+{% endblock %}
+
+{% block page_subtitle %}Chat with your team members{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ===== WHATSAPP STYLE CHAT ===== */
+.chat-container {
+    display: flex;
+    gap: 0;
+    height: calc(100vh - 260px);
+    min-height: 500px;
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+}
+
+.chat-sidebar {
+    width: 380px;
+    min-width: 280px;
+    background: #f8fafc;
+    border-right: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.chat-sidebar-header {
+    padding: 16px 20px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.chat-sidebar-header h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 8px;
+}
+
+.chat-stats {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.chat-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 2px 10px;
+    border-radius: 12px;
+}
+.chat-stat-item .num { font-weight: 700; color: #0f172a; }
+.chat-stat-item .num.unread { color: #d97706; }
+
+.chat-search {
+    position: relative;
+    margin-top: 10px;
+}
+.chat-search input {
+    width: 100%;
+    padding: 10px 14px 10px 38px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    font-size: 13px;
+    background: white;
+    transition: all 0.2s;
+}
+.chat-search input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+.chat-search i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.contact-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 12px;
+}
+.contact-list::-webkit-scrollbar { width: 4px; }
+.contact-list::-webkit-scrollbar-thumb { background: #d1d9e6; border-radius: 40px; }
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 2px;
+    position: relative;
+}
+.contact-item:hover { background: #eef2ff; }
+.contact-item.active { background: #eef2ff; }
+.contact-item.unread { background: #f0f7ff; }
+
+.contact-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    color: white;
+    flex-shrink: 0;
+    position: relative;
+}
+.contact-avatar .online-dot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    background: #22c55e;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.contact-info {
+    flex: 1;
+    min-width: 0;
+}
+.contact-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.contact-name .time {
+    font-size: 10px;
+    font-weight: 400;
+    color: #94a3b8;
+}
+.contact-preview {
+    font-size: 12px;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+}
+
+.contact-badge {
+    background: #6366f1;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    min-width: 18px;
+    text-align: center;
+}
+.contact-badge.urgent { background: #ef4444; }
+
+.group-item {
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+}
+.group-item .contact-avatar {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+}
+
+.chat-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    overflow: hidden;
+}
+
+.chat-main-header {
+    padding: 14px 24px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: white;
+    flex-shrink: 0;
+}
+.chat-main-header .avatar-sm {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    color: white;
+    flex-shrink: 0;
+}
+.chat-main-header .name { font-weight: 600; font-size: 16px; color: #0f172a; }
+.chat-main-header .role { font-size: 12px; color: #94a3b8; }
+.chat-main-header .header-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.chat-main-header .header-actions button {
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: none;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #eef2ff;
+    color: #4f46e5;
+}
+.chat-main-header .header-actions button:hover { background: #e0e7ff; }
+
+.chat-messages {
+    flex: 1;
+    padding: 16px 24px;
+    overflow-y: auto;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.chat-messages::-webkit-scrollbar { width: 4px; }
+.chat-messages::-webkit-scrollbar-thumb { background: #d1d9e6; border-radius: 40px; }
+
+/* ===== WHATSAPP-STYLE MESSAGE GROUPING ===== */
+
+.sender-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6366f1;
+    margin-bottom: 2px;
+    padding-left: 4px;
+}
+
+.message-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    max-width: 80%;
+    margin-bottom: 4px;
+}
+.message-group.sent { align-self: flex-end; align-items: flex-end; }
+.message-group.received { align-self: flex-start; align-items: flex-start; }
+
+.message-wrapper {
+    display: flex;
+    flex-direction: column;
+    animation: messageIn 0.2s ease-out;
+}
+.message-wrapper.sent { align-items: flex-end; }
+.message-wrapper.received { align-items: flex-start; }
+
+/* ===== BUBBLE STYLES WITH GROUPING ===== */
+.message-bubble {
+    padding: 6px 12px;
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    word-wrap: break-word;
+    max-width: 100%;
+    position: relative;
+}
+
+/* Sent messages */
+.message-bubble.sent {
+    background: #6366f1;
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+.message-bubble.sent.single {
+    border-radius: 14px 4px 14px 14px;
+}
+.message-bubble.sent.first {
+    border-radius: 14px 4px 4px 14px;
+}
+.message-bubble.sent.middle {
+    border-radius: 4px 4px 4px 14px;
+}
+.message-bubble.sent.last {
+    border-radius: 14px 4px 14px 14px;
+}
+
+/* Received messages */
+.message-bubble.received {
+    background: white;
+    color: #0f172a;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+.message-bubble.received.single {
+    border-radius: 4px 14px 14px 14px;
+}
+.message-bubble.received.first {
+    border-radius: 4px 14px 14px 4px;
+}
+.message-bubble.received.middle {
+    border-radius: 4px 14px 4px 4px;
+}
+.message-bubble.received.last {
+    border-radius: 4px 14px 14px 14px;
+}
+
+.message-bubble .sender-name {
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+.message-bubble .sender-name.sent { color: #c7d2fe; }
+.message-bubble .sender-name.received { color: #4f46e5; }
+
+.message-bubble .content {
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.message-bubble .time {
+    font-size: 10px;
+    opacity: 0.6;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    justify-content: flex-end;
+    margin-top: 2px;
+    gap: 6px;
+}
+.message-bubble .time i { font-size: 11px; }
+.message-bubble .read-status .read { color: #22c55e; }
+.message-bubble .read-status .unread { color: #94a3b8; }
+.message-bubble.sent .time { color: #c7d2fe; }
+.message-bubble.received .time { color: #94a3b8; }
+
+/* Gap between different senders */
+.message-group + .message-group {
+    margin-top: 6px;
+}
+
+/* Date divider */
+.date-divider {
+    text-align: center;
+    font-size: 12px;
+    color: #94a3b8;
+    padding: 12px 0 8px 0;
+}
+.date-divider span {
+    background: #e2e8f0;
+    padding: 3px 14px;
+    border-radius: 12px;
+    font-size: 11px;
+    color: #64748b;
+}
+
+/* Message animation */
+@keyframes messageIn {
+    from { opacity: 0; transform: translateY(8px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.chat-input-container {
+    padding: 12px 20px;
+    border-top: 1px solid #e5e7eb;
+    background: white;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-shrink: 0;
+}
+.chat-input-container .input-wrapper {
+    flex: 1;
+    position: relative;
+}
+.chat-input-container textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    font-size: 14px;
+    resize: none;
+    min-height: 42px;
+    max-height: 100px;
+    transition: all 0.2s;
+    background: #f8fafc;
+    font-family: inherit;
+    line-height: 1.5;
+}
+.chat-input-container textarea:focus {
+    outline: none;
+    border-color: #6366f1;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+.chat-input-container .send-btn {
+    padding: 10px 20px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    height: 42px;
+}
+.chat-input-container .send-btn:hover {
+    background: #4f46e5;
+    transform: scale(1.02);
+}
+.chat-input-container .send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.chat-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    padding: 40px;
+}
+.chat-empty i { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
+.chat-empty h3 { font-size: 16px; font-weight: 600; color: #475569; }
+.chat-empty p { font-size: 13px; }
+
+@media (max-width: 900px) {
+    .chat-sidebar { width: 100%; min-width: unset; max-height: 350px; border-right: none; border-bottom: 1px solid #e5e7eb; }
+    .chat-container { flex-direction: column; height: auto; min-height: auto; }
+    .chat-main { min-height: 400px; }
+    .chat-main-mobile { display: none !important; }
+    .chat-main-mobile.active { display: flex !important; }
+    .back-to-list { display: flex !important; }
+}
+@media (min-width: 901px) {
+    .chat-sidebar-mobile { display: flex !important; }
+    .chat-main-mobile { display: flex !important; }
+    .back-to-list { display: none !important; }
+}
+
+.back-to-list {
+    display: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    font-size: 13px;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+    align-items: center;
+    gap: 6px;
+}
+.back-to-list:hover { background: #f8fafc; }
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #64748b;
+    padding: 2px 10px;
+    border-radius: 12px;
+    background: #f1f5f9;
+}
+.connection-status .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.connection-status .dot.green { background: #22c55e; animation: pulse 2s infinite; }
+.connection-status .dot.red { background: #ef4444; }
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+.toast-notification {
+    animation: slide-in 0.3s ease-out;
+}
+@keyframes slide-in {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ============================================================
+     ADMIN MESSAGES
+     ============================================================ -->
+<div class="chat-container" id="chatContainer">
+    
+    <!-- ===== LEFT SIDEBAR - CONTACTS ===== -->
+    <div class="chat-sidebar chat-sidebar-mobile" id="chatSidebar">
+        <div class="chat-sidebar-header">
+            <h2>Chats</h2>
+            <div class="chat-stats">
+                <div class="chat-stat-item">
+                    <i class="fas fa-users text-indigo-400"></i>
+                    <span>Contacts <span class="num">{{ users|length }}</span></span>
+                </div>
+                <div class="chat-stat-item">
+                    <i class="fas fa-envelope-open text-amber-400"></i>
+                    <span>Unread <span class="num unread" id="unreadCount">0</span></span>
+                </div>
+            </div>
+            <div class="chat-search">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search contacts..." id="searchInput" onkeyup="searchContacts()">
+            </div>
+        </div>
+        
+        <div class="contact-list" id="contactList">
+            <!-- Group Chat -->
+            <div class="contact-item group-item active" data-id="group" onclick="selectContact('group', this)">
+                <div class="contact-avatar" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                    <i class="fas fa-users text-white text-sm"></i>
+                </div>
+                <div class="contact-info">
+                    <div class="contact-name">
+                        <span>👥 Everyone (Group)</span>
+                        <span class="time" id="groupTime"></span>
+                    </div>
+                    <div class="contact-preview" id="groupPreview">Chat with everyone</div>
+                </div>
+                <span class="contact-badge" id="groupBadge" style="display:none;">0</span>
+            </div>
+            
+            <!-- Individual Contacts -->
+            {% for user in users %}
+                {% if user.id != current_user_id %}
+                <div class="contact-item" data-id="{{ user.id }}" data-name="{{ user.name }}" onclick="selectContact('{{ user.id }}', this)">
+                    <div class="contact-avatar" style="background: {{ ['#6366f1', '#8b5cf6', '#7c3aed', '#4f46e5', '#3b82f6', '#0ea5e9', '#06b6d4', '#10b981', '#059669', '#d97706', '#dc2626', '#7c3aed', '#6d28d9', '#5b21b6', '#4c1d95', '#3730a3']|random }}">
+                        {{ (user.name or 'U')[0]|upper }}
+                        <span class="online-dot"></span>
+                    </div>
+                    <div class="contact-info">
+                        <div class="contact-name">
+                            <span>{{ user.name or 'Unknown' }}</span>
+                            <span class="time" id="time_{{ user.id }}"></span>
+                        </div>
+                        <div class="contact-preview" id="preview_{{ user.id }}">No messages yet</div>
+                    </div>
+                    <span class="contact-badge" id="badge_{{ user.id }}" style="display:none;">0</span>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- ===== RIGHT MAIN - CHAT ===== -->
+    <div class="chat-main chat-main-mobile" id="chatMain">
+        <div class="chat-main-header" id="chatHeader">
+            <button class="back-to-list" onclick="showContactList()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div class="avatar-sm" id="chatAvatar" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                <i class="fas fa-users text-white text-sm"></i>
+            </div>
+            <div>
+                <div class="name" id="chatName">Everyone (Group)</div>
+                <div class="role" id="chatRole">Group chat</div>
+            </div>
+            <div class="header-actions">
+                <div class="connection-status">
+                    <span class="dot green" id="connectionDot"></span>
+                    <span id="connectionText">Live</span>
+                </div>
+                <button onclick="markAllRead()">Mark All Read</button>
+            </div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-empty">
+                <i class="fas fa-comments"></i>
+                <h3>No messages</h3>
+                <p>Send a message to start the conversation</p>
+            </div>
+        </div>
+        
+        <div class="chat-input-container">
+            <div class="input-wrapper">
+                <textarea 
+                    id="chatInput" 
+                    rows="1" 
+                    placeholder="Type a message..." 
+                    onkeydown="handleKeyPress(event)"
+                    oninput="autoResize(this)"
+                ></textarea>
+            </div>
+            <button class="send-btn" id="sendChatBtn" onclick="sendChatMessage()">
+                <i class="fas fa-paper-plane"></i> Send
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- ============================================================
+     SUPABASE REAL-TIME + CHAT LOGIC
+     ============================================================ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+</script>
+<script>
+// ============================================================
+// 🔧 CONFIGURATION
+// ============================================================
+const SUPABASE_URL = 'https://ocikxcyckwigrvtwxsap.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_f3zLVxnd9ZlV4JiwxFBVPg_UkDDNKVm';
+const TABLE_NAME = 'hs_announcements';
+
+// ============================================================
+// 📦 DATA
+// ============================================================
+let currentContact = 'group';
+let allMessages = {{ announcements|tojson }};
+let allUsers = {{ users|tojson }};
+let currentUserId = '{{ current_user_id }}';
+let currentUserName = '{{ user_name|default("Admin") }}';
+let realtimeChannel = null;
+
+// ============================================================
+// 🛠️ HELPER: Sort Messages Function
+// ============================================================
+function sortMessages(messages) {
+    return messages.sort((a, b) => {
+        const dateA = new Date(a.created_at || 0);
+        const dateB = new Date(b.created_at || 0);
+        if (dateA - dateB !== 0) {
+            return dateA - dateB;
+        }
+        return (a.id || '').localeCompare(b.id || '');
+    });
+}
+
+// ============================================================
+// 🔄 FORCE AUTO-SORT - ALWAYS SORTS AND REFRESHES UI
+// ============================================================
+let autoSortInterval = null;
+let isSorting = false;
+
+function forceAutoSort() {
+    if (isSorting) return;
+    isSorting = true;
+    
+    try {
+        if (allMessages && allMessages.length > 0) {
+            // Always sort the messages
+            sortMessages(allMessages);
+            
+            // Always refresh the UI to show sorted order
+            loadMessages(currentContact);
+        }
+    } catch (e) {
+        // Silent fail
+    } finally {
+        isSorting = false;
+    }
+}
+
+function startAutoSort() {
+    if (autoSortInterval) {
+        clearInterval(autoSortInterval);
+    }
+    // Run every 1 second
+    autoSortInterval = setInterval(forceAutoSort, 1000);
+    // Run immediately on load
+    setTimeout(forceAutoSort, 100);
+}
+
+function stopAutoSort() {
+    if (autoSortInterval) {
+        clearInterval(autoSortInterval);
+        autoSortInterval = null;
+    }
+}
+
+// ============================================================
+// 📋 LOAD MESSAGES - SMOOTH VERSION
+// ============================================================
+function loadMessages(contactId) {
+    const container = document.getElementById('chatMessages');
+    
+    // Ensure messages are sorted
+    sortMessages(allMessages);
+    
+    // Filter messages
+    let messages = [];
+    if (contactId === 'group') {
+        messages = allMessages.filter(m => {
+            const audience = m.audience || '';
+            return audience === 'all' || audience === 'all_users';
+        });
+    } else {
+        messages = allMessages.filter(m => {
+            const senderId = m.sender_id || '';
+            const targetUsers = m.target_users || [];
+            const audience = m.audience || '';
+            
+            const isFromContact = senderId === contactId;
+            const isToContact = targetUsers.includes(contactId);
+            const isToAll = audience === 'all' || audience === 'all_users';
+            const isFromMeToContact = senderId === currentUserId && targetUsers.includes(contactId);
+            
+            return isFromContact || isToContact || isToAll || isFromMeToContact;
+        });
+    }
+    
+    if (messages.length === 0) {
+        container.innerHTML = `
+            <div class="chat-empty">
+                <i class="fas fa-comments"></i>
+                <h3>${contactId === 'group' ? 'No group messages yet' : 'No messages yet'}</h3>
+                <p>${contactId === 'group' ? 'Send a message to everyone' : 'Send a message to start the conversation'}</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    let currentDate = '';
+    let lastSenderId = null;
+    let messageGroup = null;
+    let groupedMessages = [];
+    
+    messages.forEach((msg) => {
+        const msgDate = msg.created_at ? msg.created_at.substring(0, 10) : '';
+        const senderId = msg.sender_id || 'unknown';
+        const isSent = senderId === currentUserId;
+        
+        if (msgDate !== currentDate) {
+            if (messageGroup) {
+                groupedMessages.push(messageGroup);
+                messageGroup = null;
+            }
+            
+            currentDate = msgDate;
+            const displayDate = msgDate === new Date().toISOString().substring(0, 10) ? 'Today' : 
+                               msgDate === new Date(Date.now() - 86400000).toISOString().substring(0, 10) ? 'Yesterday' : 
+                               msgDate;
+            
+            html += `<div class="date-divider"><span>${displayDate}</span></div>`;
+            lastSenderId = null;
+        }
+        
+        if (senderId !== lastSenderId) {
+            if (messageGroup) {
+                groupedMessages.push(messageGroup);
+            }
+            
+            const senderName = msg.sender_name || 'Unknown';
+            messageGroup = {
+                senderId: senderId,
+                senderName: senderName,
+                isSent: isSent,
+                messages: []
+            };
+            lastSenderId = senderId;
+        }
+        
+        if (messageGroup) {
+            messageGroup.messages.push(msg);
+        }
+    });
+    
+    if (messageGroup) {
+        groupedMessages.push(messageGroup);
+    }
+    
+    groupedMessages.forEach((group) => {
+        const isSent = group.isSent;
+        
+        if (!isSent) {
+            html += `<div class="sender-label">${group.senderName}</div>`;
+        }
+        
+        html += `<div class="message-group ${isSent ? 'sent' : 'received'}">`;
+        
+        group.messages.forEach((msg, index) => {
+            const time = msg.created_at ? msg.created_at.substring(11, 16) : '';
+            const isRead = msg.read_by && msg.read_by.includes(currentUserId);
+            const isFirst = index === 0;
+            const isLast = index === group.messages.length - 1;
+            
+            let bubbleClass = `message-bubble ${isSent ? 'sent' : 'received'}`;
+            
+            if (group.messages.length === 1) {
+                bubbleClass += ' single';
+            } else if (isFirst && !isLast) {
+                bubbleClass += ' first';
+            } else if (!isFirst && !isLast) {
+                bubbleClass += ' middle';
+            } else if (!isFirst && isLast) {
+                bubbleClass += ' last';
+            }
+            
+            html += `
+                <div class="message-wrapper ${isSent ? 'sent' : 'received'}">
+                    <div class="${bubbleClass}">
+                        <div class="content">${msg.message}</div>
+                        <div class="time">
+                            ${time}
+                            <span class="read-status">
+                                ${isRead ? '<i class="fas fa-check-double read"></i>' : '<i class="fas fa-check unread"></i>'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += `</div>`;
+    });
+    
+    container.innerHTML = html;
+    container.scrollTop = container.scrollHeight;
+    updateUnreadCounts();
+}
+
+// ============================================================
+// 🔊 PLAY NOTIFICATION SOUND
+// ============================================================
+function playNotificationSound() {
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+        gainNode.gain.value = 0.1;
+        oscillator.start();
+        setTimeout(() => {
+            oscillator.stop();
+            audioCtx.close();
+        }, 150);
+    } catch(e) {}
+}
+
+// ============================================================
+// 📊 UPDATE UNREAD COUNTS
+// ============================================================
+function updateUnreadCounts() {
+    const unread = allMessages.filter(m => {
+        if (m.sender_id === currentUserId) return false;
+        if (m.is_temp) return false;
+        const readBy = m.read_by || [];
+        return !readBy.includes(currentUserId);
+    }).length;
+    
+    document.getElementById('unreadCount').textContent = unread;
+    
+    allUsers.forEach(user => {
+        if (user.id === currentUserId) return;
+        
+        const userUnread = allMessages.filter(m => {
+            if (m.sender_id === currentUserId) return false;
+            if (m.is_temp) return false;
+            
+            const senderId = m.sender_id || '';
+            const targetUsers = m.target_users || [];
+            const isFromUser = senderId === user.id;
+            const isToUser = targetUsers.includes(user.id);
+            const isToAll = m.audience === 'all' || m.audience === 'all_users';
+            const readBy = m.read_by || [];
+            
+            return (isFromUser || isToUser || isToAll) && !readBy.includes(currentUserId);
+        }).length;
+        
+        const badge = document.getElementById(`badge_${user.id}`);
+        if (badge && userUnread > 0) {
+            badge.style.display = 'block';
+            badge.textContent = userUnread;
+        } else if (badge) {
+            badge.style.display = 'none';
+        }
+    });
+    
+    const groupUnread = allMessages.filter(m => {
+        if (m.sender_id === currentUserId) return false;
+        if (m.is_temp) return false;
+        const audience = m.audience || '';
+        const isToAll = audience === 'all' || audience === 'all_users';
+        const readBy = m.read_by || [];
+        return isToAll && !readBy.includes(currentUserId);
+    }).length;
+    
+    const groupBadge = document.getElementById('groupBadge');
+    if (groupBadge && groupUnread > 0) {
+        groupBadge.style.display = 'block';
+        groupBadge.textContent = groupUnread;
+    } else if (groupBadge) {
+        groupBadge.style.display = 'none';
+    }
+}
+
+// ============================================================
+// 👤 SELECT CONTACT
+// ============================================================
+function selectContact(id, element) {
+    currentContact = id;
+    document.querySelectorAll('.contact-item').forEach(el => el.classList.remove('active'));
+    if (element) element.classList.add('active');
+    
+    const name = element.querySelector('.contact-name span')?.textContent || 'Unknown';
+    const avatar = element.querySelector('.contact-avatar')?.innerHTML || '';
+    document.getElementById('chatName').textContent = name;
+    document.getElementById('chatRole').textContent = id === 'group' ? 'Group chat' : 'Contact';
+    document.getElementById('chatAvatar').innerHTML = avatar;
+    
+    loadMessages(id);
+    
+    if (window.innerWidth <= 900) {
+        document.getElementById('chatSidebar').style.display = 'none';
+        document.getElementById('chatMain').classList.add('active');
+        document.getElementById('chatMain').style.display = 'flex';
+    }
+}
+
+function showContactList() {
+    document.getElementById('chatSidebar').style.display = 'block';
+    document.getElementById('chatMain').classList.remove('active');
+    document.getElementById('chatMain').style.display = 'none';
+}
+
+// ============================================================
+// 🔍 SEARCH CONTACTS
+// ============================================================
+function searchContacts() {
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    document.querySelectorAll('.contact-item').forEach(item => {
+        const name = item.querySelector('.contact-name span')?.textContent?.toLowerCase() || '';
+        item.style.display = name.includes(query) ? '' : 'none';
+    });
+}
+
+// ============================================================
+// 🔔 SUPABASE REAL-TIME LISTENER
+// ============================================================
+function setupRealtime() {
+    console.log('🔌 Setting up real-time listener...');
+    
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    realtimeChannel = sb
+        .channel('admin-messages-' + currentUserId)
+        .on('postgres_changes', 
+            {
+                event: 'INSERT',
+                schema: 'public',
+                table: TABLE_NAME
+            },
+            (payload) => {
+                const newMsg = payload.new;
+                
+                const normalizedMsg = {
+                    id: newMsg.id,
+                    sender_id: newMsg.created_by || newMsg.sender_id || 'unknown',
+                    sender_name: newMsg.created_by_name || newMsg.sender_name || 'Unknown',
+                    sender_role: newMsg.created_by_role || newMsg.sender_role || 'User',
+                    message: newMsg.message || newMsg.content || '',
+                    title: newMsg.title || '',
+                    audience: newMsg.audience || 'all',
+                    target_users: newMsg.target_users || [],
+                    read_by: newMsg.read_by || [],
+                    created_at: newMsg.created_at || new Date().toISOString(),
+                    priority: newMsg.priority || 'normal'
+                };
+                
+                let isForMe = false;
+                if (normalizedMsg.audience === 'all' || normalizedMsg.audience === 'all_users') {
+                    isForMe = true;
+                }
+                if (normalizedMsg.target_users && Array.isArray(normalizedMsg.target_users)) {
+                    if (normalizedMsg.target_users.includes(currentUserId)) {
+                        isForMe = true;
+                    }
+                }
+                
+                const isFromMe = normalizedMsg.sender_id === currentUserId;
+                const shouldAdd = isForMe || 
+                                 normalizedMsg.sender_id === currentContact || 
+                                 (normalizedMsg.target_users && normalizedMsg.target_users.includes(currentContact));
+                
+                if (shouldAdd) {
+                    const exists = allMessages.some(m => m.id === normalizedMsg.id);
+                    
+                    const tempMessage = allMessages.find(m => 
+                        m.is_temp && 
+                        m.message === normalizedMsg.message && 
+                        m.sender_id === currentUserId
+                    );
+                    
+                    if (tempMessage) {
+                        const index = allMessages.indexOf(tempMessage);
+                        allMessages[index] = normalizedMsg;
+                    } else if (!exists) {
+                        allMessages.push(normalizedMsg);
+                    }
+                    
+                    // Sort and refresh
+                    sortMessages(allMessages);
+                    loadMessages(currentContact);
+                    updateContactPreviews();
+                    updateUnreadCounts();
+                    
+                    if (!isFromMe) {
+                        const senderName = normalizedMsg.sender_name || 'Someone';
+                        showToast(`📩 New message from ${senderName}`, 'info');
+                        playNotificationSound();
+                    }
+                }
+            }
+        )
+        .subscribe((status) => {
+            const dot = document.getElementById('connectionDot');
+            const text = document.getElementById('connectionText');
+            
+            if (status === 'SUBSCRIBED') {
+                dot.className = 'dot green';
+                text.textContent = 'Live';
+                console.log('✅✅✅ REAL-TIME CONNECTED!');
+            } else {
+                dot.className = 'dot orange';
+                text.textContent = 'Connecting...';
+                console.log('📡 Status:', status);
+            }
+        });
+    
+    window.realtimeChannel = realtimeChannel;
+}
+
+// ============================================================
+// 📝 SEND MESSAGE
+// ============================================================
+async function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    
+    if (!message) {
+        showToast('Please type a message', 'warning');
+        return;
+    }
+    
+    let recipientType = 'all_users';
+    let recipientId = null;
+    let audience = 'all';
+    let targetUsers = [];
+    
+    if (currentContact === 'group') {
+        recipientType = 'all_users';
+        audience = 'all';
+        targetUsers = [];
+    } else {
+        recipientType = 'specific_worker';
+        audience = 'workers';
+        recipientId = currentContact;
+        targetUsers = [currentContact];
+    }
+    
+    const sendBtn = document.getElementById('sendChatBtn');
+    const originalText = sendBtn.innerHTML;
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+    const tempId = 'temp_' + Date.now() + '_' + Math.random().toString(36).substring(7);
+    const newMsg = {
+        id: tempId,
+        sender_id: currentUserId,
+        sender_name: 'You',
+        message: message,
+        audience: audience,
+        target_users: targetUsers,
+        read_by: [currentUserId],
+        created_at: new Date().toISOString(),
+        is_temp: true
+    };
+    
+    allMessages.push(newMsg);
+    sortMessages(allMessages);
+    loadMessages(currentContact);
+    updateContactPreviews();
+    
+    input.value = '';
+    input.style.height = 'auto';
+    
+    const data = {
+        recipient_type: recipientType,
+        recipient_id: recipientId,
+        title: 'New Message',
+        message: message,
+        priority: 'normal'
+    };
+    
+    try {
+        const response = await fetch('/api/announcements', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = originalText;
+        
+        if (result.success) {
+            showToast('✅ Message sent!', 'success');
+            
+            const realId = result.data?.[0]?.id || Date.now().toString();
+            const realMsg = {
+                id: realId,
+                sender_id: currentUserId,
+                sender_name: 'You',
+                message: message,
+                audience: audience,
+                target_users: targetUsers,
+                read_by: [currentUserId],
+                created_at: new Date().toISOString()
+            };
+            
+            const index = allMessages.findIndex(m => m.id === tempId);
+            if (index !== -1) {
+                allMessages[index] = realMsg;
+            }
+            
+            sortMessages(allMessages);
+            loadMessages(currentContact);
+            updateContactPreviews();
+            
+        } else {
+            const index = allMessages.findIndex(m => m.id === tempId);
+            if (index !== -1) {
+                allMessages.splice(index, 1);
+                sortMessages(allMessages);
+                loadMessages(currentContact);
+                updateContactPreviews();
+            }
+            showToast('❌ ' + (result.error || 'Failed to send message'), 'error');
+        }
+    } catch (error) {
+        const index = allMessages.findIndex(m => m.id === tempId);
+        if (index !== -1) {
+            allMessages.splice(index, 1);
+            sortMessages(allMessages);
+            loadMessages(currentContact);
+            updateContactPreviews();
+        }
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = originalText;
+        showToast('❌ Error: ' + error.message, 'error');
+    }
+}
+
+// ============================================================
+// 🔄 UPDATE CONTACT PREVIEWS
+// ============================================================
+function updateContactPreviews() {
+    allUsers.forEach(user => {
+        if (user.id === currentUserId) return;
+        
+        const userMessages = allMessages.filter(m => {
+            const senderId = m.sender_id || '';
+            const targetUsers = m.target_users || [];
+            return senderId === user.id || targetUsers.includes(user.id);
+        });
+        
+        const lastMsg = userMessages[userMessages.length - 1];
+        const previewEl = document.getElementById(`preview_${user.id}`);
+        if (previewEl && lastMsg) {
+            previewEl.textContent = lastMsg.message.substring(0, 40) + (lastMsg.message.length > 40 ? '...' : '');
+        }
+        
+        const timeEl = document.getElementById(`time_${user.id}`);
+        if (timeEl && lastMsg && lastMsg.created_at) {
+            timeEl.textContent = lastMsg.created_at.substring(11, 16);
+        }
+    });
+    
+    const groupMessages = allMessages.filter(m => m.audience === 'all' || m.audience === 'all_users');
+    const groupMsg = groupMessages[groupMessages.length - 1];
+    const groupPreview = document.getElementById('groupPreview');
+    if (groupPreview && groupMsg) {
+        const senderName = groupMsg.sender_id === currentUserId ? 'You' : (groupMsg.sender_name || 'Someone');
+        groupPreview.textContent = `${senderName}: ${groupMsg.message.substring(0, 40)}${groupMsg.message.length > 40 ? '...' : ''}`;
+    }
+}
+
+// ============================================================
+// 📌 AUTO-RESIZE TEXTAREA
+// ============================================================
+function autoResize(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
+}
+
+// ============================================================
+// ⌨️ HANDLE KEY PRESS
+// ============================================================
+function handleKeyPress(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendChatMessage();
+    }
+}
+
+// ============================================================
+// ✅ MARK ALL READ
+// ============================================================
+async function markAllRead() {
+    try {
+        const response = await fetch('/api/announcements/mark-all-read', {
+            method: 'PATCH'
+        });
+        const result = await response.json();
+        if (result.success) {
+            showToast('✅ All messages marked as read', 'success');
+            allMessages.forEach(m => {
+                if (!m.read_by) m.read_by = [];
+                if (!m.read_by.includes(currentUserId)) {
+                    m.read_by.push(currentUserId);
+                }
+            });
+            loadMessages(currentContact);
+            updateUnreadCounts();
+        }
+    } catch (error) {
+        showToast('❌ Error: ' + error.message, 'error');
+    }
+}
+
+// ============================================================
+// 🔔 SHOW TOAST
+// ============================================================
+function showToast(message, type = 'success') {
+    const colors = {
+        success: 'bg-emerald-500',
+        error: 'bg-red-500',
+        warning: 'bg-amber-500',
+        info: 'bg-blue-500'
+    };
+    document.querySelectorAll('.toast-notification').forEach(el => el.remove());
+    const toast = document.createElement('div');
+    toast.className = `toast-notification fixed top-4 right-4 ${colors[type] || 'bg-slate-500'} text-white px-5 py-3 rounded-xl shadow-lg z-50 flex items-center gap-3 max-w-md`;
+    toast.innerHTML = `
+        <span class="text-sm">${message}</span>
+        <button onclick="this.parentElement.remove()" class="ml-4 hover:opacity-80"><i class="fas fa-times"></i></button>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+}
+
+// ============================================================
+// 🚀 INITIALIZE
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📬 Admin Messages Loaded');
+    console.log('👤 User:', currentUserName);
+    console.log('📋 Messages:', allMessages.length);
+    
+    // Sort messages on load
+    sortMessages(allMessages);
+    
+    loadMessages('group');
+    setTimeout(() => document.getElementById('chatInput')?.focus(), 500);
+    setupRealtime();
+    
+    // 🔥 START FORCE AUTO-SORT - runs every second
+    startAutoSort();
+    
+    if (window.innerWidth <= 900) {
+        document.getElementById('chatSidebar').style.display = 'block';
+        document.getElementById('chatMain').style.display = 'none';
+    }
+});
+
+// Cleanup
+window.addEventListener('beforeunload', function() {
+    if (realtimeChannel) {
+        realtimeChannel.unsubscribe();
+    }
+    stopAutoSort();
+});
+
+// Handle resize
+window.addEventListener('resize', function() {
+    if (window.innerWidth <= 900) {
+        if (!document.getElementById('chatMain').classList.contains('active')) {
+            document.getElementById('chatSidebar').style.display = 'block';
+            document.getElementById('chatMain').style.display = 'none';
+        }
+    } else {
+        document.getElementById('chatSidebar').style.display = 'block';
+        document.getElementById('chatMain').style.display = 'flex';
+        document.getElementById('chatMain').classList.add('active');
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Handshake Manager{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #f0f2f5; }
+        .stat-card { transition: all 0.3s ease; cursor: pointer; }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.1); }
+        .nav-link:hover { background: #f0f4ff; color: #2563eb; }
+        .badge-pending { background: #fef3c7; color: #d97706; }
+        .badge-approved { background: #d1fae5; color: #059669; }
+        .badge-rejected { background: #fee2e2; color: #dc2626; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-8">
+                    <a href="/dashboard" class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        <i class="fas fa-handshake text-blue-600"></i>
+                        <span>Handshake</span>
+                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{{ session.get('user_role', 'User') }}</span>
+                    </a>
+                    <div class="hidden lg:flex space-x-1">
+                        {% if session.get('user_role') == 'admin' %}
+                        <a href="/admin-dashboard" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">Dashboard</a>
+                        <a href="/accounts" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">Accounts</a>
+                        <a href="/proxies" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">Proxies</a>
+                        <a href="/workers" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">Workers</a>
+                        <a href="/managers" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">Managers</a>
+                        <a href="/approvals" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">Approvals</a>
+                        <a href="/reports" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">Reports</a>
+                        <a href="/settings" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">Settings</a>
+                        {% elif session.get('user_role') == 'manager' %}
+                        <a href="/manager-dashboard" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">Dashboard</a>
+                        <a href="/approvals" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">Approvals</a>
+                        {% else %}
+                        <a href="/worker-dashboard" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">Dashboard</a>
+                        <a href="/submit-hours" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">Submit Hours</a>
+                        <a href="/my-submissions" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">My Submissions</a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-600 hidden sm:inline">{{ user_name or 'User' }}</span>
+                    <a href="/logout" class="text-sm text-red-600 hover:text-red-800">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-4 p-4 rounded-xl flex items-center gap-3 border
+                        {% if category == 'success' %}bg-green-50 text-green-700 border-green-200
+                        {% elif category == 'danger' %}bg-red-50 text-red-700 border-red-200
+                        {% elif category == 'warning' %}bg-yellow-50 text-yellow-700 border-yellow-200
+                        {% else %}bg-blue-50 text-blue-700 border-blue-200{% endif %}">
+                        <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-circle{% elif category == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} text-xl"></i>
+                        <span>{{ message }}</span>
+                        <button onclick="this.parentElement.remove()" class="ml-auto text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Page Content -->
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('dropdown');
+            if (dropdown && !event.target.closest('.relative')) {
+                dropdown.classList.remove('show');
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

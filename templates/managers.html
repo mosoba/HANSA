@@ -1,0 +1,145 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Managers - Handshake Manager{% endblock %}
+
+{% block page_title %}Managers{% endblock %}
+{% block page_subtitle %}Manage managers and their account access{% endblock %}
+
+{% block content %}
+
+<div class="flex justify-between items-center mb-4">
+    <div></div>
+    <button onclick="openModal()" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add Manager
+    </button>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-user-tie text-purple-500 mr-2"></i>All Managers</h3>
+        <span class="text-sm text-gray-500">{{ managers|length }} total</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Assigned Accounts</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if managers %}
+                        {% for manager in managers %}
+                        <tr>
+                            <td class="font-medium">{{ manager.name }}</td>
+                            <td>{{ manager.email }}</td>
+                            <td>
+                                <span class="text-xs text-gray-400">—</span>
+                            </td>
+                            <td>
+                                <button onclick="deleteManager('{{ manager.id }}')" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4">
+                                <div class="empty-state">
+                                    <i class="fas fa-user-tie"></i>
+                                    <p>No managers found</p>
+                                    <div class="sub">Click "Add Manager" to create one</div>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Manager Modal -->
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <h2><i class="fas fa-user-tie text-purple-500 mr-2"></i>Add Manager</h2>
+        <form id="addManagerForm">
+            <label>Full Name *</label>
+            <input type="text" id="managerName" placeholder="e.g., John Doe" required>
+
+            <label>Email *</label>
+            <input type="email" id="managerEmail" placeholder="e.g., manager@example.com" required>
+
+            <label>Password</label>
+            <input type="text" id="managerPassword" value="temp123">
+            <p class="text-xs text-gray-400 -mt-2 mb-3">Default: temp123</p>
+
+            <button type="submit" class="btn btn-primary w-full justify-center">
+                <i class="fas fa-save mr-2"></i> Save Manager
+            </button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function openModal() {
+        document.getElementById('addModal').classList.add('show');
+    }
+    function closeModal() {
+        document.getElementById('addModal').classList.remove('show');
+        document.getElementById('addManagerForm').reset();
+        document.getElementById('managerPassword').value = 'temp123';
+    }
+    document.getElementById('addModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    document.getElementById('addManagerForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const data = {
+            name: document.getElementById('managerName').value,
+            email: document.getElementById('managerEmail').value,
+            password: document.getElementById('managerPassword').value
+        };
+        try {
+            const response = await fetch('/api/managers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert('✅ ' + result.message);
+                location.reload();
+            } else {
+                alert('❌ Error: ' + result.error);
+            }
+        } catch (error) {
+            alert('❌ Error: ' + error.message);
+        }
+    });
+
+    async function deleteManager(id) {
+        if (!confirm('Delete this manager?')) return;
+        try {
+            const response = await fetch(`/api/managers?id=${id}`, { method: 'DELETE' });
+            const result = await response.json();
+            if (result.success) {
+                alert('✅ ' + result.message);
+                location.reload();
+            } else {
+                alert('❌ Error: ' + result.error);
+            }
+        } catch (error) {
+            alert('❌ Error: ' + error.message);
+        }
+    }
+</script>
+{% endblock %}

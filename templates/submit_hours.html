@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+  <title>Submit · Handshake</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
+  <style>
+    * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    body { background: #f4f6fb; margin: 0; min-height: 100vh; }
+    
+    /* Sidebar - INDIGO GRADIENT */
+    .sidebar {
+      transform: translateX(-100%);
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: transform;
+      background: linear-gradient(180deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+    }
+    .sidebar.open { transform: translateX(0); box-shadow: 8px 0 30px rgba(0,0,0,0.08); }
+    @media (min-width: 768px) { .sidebar { transform: translateX(0) !important; } }
+    
+    .sidebar-link {
+      border-radius: 12px;
+      transition: all 0.15s;
+      font-weight: 500;
+      color: #a5b4fc;
+    }
+    .sidebar-link:hover { background: rgba(255,255,255,0.1); color: #ffffff; }
+    .sidebar-link.active { background: rgba(255,255,255,0.15); color: #ffffff; font-weight: 600; }
+    .sidebar-link i { width: 20px; text-align: center; }
+    
+    .sidebar-brand { border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .sidebar-divider { border-color: rgba(255,255,255,0.08); }
+    .sidebar-user { border-top: 1px solid rgba(255,255,255,0.08); }
+    .sidebar-user .text-muted { color: #a5b4fc; }
+    
+    .card { background: #ffffff; border-radius: 28px; border: 1px solid #eef2f6; box-shadow: 0 8px 20px -6px rgba(0,0,0,0.02); }
+    .form-input { width: 100%; border-radius: 16px; border: 1px solid #e2e8f0; padding: 12px 16px; font-size: 14px; transition: 0.15s; background: #fafcff; }
+    .form-input:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99,102,241,0.10); background: white; }
+    .form-label { display: block; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+    .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .avatar { width: 44px; height: 44px; border-radius: 16px; background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 18px; }
+    .file-input { width: 100%; padding: 12px; border: 2px dashed #d1d9e6; border-radius: 16px; cursor: pointer; transition: 0.15s; background: #fafcff; }
+    .file-input:hover { border-color: #6366f1; background: #f8fafc; }
+    .debug-box { background: #fffbeb; padding: 16px; margin: 0 0 20px 0; border-radius: 20px; border: 2px solid #fcd34d; font-size: 13px; }
+    .debug-box pre { background: white; padding: 12px; border-radius: 12px; overflow-x: auto; max-height: 160px; border: 1px solid #fde68a; }
+    .scrollable { scrollbar-width: thin; scrollbar-color: #d1d9e6 transparent; }
+    .scrollable::-webkit-scrollbar { width: 4px; }
+    .scrollable::-webkit-scrollbar-thumb { background: #d1d9e6; border-radius: 40px; }
+    main { min-height: 100vh; }
+    .sidebar { height: 100vh; overflow-y: auto; }
+    .currency-value { font-weight: 700; }
+    .no-data { color: #94a3b8; font-style: italic; }
+  </style>
+</head>
+<body>
+
+<!-- ========== SIDEBAR - INDIGO GRADIENT ========== -->
+<aside class="sidebar fixed top-0 left-0 z-50 h-full w-[280px] px-5 py-6 flex flex-col shadow-xl" id="sidebar">
+  <div class="sidebar-brand flex items-center gap-3 px-1 pb-5 mb-5">
+    <i class="fas fa-handshake text-2xl text-indigo-300"></i>
+    <span class="font-extrabold text-xl tracking-tight text-white">Handshake</span>
+    <span class="ml-auto text-[10px] font-bold bg-white/10 text-indigo-200 px-3 py-0.5 rounded-full uppercase tracking-wide">worker</span>
+  </div>
+  <nav class="flex-1 space-y-1.5 overflow-y-auto pr-1">
+    <a href="/worker-dashboard" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm">
+      <i class="fas fa-th-large w-5 text-center"></i> Dashboard
+    </a>
+    <a href="/submit-hours" class="sidebar-link active flex items-center gap-3 px-4 py-2.5 text-sm">
+      <i class="fas fa-clock w-5 text-center"></i> Submit Hours
+    </a>
+    <a href="/my-submissions" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm">
+      <i class="fas fa-list-ul w-5 text-center"></i> My Submissions
+    </a>
+    <div class="sidebar-divider border-t my-4"></div>
+    <a href="/logout" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm text-red-300 hover:bg-red-500/10 hover:text-red-200">
+      <i class="fas fa-sign-out-alt w-5 text-center"></i> Logout
+    </a>
+  </nav>
+  <div class="sidebar-user mt-6 pt-5 flex items-center gap-3 px-1">
+    <div class="avatar w-10 h-10 text-sm"><span>{{ (user_name or 'Worker')[0]|upper }}</span></div>
+    <div class="flex-1 min-w-0">
+      <p class="text-sm font-bold text-white truncate">{{ user_name or 'Worker' }}</p>
+      <p class="text-xs text-indigo-300 truncate">{{ user_email or 'worker@handshake.com' }}</p>
+    </div>
+  </div>
+</aside>
+
+<!-- overlay for mobile -->
+<div class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden" id="overlay" onclick="toggleSidebar()"></div>
+
+<!-- ========== MAIN ========== -->
+<main class="md:ml-[280px] min-h-screen p-4 md:p-6 lg:p-8 transition-all">
+
+  <!-- top bar -->
+  <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+    <div class="flex items-center gap-3">
+      <button onclick="toggleSidebar()" class="md:hidden text-slate-600 bg-white p-2.5 rounded-2xl shadow-sm border border-gray-200">
+        <i class="fas fa-bars text-lg"></i>
+      </button>
+      <div>
+        <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Submit</h1>
+        <p class="text-sm text-slate-400 hidden sm:block">Daily hours or payment proof</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-sm text-slate-500 bg-white/80 px-4 py-2 rounded-full border border-gray-200 shadow-sm flex items-center gap-2 backdrop-blur-sm">
+        <i class="far fa-calendar-alt text-indigo-400"></i> {{ now.strftime('%b %d, %Y') if now else 'Today' }}
+      </span>
+      <span class="text-sm text-slate-500 bg-white/80 px-4 py-2 rounded-full border border-gray-200 shadow-sm flex items-center gap-2 backdrop-blur-sm">
+        <i class="far fa-clock text-indigo-400"></i> {{ now.strftime('%I:%M %p') if now else 'Now' }}
+      </span>
+    </div>
+  </div>
+
+  <!-- flash -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="mb-5 p-4 rounded-2xl flex items-center gap-3 border backdrop-blur-sm
+          {% if category == 'success' %}bg-green-50/90 text-green-700 border-green-200
+          {% elif category == 'danger' %}bg-red-50/90 text-red-700 border-red-200
+          {% elif category == 'warning' %}bg-yellow-50/90 text-yellow-700 border-yellow-200
+          {% else %}bg-blue-50/90 text-blue-700 border-blue-200{% endif %}">
+          <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-circle{% elif category == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} text-xl"></i>
+          <span>{{ message }}</span>
+          <button onclick="this.parentElement.remove()" class="ml-auto text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- ===== DEBUG BOX - FIXED: Removed session|tojson ===== -->
+  <div class="debug-box">
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+      <span><strong>👤 User:</strong> {{ user_name }}</span>
+      <span><strong>🆔 ID:</strong> {{ user_id or 'NOT SET' }}</span>
+      <span><strong>📂 Accounts:</strong> {{ accounts|length }}</span>
+      <span><strong>📋 Submissions:</strong> {{ submissions|length }}</span>
+    </div>
+    {% if accounts|length == 0 %}
+    <div class="mt-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+      <strong>⚠️ No accounts found!</strong>
+      <ul class="mt-1 list-disc list-inside text-xs">
+        <li>Check if worker has assignments in hs_worker_assignments</li>
+        <li>Check if account IDs match</li>
+        <li>Check the route is passing 'accounts' variable</li>
+      </ul>
+    </div>
+    {% endif %}
+    <details class="mt-2">
+      <summary class="cursor-pointer text-indigo-600 text-sm font-medium">🔍 show accounts data</summary>
+      <pre>{% if accounts %}[
+  {% for acc in accounts %}
+  {
+    "id": "{{ acc.id }}",
+    "name": "{{ acc.name }}",
+    "platform": "{{ acc.platform }}"
+  }{% if not loop.last %},{% endif %}
+  {% endfor %}
+]{% else %}[] (no accounts){% endif %}</pre>
+    </details>
+    <details class="mt-1">
+      <summary class="cursor-pointer text-indigo-600 text-sm font-medium">🔍 show user info</summary>
+      <pre>{
+  "user_id": "{{ user_id or 'NOT SET' }}",
+  "user_name": "{{ user_name or 'NOT SET' }}",
+  "user_email": "{{ user_email or 'NOT SET' }}"
+}</pre>
+    </details>
+  </div>
+
+  <!-- grid -->
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+    <!-- ===== FORM CARD ===== -->
+    <div class="card p-0 overflow-hidden">
+      <div class="px-6 py-5 border-b border-gray-100 flex items-center gap-2">
+        <i class="fas fa-pen text-blue-500 text-lg"></i>
+        <h3 class="font-bold text-slate-800 text-lg">New Submission</h3>
+      </div>
+      <div class="p-6 space-y-5">
+
+        <!-- type -->
+        <div>
+          <label class="form-label"><i class="far fa-circle mr-1"></i> Type</label>
+          <select id="submissionType" class="form-input" onchange="toggleType()">
+            <option value="hours">📋 Daily Hours</option>
+            <option value="payment">💰 Payment Proof</option>
+          </select>
+          <p class="text-xs text-slate-400 mt-1.5" id="typeDesc">Submit your daily work hours (1 per day)</p>
+        </div>
+
+        <!-- account -->
+        <div>
+          <label class="form-label"><i class="far fa-building mr-1"></i> Account</label>
+          <select id="accountId" class="form-input" required>
+            <option value="">Select account…</option>
+            {% for account in accounts %}
+              <option value="{{ account.id }}">{{ account.name }} ({{ account.platform }})</option>
+            {% endfor %}
+          </select>
+          {% if accounts|length == 0 %}
+            <p class="text-xs text-red-500 mt-1.5 font-medium">⚠️ No accounts assigned. Contact manager.</p>
+          {% endif %}
+        </div>
+
+        <!-- hours fields -->
+        <div id="hoursFields">
+          <div>
+            <label class="form-label"><i class="far fa-calendar mr-1"></i> Date</label>
+            <input type="date" id="workDate" class="form-input" required>
+            <div id="hoursDateWarning" class="hidden mt-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-sm">
+              <i class="fas fa-exclamation-triangle mr-2"></i><span id="hoursDateWarningText">Already submitted hours for this date.</span>
+            </div>
+          </div>
+          <div class="mt-4">
+            <label class="form-label"><i class="far fa-clock mr-1"></i> Hours</label>
+            <input type="number" id="workHours" class="form-input" step="0.5" min="0.5" max="24" placeholder="4.5" required>
+          </div>
+          <div class="mt-4">
+            <label class="form-label"><i class="far fa-image mr-1"></i> Screenshot (optional)</label>
+            <input type="file" id="screenshotFile" accept="image/*" class="file-input">
+          </div>
+          <div class="mt-4">
+            <label class="form-label"><i class="far fa-sticky-note mr-1"></i> Notes</label>
+            <textarea id="workNotes" class="form-input" rows="2" placeholder="What did you work on?"></textarea>
+          </div>
+        </div>
+
+        <!-- payment fields -->
+        <div id="paymentFields" class="hidden space-y-4">
+          <div>
+            <label class="form-label"><i class="far fa-calendar mr-1"></i> Payment Date</label>
+            <input type="date" id="paymentDate" class="form-input" required>
+            <div id="paymentDateWarning" class="hidden mt-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-sm">
+              <i class="fas fa-exclamation-triangle mr-2"></i><span id="paymentDateWarningText">Payment proof submitted within 7 days.</span>
+            </div>
+          </div>
+          <div>
+            <label class="form-label"><i class="fas fa-hashtag mr-1"></i> Reference</label>
+            <input type="text" id="paymentRef" class="form-input" placeholder="Payment #001">
+          </div>
+          <div>
+            <label class="form-label"><i class="fas fa-dollar-sign mr-1"></i> Amount ($)</label>
+            <input type="number" id="paymentAmount" class="form-input" step="0.01" placeholder="100.00" required>
+          </div>
+          <div>
+            <label class="form-label"><i class="fas fa-camera mr-1"></i> Screenshot</label>
+            <input type="file" id="paymentScreenshot" accept="image/*" class="file-input" required>
+          </div>
+        </div>
+
+        <!-- preview -->
+        <div id="previewContainer" class="hidden">
+          <label class="form-label">Preview</label>
+          <img id="previewImage" class="max-w-full max-h-40 rounded-xl border border-gray-200 shadow-sm">
+        </div>
+
+        <!-- messages -->
+        <div id="errorMsg" class="hidden p-4 bg-red-50 text-red-700 rounded-2xl border border-red-200 text-sm"></div>
+        <div id="successMsg" class="hidden p-4 bg-green-50 text-green-700 rounded-2xl border border-green-200 text-sm"></div>
+
+        <!-- submit -->
+        <button type="button" id="submitBtn" class="w-full gradient-bg text-white py-3.5 rounded-2xl font-bold hover:opacity-90 transition flex items-center justify-center gap-2 text-base shadow-lg shadow-indigo-200/50">
+          <i class="fas fa-paper-plane"></i> <span id="btnText">Submit Hours</span>
+        </button>
+
+        <!-- rules -->
+        <div class="p-4 bg-slate-50/80 rounded-2xl border border-gray-200 text-xs text-slate-500 space-y-1">
+          <p><i class="fas fa-info-circle text-blue-500 mr-1.5"></i><strong>Rules</strong></p>
+          <p>📋 Hours: 1 submission every 24h (once per day)</p>
+          <p>💰 Payment Proof: 1 submission per week (every 7 days)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== HISTORY CARD ===== -->
+    <div class="card p-0 overflow-hidden flex flex-col h-full">
+      <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="font-bold text-slate-800 flex items-center gap-2 text-lg"><i class="fas fa-history text-blue-500"></i> Your Submissions</h3>
+        <a href="/my-submissions" class="text-indigo-600 hover:text-indigo-800 text-sm font-semibold">View all →</a>
+      </div>
+      <div class="flex-1 overflow-y-auto scrollable max-h-[400px]">
+        {% if submissions and submissions|length > 0 %}
+          {% for s in submissions[:10] %}
+            <div class="px-6 py-4 border-b border-gray-100 hover:bg-slate-50/70 transition">
+              <div class="flex justify-between items-start">
+                <div>
+                  <span class="font-semibold text-sm text-slate-800">{{ s.account_name or 'Account' }}</span>
+                  <span class="text-xs text-slate-400 ml-2">{{ s.date or '' }}</span>
+                </div>
+                <span class="text-xs font-bold px-3 py-1 rounded-full 
+                  {% if s.status == 'approved' %}bg-emerald-100 text-emerald-700
+                  {% elif s.status == 'rejected' %}bg-red-100 text-red-700
+                  {% elif s.status == 'paid' %}bg-emerald-100 text-emerald-700
+                  {% else %}bg-amber-100 text-amber-700{% endif %}">
+                  {% if s.status == 'approved' %}✅ Approved
+                  {% elif s.status == 'rejected' %}❌ Rejected
+                  {% elif s.status == 'paid' %}💰 Paid
+                  {% else %}⏳ Pending{% endif %}
+                </span>
+              </div>
+              <div class="flex justify-between text-sm mt-1">
+                <span class="text-slate-500">
+                  {% if s.submission_type == 'payment_proof' %}
+                    💰 Payment Proof
+                  {% else %}
+                    {{ s.hours or 0 }} hours
+                  {% endif %}
+                </span>
+                <span class="currency-value {% if s.worker_payout_usd is none or s.worker_payout_usd == 0 %}no-data{% else %}text-emerald-600{% endif %}">
+                  ${% if s.worker_payout_usd is not none %}{{ "%.2f"|format(s.worker_payout_usd) }}{% else %}0.00{% endif %}
+                </span>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="flex flex-col items-center justify-center py-16 text-slate-400">
+            <i class="fas fa-inbox text-5xl opacity-30 mb-4"></i>
+            <p class="font-medium">No submissions yet</p>
+            <p class="text-sm">Submit your first hours or payment proof</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  // ========== SIDEBAR ==========
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('overlay').classList.toggle('hidden');
+  }
+  document.getElementById('overlay')?.addEventListener('click', toggleSidebar);
+
+  // ========== SET TODAY ==========
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('workDate').value = today;
+  document.getElementById('paymentDate').value = today;
+
+  // ========== TYPE TOGGLE ==========
+  function toggleType() {
+    const type = document.getElementById('submissionType').value;
+    const hours = document.getElementById('hoursFields');
+    const payment = document.getElementById('paymentFields');
+    const btnText = document.getElementById('btnText');
+    const desc = document.getElementById('typeDesc');
+    if (type === 'hours') {
+      hours.classList.remove('hidden');
+      payment.classList.add('hidden');
+      btnText.textContent = 'Submit Hours';
+      desc.textContent = 'Submit your daily work hours (1 per day)';
+      document.getElementById('paymentScreenshot').removeAttribute('required');
+      checkHoursDate();
+    } else {
+      hours.classList.add('hidden');
+      payment.classList.remove('hidden');
+      btnText.textContent = 'Submit Payment Proof';
+      desc.textContent = 'Upload payment confirmation (1 per week)';
+      document.getElementById('paymentScreenshot').setAttribute('required', 'required');
+      checkPaymentDate();
+    }
+  }
+
+  // ========== DATE CHECKS ==========
+  document.getElementById('workDate').addEventListener('change', checkHoursDate);
+  document.getElementById('paymentDate').addEventListener('change', checkPaymentDate);
+
+  function checkHoursDate() {
+    const date = document.getElementById('workDate').value;
+    const warn = document.getElementById('hoursDateWarning');
+    const txt = document.getElementById('hoursDateWarningText');
+    if (!date) return;
+    fetch(`/api/check-hours-submission?date=${date}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.exists) {
+          warn.classList.remove('hidden');
+          txt.textContent = '⚠️ You already submitted hours for ' + date + '. You can still submit (duplicate).';
+        } else warn.classList.add('hidden');
+      }).catch(() => {});
+  }
+
+  function checkPaymentDate() {
+    const date = document.getElementById('paymentDate').value;
+    const warn = document.getElementById('paymentDateWarning');
+    const txt = document.getElementById('paymentDateWarningText');
+    if (!date) return;
+    fetch(`/api/check-payment-submission?date=${date}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.exists) {
+          warn.classList.remove('hidden');
+          txt.textContent = '⚠️ Payment proof on ' + data.last_submission + ' (' + data.days_ago + ' days ago). You can still submit.';
+        } else warn.classList.add('hidden');
+      }).catch(() => {});
+  }
+
+  // ========== PREVIEW ==========
+  ['screenshotFile', 'paymentScreenshot'].forEach(id => {
+    document.getElementById(id).addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      const preview = document.getElementById('previewImage');
+      const container = document.getElementById('previewContainer');
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = ev => { preview.src = ev.target.result; container.classList.remove('hidden'); };
+        reader.readAsDataURL(file);
+      } else container.classList.add('hidden');
+    });
+  });
+
+  // ========== MESSAGES ==========
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.textContent = '❌ ' + msg;
+    el.classList.remove('hidden');
+    document.getElementById('successMsg').classList.add('hidden');
+    setTimeout(() => el.classList.add('hidden'), 8000);
+  }
+  function showSuccess(msg) {
+    const el = document.getElementById('successMsg');
+    el.textContent = '✅ ' + msg;
+    el.classList.remove('hidden');
+    document.getElementById('errorMsg').classList.add('hidden');
+    setTimeout(() => el.classList.add('hidden'), 5000);
+  }
+
+  // ========== SUBMIT ==========
+  document.getElementById('submitBtn').addEventListener('click', function() {
+    const type = document.getElementById('submissionType').value;
+    const accountId = document.getElementById('accountId').value;
+    document.getElementById('errorMsg').classList.add('hidden');
+    document.getElementById('successMsg').classList.add('hidden');
+    if (!accountId) return showError('Please select an account');
+    if (type === 'hours') submitHours(); else submitPaymentProof();
+  });
+
+  function submitHours() {
+    const file = document.getElementById('screenshotFile').files[0];
+    const btn = document.getElementById('submitBtn');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    btn.disabled = true;
+
+    const send = (url) => {
+      const data = {
+        account_id: document.getElementById('accountId').value,
+        date: document.getElementById('workDate').value,
+        hours: parseFloat(document.getElementById('workHours').value),
+        screenshot_url: url || null,
+        notes: document.getElementById('workNotes').value
+      };
+      if (!data.hours || data.hours <= 0) { showError('Enter valid hours (min 0.5)'); btn.innerHTML = orig; btn.disabled = false; return; }
+      fetch('/api/submit-hours', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+      }).then(r => r.json()).then(res => {
+        btn.innerHTML = orig; btn.disabled = false;
+        if (res.success) { showSuccess('✅ ' + res.message); setTimeout(() => location.reload(), 1800); }
+        else showError('❌ ' + res.error);
+      }).catch(err => { btn.innerHTML = orig; btn.disabled = false; showError('Error: ' + err.message); });
+    };
+
+    if (file) {
+      const fd = new FormData(); fd.append('file', file);
+      fetch('/api/upload', { method: 'POST', body: fd })
+        .then(r => r.json()).then(res => { if (res.success) send(res.url); else { showError('Upload error: ' + res.error); btn.innerHTML = orig; btn.disabled = false; } })
+        .catch(err => { btn.innerHTML = orig; btn.disabled = false; showError('Upload error: ' + err.message); });
+    } else send(null);
+  }
+
+  function submitPaymentProof() {
+    const file = document.getElementById('paymentScreenshot').files[0];
+    if (!file) return showError('Please upload a payment screenshot');
+    const btn = document.getElementById('submitBtn');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+    btn.disabled = true;
+
+    const fd = new FormData(); fd.append('file', file);
+    fetch('/api/upload', { method: 'POST', body: fd })
+      .then(r => r.json()).then(res => {
+        if (!res.success) { showError('Upload error: ' + res.error); btn.innerHTML = orig; btn.disabled = false; return; }
+        const amount = parseFloat(document.getElementById('paymentAmount').value);
+        if (!amount || amount <= 0) { showError('Enter valid amount'); btn.innerHTML = orig; btn.disabled = false; return; }
+        const data = {
+          account_id: document.getElementById('accountId').value,
+          date: document.getElementById('paymentDate').value,
+          payment_reference: document.getElementById('paymentRef').value || 'N/A',
+          payment_amount: amount,
+          payment_proof_url: res.url
+        };
+        fetch('/api/submit-payment-proof', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+        }).then(r => r.json()).then(result => {
+          btn.innerHTML = orig; btn.disabled = false;
+          if (result.success) { showSuccess('✅ ' + result.message); setTimeout(() => location.reload(), 1800); }
+          else showError('❌ ' + result.error);
+        }).catch(err => { btn.innerHTML = orig; btn.disabled = false; showError('Error: ' + err.message); });
+      }).catch(err => { btn.innerHTML = orig; btn.disabled = false; showError('Error: ' + err.message); });
+  }
+
+  // initial checks
+  setTimeout(() => { checkHoursDate(); checkPaymentDate(); }, 400);
+</script>
+
+</body>
+</html>

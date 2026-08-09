@@ -1,0 +1,1030 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Announcements - Handshake Manager{% endblock %}
+
+{% block page_title %}
+<div class="flex items-center gap-3">
+    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+        <i class="fas fa-bullhorn text-white text-xl"></i>
+    </div>
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Announcements</h1>
+        <p class="text-sm text-gray-500">Send updates and announcements to your team</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ===== MODERN ANNOUNCEMENTS SYSTEM ===== */
+:root {
+    --primary: #4f46e5;
+    --primary-light: #818cf8;
+    --primary-dark: #4338ca;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --gray-50: #f8fafc;
+    --gray-100: #f1f5f9;
+    --gray-200: #e2e8f0;
+    --gray-300: #cbd5e1;
+    --gray-400: #94a3b8;
+    --gray-500: #64748b;
+    --gray-600: #475569;
+    --gray-700: #334155;
+    --gray-800: #1e293b;
+    --gray-900: #0f172a;
+    --radius: 16px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.06);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.1);
+}
+
+/* ===== CONTAINER ===== */
+.announcements-container {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 28px;
+    height: calc(100vh - 260px);
+    min-height: 550px;
+}
+
+/* ===== LEFT PANEL - CREATE ===== */
+.create-panel {
+    background: white;
+    border-radius: var(--radius);
+    border: 1px solid var(--gray-200);
+    padding: 28px;
+    overflow-y: auto;
+    box-shadow: var(--shadow);
+    transition: all 0.3s;
+}
+.create-panel:hover {
+    box-shadow: var(--shadow-lg);
+}
+.create-panel::-webkit-scrollbar { width: 4px; }
+.create-panel::-webkit-scrollbar-track { background: var(--gray-100); border-radius: 10px; }
+.create-panel::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 10px; }
+
+.create-panel .panel-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--gray-100);
+}
+.create-panel .panel-header .icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+}
+.create-panel .panel-header h2 {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--gray-900);
+    margin: 0;
+}
+.create-panel .panel-header p {
+    font-size: 13px;
+    color: var(--gray-500);
+    margin: 0;
+}
+
+/* ===== FORM ===== */
+.form-group {
+    margin-bottom: 20px;
+}
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 6px;
+}
+.form-group label .required {
+    color: var(--danger);
+}
+.form-group label .label-icon {
+    color: var(--primary);
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid var(--gray-200);
+    font-size: 14px;
+    transition: all 0.2s;
+    background: var(--gray-50);
+    font-family: inherit;
+    color: var(--gray-800);
+}
+.form-group input:hover,
+.form-group select:hover,
+.form-group textarea:hover {
+    background: white;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.08);
+}
+.form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+    max-height: 200px;
+    line-height: 1.6;
+}
+.form-group .helper {
+    font-size: 12px;
+    color: var(--gray-400);
+    margin-top: 6px;
+    display: flex;
+    justify-content: space-between;
+}
+.form-group .helper .char-count {
+    font-weight: 600;
+    color: var(--gray-500);
+}
+.form-group .helper .char-count.over {
+    color: var(--danger);
+}
+
+/* ===== AUDIENCE SELECTOR ===== */
+.audience-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+}
+.audience-selector .audience-option {
+    padding: 12px 8px;
+    border-radius: 12px;
+    border: 2px solid var(--gray-200);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+}
+.audience-selector .audience-option:hover {
+    border-color: var(--primary-light);
+    background: #eef2ff;
+    transform: translateY(-2px);
+}
+.audience-selector .audience-option.selected {
+    border-color: var(--primary);
+    background: #eef2ff;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+.audience-selector .audience-option .emoji {
+    font-size: 22px;
+    display: block;
+    margin-bottom: 4px;
+}
+.audience-selector .audience-option .label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-700);
+}
+.audience-selector .audience-option.selected .label {
+    color: var(--primary);
+}
+
+/* ===== PRIORITY TOGGLE ===== */
+.priority-toggle {
+    display: flex;
+    gap: 8px;
+}
+.priority-toggle .priority-option {
+    flex: 1;
+    padding: 10px;
+    border-radius: 12px;
+    border: 2px solid var(--gray-200);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--gray-600);
+}
+.priority-toggle .priority-option:hover {
+    border-color: var(--gray-300);
+}
+.priority-toggle .priority-option.selected-normal {
+    border-color: var(--primary);
+    background: #eef2ff;
+    color: var(--primary);
+}
+.priority-toggle .priority-option.selected-high {
+    border-color: var(--danger);
+    background: #fef2f2;
+    color: var(--danger);
+}
+.priority-toggle .priority-option .prio-icon {
+    font-size: 16px;
+    display: block;
+    margin-bottom: 2px;
+}
+
+/* ===== SEND BUTTON ===== */
+.btn-send {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 8px;
+    position: relative;
+    overflow: hidden;
+}
+.btn-send::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.5s;
+}
+.btn-send:hover::before {
+    left: 100%;
+}
+.btn-send:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.35);
+}
+.btn-send:active {
+    transform: translateY(0);
+}
+.btn-send:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+.btn-send i {
+    font-size: 18px;
+}
+
+/* ===== RIGHT PANEL - LIST ===== */
+.list-panel {
+    background: white;
+    border-radius: var(--radius);
+    border: 1px solid var(--gray-200);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+}
+
+.list-panel .list-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+    background: var(--gray-50);
+}
+.list-panel .list-header .left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.list-panel .list-header .left h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin: 0;
+}
+.list-panel .list-header .left .count-badge {
+    padding: 2px 12px;
+    border-radius: 20px;
+    background: #eef2ff;
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 600;
+}
+.list-panel .list-header .filter-group {
+    display: flex;
+    gap: 4px;
+}
+.list-panel .list-header .filter-group button {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid transparent;
+    background: transparent;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gray-500);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.list-panel .list-header .filter-group button:hover {
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+.list-panel .list-header .filter-group button.active {
+    background: #eef2ff;
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.list-panel .list-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+}
+.list-panel .list-body::-webkit-scrollbar { width: 4px; }
+.list-panel .list-body::-webkit-scrollbar-track { background: var(--gray-100); border-radius: 10px; }
+.list-panel .list-body::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 10px; }
+
+/* ===== ANNOUNCEMENT ITEM ===== */
+.announcement-item {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid var(--gray-200);
+    padding: 18px 20px;
+    margin-bottom: 10px;
+    transition: all 0.3s;
+    position: relative;
+}
+.announcement-item:hover {
+    border-color: var(--gray-300);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+    transform: translateX(4px);
+}
+.announcement-item.unread {
+    border-left: 4px solid var(--primary);
+    background: #f8fafc;
+}
+.announcement-item.high-priority {
+    border-color: #fca5a5;
+    background: #fef2f2;
+}
+.announcement-item.high-priority.unread {
+    border-left: 4px solid var(--danger);
+}
+
+.announcement-item .item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.announcement-item .item-header .title {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--gray-900);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.announcement-item .item-header .title .new-badge {
+    background: var(--danger);
+    color: white;
+    font-size: 9px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    animation: pulse-badge 2s infinite;
+}
+@keyframes pulse-badge {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+.announcement-item .item-header .title .priority-badge {
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    background: #fee2e2;
+    color: #991b1b;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.announcement-item .item-header .meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--gray-500);
+    flex-shrink: 0;
+}
+.announcement-item .item-header .meta .sender {
+    font-weight: 600;
+    color: var(--primary);
+}
+.announcement-item .item-header .meta .audience-badge {
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+}
+.announcement-item .item-header .meta .audience-badge.all {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+.announcement-item .item-header .meta .audience-badge.workers {
+    background: #d1fae5;
+    color: #065f46;
+}
+.announcement-item .item-header .meta .audience-badge.admins {
+    background: #fef3c7;
+    color: #92400e;
+}
+.announcement-item .item-header .meta .audience-badge.specific {
+    background: #ede9fe;
+    color: #5b21b6;
+}
+
+.announcement-item .item-body {
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--gray-600);
+    line-height: 1.7;
+    padding: 12px 16px;
+    background: var(--gray-50);
+    border-radius: 10px;
+    border: 1px solid var(--gray-100);
+}
+
+.announcement-item .item-footer {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--gray-100);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.announcement-item .item-footer .read-status {
+    font-size: 12px;
+    color: var(--gray-500);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.announcement-item .item-footer .read-status .read {
+    color: var(--success);
+}
+.announcement-item .item-footer .read-status .unread {
+    color: var(--warning);
+}
+.announcement-item .item-footer .read-status .read-count {
+    color: var(--gray-400);
+    font-size: 11px;
+}
+.announcement-item .item-footer .actions {
+    display: flex;
+    gap: 6px;
+}
+.announcement-item .item-footer .actions button {
+    padding: 5px 14px;
+    border-radius: 8px;
+    border: none;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--gray-100);
+    color: var(--gray-600);
+}
+.announcement-item .item-footer .actions button:hover {
+    background: var(--gray-200);
+}
+.announcement-item .item-footer .actions .delete-btn:hover {
+    background: #fee2e2;
+    color: var(--danger);
+}
+.announcement-item .item-footer .actions .read-btn:hover {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: var(--gray-400);
+    text-align: center;
+}
+.empty-state i {
+    font-size: 56px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+    color: var(--primary);
+}
+.empty-state h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gray-600);
+    margin: 0;
+}
+.empty-state p {
+    font-size: 14px;
+    max-width: 320px;
+    margin: 8px auto 0;
+}
+
+/* ===== TOAST ===== */
+.toast {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 99999;
+    padding: 16px 24px;
+    border-radius: 14px;
+    color: white;
+    font-weight: 500;
+    font-size: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    animation: slideInRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 420px;
+}
+.toast.success { background: var(--success); }
+.toast.error { background: var(--danger); }
+.toast.warning { background: var(--warning); }
+.toast.info { background: #3b82f6; }
+.toast .close {
+    cursor: pointer;
+    opacity: 0.7;
+    transition: 0.2s;
+}
+.toast .close:hover { opacity: 1; }
+
+@keyframes slideInRight {
+    from { transform: translateX(120%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+    .announcements-container {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+    .create-panel { max-height: 500px; }
+    .list-panel { min-height: 400px; }
+}
+
+@media (max-width: 640px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    .audience-selector {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+    .announcement-item .item-header {
+        flex-direction: column;
+    }
+    .list-panel .list-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+    .list-panel .list-header .filter-group {
+        flex-wrap: wrap;
+    }
+    .create-panel {
+        padding: 20px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="announcements-container">
+
+    <!-- ===== LEFT PANEL - CREATE ===== -->
+    <div class="create-panel">
+        <div class="panel-header">
+            <div class="icon"><i class="fas fa-pen-fancy"></i></div>
+            <div>
+                <h2>Create Announcement</h2>
+                <p>Share updates with your team instantly</p>
+            </div>
+        </div>
+
+        <form id="announcementForm" onsubmit="sendAnnouncement(event)">
+            <!-- Title -->
+            <div class="form-group">
+                <label>
+                    <span class="label-icon"><i class="fas fa-heading"></i></span>
+                    Title <span class="required">*</span>
+                </label>
+                <input type="text" id="title" placeholder="What's the announcement about?" required>
+            </div>
+
+            <!-- Audience -->
+            <div class="form-group">
+                <label>
+                    <span class="label-icon"><i class="fas fa-users"></i></span>
+                    Audience <span class="required">*</span>
+                </label>
+                <div class="audience-selector" id="audienceSelector">
+                    <div class="audience-option selected" data-value="all" onclick="selectAudience('all')">
+                        <span class="emoji">👥</span>
+                        <span class="label">Everyone</span>
+                    </div>
+                    <div class="audience-option" data-value="workers" onclick="selectAudience('workers')">
+                        <span class="emoji">👷</span>
+                        <span class="label">Workers</span>
+                    </div>
+                    <div class="audience-option" data-value="admins" onclick="selectAudience('admins')">
+                        <span class="emoji">👑</span>
+                        <span class="label">Admins</span>
+                    </div>
+                </div>
+                <input type="hidden" id="audience" value="all">
+            </div>
+
+            <!-- Specific Worker -->
+            <div class="form-group" id="specificWorkerGroup" style="display:none;">
+                <label>
+                    <span class="label-icon"><i class="fas fa-user-check"></i></span>
+                    Select Worker
+                </label>
+                <select id="specificWorker">
+                    <option value="">-- Select a worker --</option>
+                    {% for user in users %}
+                        {% if user.role == 'worker' %}
+                        <option value="{{ user.id }}">{{ user.name or 'Unknown' }} ({{ user.email }})</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Priority -->
+            <div class="form-group">
+                <label>
+                    <span class="label-icon"><i class="fas fa-flag"></i></span>
+                    Priority
+                </label>
+                <div class="priority-toggle" id="priorityToggle">
+                    <div class="priority-option selected-normal" data-value="normal" onclick="selectPriority('normal')">
+                        <span class="prio-icon">📌</span>
+                        Normal
+                    </div>
+                    <div class="priority-option" data-value="high" onclick="selectPriority('high')">
+                        <span class="prio-icon">⚠️</span>
+                        High Priority
+                    </div>
+                </div>
+                <input type="hidden" id="priority" value="normal">
+            </div>
+
+            <!-- Message -->
+            <div class="form-group">
+                <label>
+                    <span class="label-icon"><i class="fas fa-comment-dots"></i></span>
+                    Message <span class="required">*</span>
+                </label>
+                <textarea id="message" placeholder="Write your announcement here..." required></textarea>
+                <div class="helper">
+                    <span><span id="charCount">0</span> characters</span>
+                    <span>Max 2000 characters</span>
+                </div>
+            </div>
+
+            <!-- Send Button -->
+            <button type="submit" class="btn-send" id="sendBtn">
+                <i class="fas fa-paper-plane"></i> Send Announcement
+            </button>
+        </form>
+    </div>
+
+    <!-- ===== RIGHT PANEL - LIST ===== -->
+    <div class="list-panel">
+        <div class="list-header">
+            <div class="left">
+                <h3>
+                    <i class="fas fa-bullhorn text-indigo-500"></i>
+                    Announcements
+                </h3>
+                <span class="count-badge">{{ announcements|length }}</span>
+            </div>
+            <div class="filter-group" id="filterGroup">
+                <button class="active" data-filter="all" onclick="filterAnnouncements('all', this)">All</button>
+                <button data-filter="unread" onclick="filterAnnouncements('unread', this)">Unread</button>
+                <button data-filter="read" onclick="filterAnnouncements('read', this)">Read</button>
+                <button data-filter="high" onclick="filterAnnouncements('high', this)">⚠️ High</button>
+            </div>
+        </div>
+
+        <div class="list-body" id="announcementsList">
+            {% if announcements %}
+                {% for announcement in announcements %}
+                <div class="announcement-item 
+                            {% if not announcement.is_read %}unread{% endif %}
+                            {% if announcement.priority == 'high' %}high-priority{% endif %}" 
+                     id="announcement-{{ announcement.id }}"
+                     data-read="{% if announcement.is_read %}read{% else %}unread{% endif %}"
+                     data-priority="{{ announcement.priority }}">
+                    <div class="item-header">
+                        <div class="title">
+                            {{ announcement.title }}
+                            {% if not announcement.is_read %}
+                            <span class="new-badge">New</span>
+                            {% endif %}
+                            {% if announcement.priority == 'high' %}
+                            <span class="priority-badge"><i class="fas fa-exclamation-triangle"></i> High Priority</span>
+                            {% endif %}
+                        </div>
+                        <div class="meta">
+                            <span class="sender"><i class="far fa-user"></i> {{ announcement.sender_name or 'System' }}</span>
+                            <span><i class="far fa-clock"></i> {{ announcement.created_at[:16]|replace('T', ' ') if announcement.created_at else 'Just now' }}</span>
+                            <span class="audience-badge {{ announcement.audience or 'all' }}">
+                                {% if announcement.audience == 'all' %}👥 Everyone
+                                {% elif announcement.audience == 'workers' %}👷 Workers
+                                {% elif announcement.audience == 'admins' %}👑 Admins
+                                {% else %}🎯 Specific
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="item-body">{{ announcement.message }}</div>
+                    <div class="item-footer">
+                        <div class="read-status">
+                            {% if announcement.is_read %}
+                                <span class="read"><i class="fas fa-check-circle"></i> Read</span>
+                            {% else %}
+                                <span class="unread"><i class="fas fa-circle"></i> Unread</span>
+                            {% endif %}
+                            <span class="read-count">({{ announcement.read_by|length if announcement.read_by else 0 }} read)</span>
+                        </div>
+                        <div class="actions">
+                            {% if not announcement.is_read %}
+                            <button class="read-btn" onclick="markRead('{{ announcement.id }}')">
+                                <i class="fas fa-check"></i> Mark Read
+                            </button>
+                            {% endif %}
+                            {% if session.user_role == 'admin' %}
+                            <button class="delete-btn" onclick="deleteAnnouncement('{{ announcement.id }}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-bullhorn"></i>
+                    <h3>No announcements yet</h3>
+                    <p>Create your first announcement using the form on the left</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// AUDIENCE SELECTOR
+// ============================================================
+function selectAudience(value) {
+    document.querySelectorAll('.audience-option').forEach(el => {
+        el.classList.toggle('selected', el.dataset.value === value);
+    });
+    document.getElementById('audience').value = value;
+    
+    const specificGroup = document.getElementById('specificWorkerGroup');
+    specificGroup.style.display = value === 'specific_worker' ? 'block' : 'none';
+}
+
+// ============================================================
+// PRIORITY SELECTOR
+// ============================================================
+function selectPriority(value) {
+    document.querySelectorAll('.priority-option').forEach(el => {
+        el.className = 'priority-option';
+        if (el.dataset.value === value) {
+            el.classList.add(value === 'normal' ? 'selected-normal' : 'selected-high');
+        }
+    });
+    document.getElementById('priority').value = value;
+}
+
+// ============================================================
+// CHARACTER COUNTER
+// ============================================================
+document.getElementById('message').addEventListener('input', function() {
+    const count = this.value.length;
+    document.getElementById('charCount').textContent = count;
+});
+
+// ============================================================
+// FILTER ANNOUNCEMENTS
+// ============================================================
+function filterAnnouncements(filter, btn) {
+    document.querySelectorAll('#filterGroup button').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    
+    const items = document.querySelectorAll('.announcement-item');
+    items.forEach(item => {
+        let show = true;
+        const isRead = item.dataset.read === 'read';
+        const priority = item.dataset.priority || 'normal';
+        
+        if (filter === 'unread' && isRead) show = false;
+        if (filter === 'read' && !isRead) show = false;
+        if (filter === 'high' && priority !== 'high') show = false;
+        
+        item.style.display = show ? '' : 'none';
+    });
+}
+
+// ============================================================
+// SEND ANNOUNCEMENT - FIXED
+// ============================================================
+async function sendAnnouncement(event) {
+    event.preventDefault();
+    
+    const sendBtn = document.getElementById('sendBtn');
+    const originalText = sendBtn.innerHTML;
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    
+    const title = document.getElementById('title').value.trim();
+    const message = document.getElementById('message').value.trim();
+    const audience = document.getElementById('audience').value;
+    const priority = document.getElementById('priority').value;
+    const specificWorker = document.getElementById('specificWorker').value;
+    
+    if (!title || !message) {
+        showToast('Please fill in all required fields', 'warning');
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = originalText;
+        return;
+    }
+    
+    let recipient_type = audience;
+    let recipient_id = null;
+    
+    if (audience === 'workers') {
+        recipient_type = 'all_workers';
+    } else if (audience === 'admins') {
+        recipient_type = 'all_admins';
+    } else if (audience === 'all') {
+        recipient_type = 'all_users';
+    } else if (audience === 'specific_worker') {
+        if (!specificWorker) {
+            showToast('Please select a worker', 'warning');
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = originalText;
+            return;
+        }
+        recipient_type = 'specific_worker';
+        recipient_id = specificWorker;
+    }
+    
+    try {
+        const response = await fetch('/api/announcements', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: title,
+                message: message,
+                recipient_type: recipient_type,
+                recipient_id: recipient_id,
+                priority: priority
+            })
+        });
+        
+        const result = await response.json();
+        
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = originalText;
+        
+        if (result.success) {
+            showToast('✅ Announcement sent successfully!', 'success');
+            document.getElementById('title').value = '';
+            document.getElementById('message').value = '';
+            document.getElementById('charCount').textContent = '0';
+            document.getElementById('priority').value = 'normal';
+            document.getElementById('specificWorker').value = '';
+            document.getElementById('specificWorkerGroup').style.display = 'none';
+            selectAudience('all');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast('❌ ' + (result.error || 'Failed to send announcement'), 'error');
+        }
+    } catch (error) {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = originalText;
+        showToast('❌ Error: ' + error.message, 'error');
+    }
+}
+
+// ============================================================
+// MARK AS READ
+// ============================================================
+async function markRead(id) {
+    try {
+        const response = await fetch(`/api/announcements/${id}/read`, {
+            method: 'PATCH'
+        });
+        const result = await response.json();
+        if (result.success) {
+            const card = document.getElementById(`announcement-${id}`);
+            if (card) {
+                card.classList.remove('unread');
+                card.dataset.read = 'read';
+                const status = card.querySelector('.read-status');
+                if (status) {
+                    status.innerHTML = `<span class="read"><i class="fas fa-check-circle"></i> Read</span>`;
+                }
+                const newBadge = card.querySelector('.new-badge');
+                if (newBadge) newBadge.remove();
+                const readBtn = card.querySelector('.read-btn');
+                if (readBtn) readBtn.remove();
+            }
+            showToast('✅ Marked as read', 'success');
+        }
+    } catch (error) {
+        showToast('❌ Error: ' + error.message, 'error');
+    }
+}
+
+// ============================================================
+// DELETE ANNOUNCEMENT
+// ============================================================
+async function deleteAnnouncement(id) {
+    if (!confirm('Delete this announcement permanently?')) return;
+    
+    try {
+        const response = await fetch(`/api/announcements/${id}`, {
+            method: 'DELETE'
+        });
+        const result = await response.json();
+        if (result.success) {
+            const card = document.getElementById(`announcement-${id}`);
+            if (card) {
+                card.style.transition = 'all 0.3s';
+                card.style.opacity = '0';
+                card.style.transform = 'translateX(-20px)';
+                setTimeout(() => card.remove(), 300);
+            }
+            showToast('✅ Announcement deleted', 'success');
+        }
+    } catch (error) {
+        showToast('❌ Error: ' + error.message, 'error');
+    }
+}
+
+// ============================================================
+// SHOW TOAST
+// ============================================================
+function showToast(message, type = 'success') {
+    document.querySelectorAll('.toast').forEach(el => el.remove());
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <span>${message}</span>
+        <span class="close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></span>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+}
+</script>
+
+{% endblock %}

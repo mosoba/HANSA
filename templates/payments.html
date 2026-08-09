@@ -1,0 +1,511 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Payments - Handshake Manager{% endblock %}
+
+{% block page_title %}Payments{% endblock %}
+{% block page_subtitle %}Manage payment proofs and confirm payments{% endblock %}
+
+{% block content %}
+
+<!-- Stats Bar -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+    <div class="bg-white p-3 rounded-xl border border-gray-200">
+        <p class="text-xs text-gray-500">Pending Proofs</p>
+        <p class="text-lg font-bold text-gray-900">{{ pending_proofs|length }}</p>
+    </div>
+    <div class="bg-white p-3 rounded-xl border border-gray-200">
+        <p class="text-xs text-gray-500">Confirmed</p>
+        <p class="text-lg font-bold text-gray-900">{{ confirmed_payments|length }}</p>
+    </div>
+    <div class="bg-white p-3 rounded-xl border border-gray-200">
+        <p class="text-xs text-gray-500">Pending Amount</p>
+        <p class="text-lg font-bold text-amber-600">${{ "%.2f"|format(total_amount_pending|default(0)) }}</p>
+        <p class="text-xs text-gray-400">KSh {{ "{:,.2f}".format(total_amount_pending_kes|default(0)) }}</p>
+    </div>
+    <div class="bg-white p-3 rounded-xl border border-gray-200">
+        <p class="text-xs text-gray-500">Paid Amount</p>
+        <p class="text-lg font-bold text-emerald-600">${{ "%.2f"|format(total_amount_paid|default(0)) }}</p>
+        <p class="text-xs text-gray-400">KSh {{ "{:,.2f}".format(total_amount_paid_kes|default(0)) }}</p>
+    </div>
+</div>
+
+<!-- Exchange Rate Info -->
+<div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4">
+    <div class="flex items-center justify-between flex-wrap gap-2">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-coins text-indigo-600"></i>
+            <span class="text-sm font-medium text-gray-700">Exchange Rate:</span>
+            <span class="text-sm font-bold text-amber-600">1 USD = KSh {{ exchange_rate|default(150) }}</span>
+        </div>
+        <span class="text-xs text-gray-500">Updated: {{ settings_updated|default('Today') }}</span>
+    </div>
+</div>
+
+<!-- Pending Payment Proofs -->
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-hourglass-half text-amber-500 mr-2"></i>Pending Payment Proofs</h3>
+        <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-500">{{ pending_proofs|length }} pending</span>
+            {% if pending_proofs %}
+            <button onclick="confirmAll()" class="btn btn-success btn-sm">
+                <i class="fas fa-check-double"></i> Confirm All
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Worker</th>
+                        <th>Account</th>
+                        <th>Date</th>
+                        <th>Reference</th>
+                        <th class="text-right">Amount (USD)</th>
+                        <th class="text-right">Worker Gets (USD)</th>
+                        <th class="text-right">Worker Gets (KES)</th>
+                        <th class="text-center">Proof</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if pending_proofs %}
+                        {% for payment in pending_proofs %}
+                        <tr id="payment-row-{{ payment.id }}">
+                            <td class="font-medium">{{ payment.worker_name }}</td>
+                            <td>{{ payment.account_name }}</td>
+                            <td>{{ payment.date }}</td>
+                            <td>{{ payment.payment_reference }}</td>
+                            <td class="text-right font-medium">${{ "%.2f"|format(payment.amount) }}</td>
+                            <td class="text-right text-emerald-600 font-medium">${{ "%.2f"|format(payment.worker_payout) }}</td>
+                            <td class="text-right text-amber-600 font-bold">KSh {{ "{:,.2f}".format(payment.worker_payout_kes|default(payment.worker_payout * exchange_rate)) }}</td>
+                            <td class="text-center">
+                                {% if payment.payment_proof_url %}
+                                <a href="{{ payment.payment_proof_url }}" target="_blank" class="text-blue-500 hover:text-blue-700">
+                                    <i class="fas fa-image"></i>
+                                </a>
+                                {% else %}
+                                <span class="text-gray-400">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <button onclick="viewPayment('{{ payment.id }}', '{{ payment.worker_name }}', '{{ payment.account_name }}', '{{ payment.date }}', '{{ payment.amount }}', '{{ payment.worker_payout }}', '{{ payment.worker_payout_kes|default(payment.worker_payout * exchange_rate) }}', '{{ payment.payment_reference }}', '{{ payment.payment_proof_url or '' }}')" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button onclick="confirmPayment('{{ payment.id }}')" class="btn btn-success btn-sm">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="9">
+                                <div class="empty-state">
+                                    <i class="fas fa-check-circle text-green-500"></i>
+                                    <p>All caught up! 🎉</p>
+                                    <div class="sub">No pending payment proofs</div>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmed Payments -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h3><i class="fas fa-check-circle text-green-500 mr-2"></i>Confirmed Payments</h3>
+        <span class="text-sm text-gray-500">{{ confirmed_payments|length }} confirmed</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Worker</th>
+                        <th>Account</th>
+                        <th>Date</th>
+                        <th>Reference</th>
+                        <th class="text-right">Amount (USD)</th>
+                        <th class="text-right">Worker Got (USD)</th>
+                        <th class="text-right">Worker Got (KES)</th>
+                        <th class="text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if confirmed_payments %}
+                        {% for payment in confirmed_payments %}
+                        <tr>
+                            <td class="font-medium">{{ payment.worker_name }}</td>
+                            <td>{{ payment.account_name }}</td>
+                            <td>{{ payment.date }}</td>
+                            <td>{{ payment.payment_reference }}</td>
+                            <td class="text-right font-medium">${{ "%.2f"|format(payment.amount) }}</td>
+                            <td class="text-right text-emerald-600 font-medium">${{ "%.2f"|format(payment.worker_payout) }}</td>
+                            <td class="text-right text-amber-600 font-bold">KSh {{ "{:,.2f}".format(payment.worker_payout_kes|default(payment.worker_payout * exchange_rate)) }}</td>
+                            <td class="text-center">
+                                <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                                    <i class="fas fa-check mr-1"></i> Paid
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No confirmed payments</p>
+                                    <div class="sub">Payments will appear here once confirmed</div>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- View Payment Modal - MATCHES APPROVALS STYLE -->
+<div id="viewModal" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="modal-content" style="background: white; border-radius: 16px; max-width: 600px; width: 92%; padding: 30px; max-height: 90vh; overflow-y: auto;">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-gray-900">
+                <i class="fas fa-file-invoice-dollar text-blue-500 mr-2"></i>Payment Details
+            </h2>
+            <button onclick="closeViewModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+        </div>
+        
+        <div class="space-y-3">
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <p class="text-xs text-gray-500">Type</p>
+                    <p class="font-medium text-purple-600">💰 Payment Proof</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Status</p>
+                    <p class="font-medium text-amber-600">⏳ Pending</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Worker</p>
+                    <p class="font-medium" id="viewWorkerName">-</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Account</p>
+                    <p class="font-medium" id="viewAccountName">-</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Date</p>
+                    <p class="font-medium" id="viewDate">-</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Reference</p>
+                    <p class="font-medium" id="viewReference">-</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Amount (USD)</p>
+                    <p class="font-medium text-gray-800" id="viewAmount">-</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Worker Gets (USD)</p>
+                    <p class="font-medium text-emerald-600" id="viewPayoutUSD">-</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Worker Gets (KES)</p>
+                    <p class="font-medium text-amber-600" id="viewPayoutKES">-</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Exchange Rate Used</p>
+                    <p class="font-medium text-indigo-600" id="viewExchangeRate">-</p>
+                </div>
+            </div>
+            
+            <div>
+                <p class="text-xs text-gray-500 mb-1">📸 Screenshot</p>
+                <div id="viewScreenshot" class="border border-gray-200 rounded-lg p-2 bg-gray-50 min-h-[100px] flex items-center justify-center">
+                    <p class="text-gray-400 text-sm">No screenshot uploaded</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex gap-3 mt-6 pt-4 border-t border-gray-200">
+            <button onclick="confirmFromModal()" id="modalConfirmBtn" class="btn btn-success flex-1 justify-center">
+                <i class="fas fa-check mr-2"></i> Confirm Payment
+            </button>
+            <button onclick="closeViewModal()" class="btn btn-sm" style="background: #e2e8f0; color: #64748b;">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid #eef2f6;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        overflow: hidden;
+    }
+    .card-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .card-header h3 {
+        font-size: 15px;
+        font-weight: 600;
+        color: #0f172a;
+        margin: 0;
+    }
+    .card-body {
+        padding: 0;
+    }
+    .table-container {
+        overflow-x: auto;
+    }
+    .table-container table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+    .table-container table thead {
+        background: #f8fafc;
+    }
+    .table-container table th {
+        padding: 10px 16px;
+        text-align: left;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #64748b;
+        border-bottom: 1px solid #eef2f6;
+    }
+    .table-container table td {
+        padding: 10px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        color: #1e293b;
+        vertical-align: middle;
+    }
+    .table-container table tbody tr:hover {
+        background: #f8fafc;
+    }
+    .text-right {
+        text-align: right;
+    }
+    .text-center {
+        text-align: center;
+    }
+    .btn {
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        border: none;
+        cursor: pointer;
+        transition: all 0.15s;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        text-decoration: none;
+    }
+    .btn-sm {
+        padding: 3px 8px;
+        font-size: 11px;
+    }
+    .btn-success {
+        background: #10b981;
+        color: white;
+    }
+    .btn-success:hover {
+        background: #059669;
+    }
+    .btn-primary {
+        background: #4f46e5;
+        color: white;
+    }
+    .btn-primary:hover {
+        background: #4338ca;
+    }
+    .btn-danger {
+        background: #ef4444;
+        color: white;
+    }
+    .btn-danger:hover {
+        background: #dc2626;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #94a3b8;
+    }
+    .empty-state i {
+        font-size: 48px;
+        margin-bottom: 12px;
+        opacity: 0.3;
+    }
+    .empty-state p {
+        font-size: 16px;
+        font-weight: 500;
+        color: #64748b;
+    }
+    .empty-state .sub {
+        font-size: 13px;
+        color: #94a3b8;
+        margin-top: 4px;
+    }
+</style>
+
+<script>
+    let currentSubmissionId = null;
+
+    // ============================================================
+    // VIEW PAYMENT - Same as Approvals viewSubmission()
+    // ============================================================
+    function viewPayment(id, worker, account, date, amount, payoutUSD, payoutKES, reference, screenshot) {
+        currentSubmissionId = id;
+        
+        document.getElementById('viewWorkerName').textContent = worker || 'Unknown';
+        document.getElementById('viewAccountName').textContent = account || 'Unknown';
+        document.getElementById('viewDate').textContent = date || 'N/A';
+        document.getElementById('viewReference').textContent = reference || 'N/A';
+        document.getElementById('viewAmount').textContent = '$' + parseFloat(amount || 0).toFixed(2);
+        document.getElementById('viewPayoutUSD').textContent = '$' + parseFloat(payoutUSD || 0).toFixed(2);
+        document.getElementById('viewPayoutKES').textContent = 'KSh ' + parseFloat(payoutKES || 0).toFixed(2);
+        document.getElementById('viewExchangeRate').textContent = '1 USD = KSh {{ exchange_rate|default(150) }}';
+        
+        // Screenshot
+        const screenshotContainer = document.getElementById('viewScreenshot');
+        if (screenshot && screenshot !== '' && screenshot !== 'None') {
+            screenshotContainer.innerHTML = `<img src="${screenshot}" class="max-w-full max-h-64 rounded-lg" alt="Screenshot" onerror="this.parentElement.innerHTML='<p class=\\'text-gray-400 text-sm\\'>Screenshot not found</p>'">`;
+        } else {
+            screenshotContainer.innerHTML = `<p class="text-gray-400 text-sm">No screenshot uploaded</p>`;
+        }
+        
+        document.getElementById('viewModal').style.display = 'flex';
+    }
+
+    function closeViewModal() {
+        document.getElementById('viewModal').style.display = 'none';
+        currentSubmissionId = null;
+    }
+
+    document.getElementById('viewModal').addEventListener('click', function(e) {
+        if (e.target === this) closeViewModal();
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeViewModal();
+    });
+
+    // ============================================================
+    // CONFIRM PAYMENT
+    // ============================================================
+    function confirmPayment(submissionId) {
+        if (!confirm('Confirm this payment? This will credit the worker.')) return;
+        
+        const btn = event.target.closest('button');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        btn.disabled = true;
+        
+        fetch('/api/confirm-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ submission_id: submissionId })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const row = document.getElementById(`payment-row-${submissionId}`);
+                if (row) {
+                    row.style.backgroundColor = '#d1fae5';
+                    row.style.transition = 'background-color 0.5s';
+                    setTimeout(() => row.remove(), 1000);
+                }
+                alert('✅ ' + data.message);
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                alert('❌ Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            alert('❌ Error: ' + error.message);
+        });
+    }
+
+    function confirmFromModal() {
+        if (currentSubmissionId) {
+            closeViewModal();
+            confirmPayment(currentSubmissionId);
+        }
+    }
+
+    // ============================================================
+    // CONFIRM ALL
+    // ============================================================
+    function confirmAll() {
+        const ids = [];
+        document.querySelectorAll('[id^="payment-row-"]').forEach(row => {
+            const id = row.id.replace('payment-row-', '');
+            ids.push(id);
+        });
+        
+        if (ids.length === 0) {
+            alert('No pending payments to confirm');
+            return;
+        }
+        
+        if (!confirm(`Confirm all ${ids.length} pending payments?`)) return;
+        
+        const btn = event.target.closest('button');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        btn.disabled = true;
+        
+        fetch('/api/bulk-process-payments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                submission_ids: ids,
+                payment_method: 'bank',
+                payment_notes: 'Bulk confirmation'
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            if (data.success) {
+                alert('✅ ' + data.message);
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                alert('❌ Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            alert('❌ Error: ' + error.message);
+        });
+    }
+</script>
+
+{% endblock %}
