@@ -31,24 +31,19 @@ def utility_processor():
         """Generate WhatsApp click-to-chat link"""
         if not phone_number:
             return '#'
-        # Clean phone number (remove + and spaces)
         phone_number = ''.join(filter(str.isdigit, str(phone_number)))
-        # Remove leading 0 if present
         if phone_number.startswith('0'):
             phone_number = phone_number[1:]
         encoded_message = urllib.parse.quote(message)
         return f"https://wa.me/{phone_number}?text={encoded_message}"
     
     def generate_whatsapp_login_link(worker):
-        """Generate WhatsApp link with login credentials pre-filled"""
         name = worker.get('name', 'Worker')
         email = worker.get('email', '')
         password = worker.get('password', 'temp123')
         whatsapp = worker.get('whatsapp', '')
-        
         if not whatsapp:
             return '#'
-        
         message = f"""🔐 Handshake Manager - Login Credentials
 
 Hello {name}! 👋
@@ -61,19 +56,15 @@ Password: {password}
 Login URL: https://handshake-manager.vercel.app/login
 
 Please change your password after first login."""
-        
         return generate_whatsapp_link(whatsapp, message)
     
     def generate_whatsapp_account_link(worker, account):
-        """Generate WhatsApp link with account assignment pre-filled"""
         name = worker.get('name', 'Worker')
         account_name = account.get('name', 'Unknown Account')
         platform = account.get('platform', 'Unknown Platform')
         whatsapp = worker.get('whatsapp', '')
-        
         if not whatsapp:
             return '#'
-        
         message = f"""📋 Account Assignment
 
 Hello {name}! 👋
@@ -85,7 +76,6 @@ Platform: {platform}
 Location: {account.get('location', 'N/A')}
 
 Please check your dashboard for more details."""
-        
         return generate_whatsapp_link(whatsapp, message)
     
     return {
@@ -195,7 +185,6 @@ def get_handshake_stats():
         assignments = supabase_request('GET', 'hs_worker_assignments')
         managers = supabase_request('GET', 'hs_users', filters={'role': 'manager'})
         
-        # Get unread announcements count
         unread_count = 0
         try:
             announcements = supabase_request('GET', 'hs_announcements')
@@ -343,7 +332,6 @@ def login():
                     session['user_role'] = user.get('role', 'worker')
                     flash('Login successful!', 'success')
                     
-                    # ✅ CORRECT REDIRECT BASED ON ROLE
                     role = user.get('role', 'worker')
                     if role == 'admin':
                         return redirect(url_for('admin_dashboard'))
@@ -526,7 +514,6 @@ def admin_dashboard():
             'worker_performance': worker_performance
         }
         
-        # Add unread announcements count
         stats['unread_announcements'] = get_handshake_stats()['unread_announcements']
         
         return render_template('admin_dashboard.html', 
@@ -642,26 +629,21 @@ def worker_dashboard():
         print(f"👤 User ID: {user_id}")
         print("=" * 60)
         
-        # Get assignments
         assignments_response = supabase_request('GET', 'hs_worker_assignments', filters={'worker_id': user_id})
         assignments = assignments_response['data'] if assignments_response['data'] else []
         print(f"📋 Assignments: {len(assignments)}")
         
-        # Get all accounts
         accounts_response = supabase_request('GET', 'hs_accounts')
         all_accounts = accounts_response['data'] if accounts_response['data'] else []
         
-        # Filter accounts assigned to this worker
         assigned_ids = [a['account_id'] for a in assignments]
         accounts = [acc for acc in all_accounts if acc['id'] in assigned_ids]
         print(f"📂 Accounts: {len(accounts)}")
         
-        # Get ALL submissions
         submissions_response = supabase_request('GET', 'hs_submissions')
         all_submissions = submissions_response['data'] if submissions_response['data'] else []
         print(f"📝 Total Submissions in DB: {len(all_submissions)}")
         
-        # Filter submissions by worker_id
         submissions = []
         for s in all_submissions:
             if s.get('worker_id') == user_id:
@@ -669,18 +651,15 @@ def worker_dashboard():
         
         print(f"📝 Submissions for this worker: {len(submissions)}")
         
-        # Debug: Print submissions
         if len(submissions) == 0:
             print("   ⚠️ NO SUBMISSIONS FOUND")
         else:
             for idx, s in enumerate(submissions):
                 print(f"  [{idx}] ID: {s.get('id')}, Status: {s.get('status')}, Hours: {s.get('hours')}, Payout: {s.get('worker_payout_usd')}")
         
-        # Get settings
         settings = get_settings()
         exchange_rate = settings.get('exchange_rate', 150)
         
-        # Initialize with 0 (not None)
         total_hours = 0.0
         total_earnings_usd = 0.0
         total_earnings_kes = 0.0
@@ -691,7 +670,6 @@ def worker_dashboard():
         pending_payment_proofs = 0
         total_payment_proofs = 0
         
-        # Process each submission
         for s in submissions:
             sub_type = s.get('submission_type', 'hours')
             status = s.get('status')
@@ -699,7 +677,6 @@ def worker_dashboard():
             hours_val = safe_float(s.get('hours', 0))
             worker_payout_usd = safe_float(s.get('worker_payout_usd', 0))
             
-            # If payout is 0, try to calculate it
             if worker_payout_usd == 0:
                 total_earnings = safe_float(s.get('total_earnings_usd', 0))
                 worker_percentage = safe_float(s.get('worker_percentage', 10))
@@ -735,7 +712,6 @@ def worker_dashboard():
             elif status == 'rejected':
                 rejected_submissions += 1
         
-        # Make sure all values are numbers (not None)
         total_hours = float(total_hours or 0)
         total_earnings_usd = float(total_earnings_usd or 0)
         total_earnings_kes = float(total_earnings_kes or 0)
@@ -744,7 +720,6 @@ def worker_dashboard():
         print(f"📊 FINAL TOTALS: Hours={total_hours}, USD=${total_earnings_usd}, KES=KSh{total_earnings_kes}")
         print("=" * 60)
         
-        # Add account names to submissions
         account_dict = {acc['id']: acc for acc in all_accounts}
         for s in submissions:
             acc = account_dict.get(s.get('account_id'))
@@ -796,8 +771,9 @@ def worker_dashboard():
             now=datetime.now(), 
             stats=get_handshake_stats()
         )
+
 # ============================================================
-# SUBMIT HOURS
+# SUBMIT HOURS - UPDATED WITH PAYDAY SUPPORT
 # ============================================================
 
 @app.route('/submit-hours')
@@ -821,6 +797,8 @@ def submit_hours():
         accounts = []
         for acc in all_accounts:
             if acc['id'] in assigned_ids:
+                # Add payday to account
+                acc['payday'] = acc.get('payday', 'Sunday')
                 accounts.append(acc)
         
         submissions_response = supabase_request('GET', 'hs_submissions', filters={'worker_id': user_id})
@@ -855,7 +833,7 @@ def submit_hours():
         )
 
 # ============================================================
-# API SUBMIT HOURS
+# API SUBMIT HOURS - UPDATED WITH 24-HOUR RULE
 # ============================================================
 
 @app.route('/api/submit-hours', methods=['POST'])
@@ -880,6 +858,29 @@ def api_submit_hours():
         if not hours or hours <= 0:
             return jsonify({'success': False, 'error': 'Valid hours required'}), 400
         
+        # ✅ CHECK 24-HOUR RULE
+        last_submission = supabase_request('GET', 'hs_submissions', filters={
+            'worker_id': user_id,
+            'account_id': account_id,
+            'submission_type': 'hours'
+        })
+        
+        if last_submission['data']:
+            sorted_subs = sorted(last_submission['data'], 
+                key=lambda x: x.get('created_at', ''), reverse=True)
+            if sorted_subs:
+                last_time = datetime.fromisoformat(sorted_subs[0]['created_at'])
+                now = datetime.utcnow()
+                hours_diff = (now - last_time).total_seconds() / 3600
+                
+                if hours_diff < 24:
+                    remaining = 24 - hours_diff
+                    return jsonify({
+                        'success': False,
+                        'error': f'⏳ Must wait {remaining:.1f} hours before next submission (24-hour rule)'
+                    }), 400
+        
+        # Check for duplicate date
         check_response = supabase_request('GET', 'hs_submissions', filters={
             'worker_id': user_id,
             'account_id': account_id,
@@ -893,6 +894,20 @@ def api_submit_hours():
                 'error': 'You already submitted hours for this account on this date'
             }), 400
         
+        # Get account for rate calculations
+        account_result = supabase_request('GET', 'hs_accounts', filters={'id': account_id})
+        account = account_result['data'][0] if account_result['data'] else {}
+        client_rate = safe_float(account.get('client_rate', 15))
+        
+        # Get worker percentage
+        worker_result = supabase_request('GET', 'hs_users', filters={'id': user_id})
+        worker_percentage = safe_float(worker_result['data'][0].get('worker_percentage', 10)) if worker_result['data'] else 10
+        
+        # Calculate earnings
+        total_earnings = hours * client_rate
+        worker_payout = total_earnings * (worker_percentage / 100)
+        commission = total_earnings - worker_payout
+        
         submission_data = {
             'id': str(uuid.uuid4()),
             'worker_id': user_id,
@@ -903,7 +918,11 @@ def api_submit_hours():
             'notes': notes or '',
             'submission_type': 'hours',
             'status': 'pending',
-            'worker_payout_usd': 0,
+            'client_rate': client_rate,
+            'worker_percentage': worker_percentage,
+            'total_earnings_usd': total_earnings,
+            'commission_usd': commission,
+            'worker_payout_usd': worker_payout,
             'created_at': datetime.utcnow().isoformat(),
             'updated_at': datetime.utcnow().isoformat()
         }
@@ -913,7 +932,7 @@ def api_submit_hours():
         if response.get('data'):
             return jsonify({
                 'success': True,
-                'message': 'Hours submitted successfully!',
+                'message': f'✅ Hours submitted successfully! ${worker_payout:.2f} estimated payout',
                 'submission_id': response['data'][0]['id'] if response['data'] else None
             })
         else:
@@ -956,7 +975,7 @@ def check_hours_submission():
         return jsonify({'exists': False})
 
 # ============================================================
-# API CHECK PAYMENT SUBMISSION
+# API CHECK PAYMENT SUBMISSION - UPDATED WITH PAYDAY
 # ============================================================
 
 @app.route('/api/check-payment-submission', methods=['GET'])
@@ -965,6 +984,7 @@ def check_payment_submission():
     try:
         user_id = session['user_id']
         date_str = request.args.get('date')
+        account_id = request.args.get('account_id')
         
         if not date_str:
             return jsonify({'exists': False})
@@ -973,6 +993,23 @@ def check_payment_submission():
             submission_date = datetime.strptime(date_str, '%Y-%m-%d').date()
         except:
             submission_date = datetime.utcnow().date()
+        
+        # ✅ Check if date is the account's payday
+        if account_id:
+            account_result = supabase_request('GET', 'hs_accounts', filters={'id': account_id})
+            if account_result['data']:
+                payday = account_result['data'][0].get('payday', 'Sunday')
+                days_map = {
+                    'Monday': 0, 'Tuesday': 1, 'Wednesday': 2,
+                    'Thursday': 3, 'Friday': 4, 'Saturday': 5, 'Sunday': 6
+                }
+                target_day = days_map.get(payday, 6)
+                
+                if submission_date.weekday() != target_day:
+                    return jsonify({
+                        'exists': False,
+                        'message': f'Payment proof must be submitted on {payday}'
+                    })
         
         existing = supabase_request('GET', 'hs_submissions', 
             filters={
@@ -1008,7 +1045,7 @@ def check_payment_submission():
         return jsonify({'exists': False})
 
 # ============================================================
-# API SUBMIT PAYMENT PROOF
+# API SUBMIT PAYMENT PROOF - UPDATED WITH PAYDAY VALIDATION
 # ============================================================
 
 @app.route('/api/submit-payment-proof', methods=['POST'])
@@ -1035,69 +1072,99 @@ def api_submit_payment_proof():
         if not payment_proof_url:
             return jsonify({'success': False, 'error': 'Payment proof screenshot required'}), 400
         
-        check_response = supabase_request('GET', 'hs_submissions', filters={
+        # ✅ CHECK PAYDAY RULE
+        account_result = supabase_request('GET', 'hs_accounts', filters={'id': account_id})
+        if not account_result['data']:
+            return jsonify({'success': False, 'error': 'Account not found'}), 404
+        
+        account = account_result['data'][0]
+        payday = account.get('payday', 'Sunday')
+        
+        # Check if today is the payday
+        submission_date = datetime.strptime(date, '%Y-%m-%d').date()
+        
+        days = {
+            'Monday': 0, 'Tuesday': 1, 'Wednesday': 2,
+            'Thursday': 3, 'Friday': 4, 'Saturday': 5, 'Sunday': 6
+        }
+        target_day = days.get(payday, 6)
+        
+        # Check if submission date matches payday
+        if submission_date.weekday() != target_day:
+            return jsonify({
+                'success': False,
+                'error': f'❌ Payment proof must be submitted on {payday}. Today is {submission_date.strftime("%A")}.'
+            }), 400
+        
+        # ✅ Check if already submitted for this pay period
+        pay_period_start = submission_date - timedelta(days=7)
+        
+        existing = supabase_request('GET', 'hs_submissions', filters={
             'worker_id': user_id,
             'account_id': account_id,
             'submission_type': 'payment_proof'
         })
         
-        try:
-            new_date = datetime.strptime(date, '%Y-%m-%d').date()
-        except:
-            new_date = datetime.utcnow().date()
+        if existing['data']:
+            for sub in existing['data']:
+                sub_date = datetime.strptime(sub.get('date', ''), '%Y-%m-%d').date() if sub.get('date') else None
+                if sub_date and pay_period_start <= sub_date <= submission_date:
+                    if sub.get('status') != 'rejected':
+                        return jsonify({
+                            'success': False,
+                            'error': f'⚠️ Payment proof already submitted for this pay period ({pay_period_start} to {submission_date})'
+                        }), 400
         
-        if check_response['data']:
-            for sub in check_response['data']:
-                if sub.get('status') == 'rejected':
-                    continue
-                
-                sub_date_str = sub.get('date')
-                if sub_date_str:
-                    try:
-                        sub_date = datetime.strptime(sub_date_str, '%Y-%m-%d').date()
-                        days_diff = abs((new_date - sub_date).days)
-                        
-                        if days_diff <= 7:
-                            return jsonify({
-                                'success': False,
-                                'error': f'❌ You already submitted a payment proof on {sub_date_str}. Must wait 7 days between submissions. (Days difference: {days_diff})'
-                            }), 400
-                    except:
-                        pass
-        
+        # Get worker percentage
         worker_result = supabase_request('GET', 'hs_users', filters={'id': user_id})
         worker_percentage = safe_float(worker_result['data'][0].get('worker_percentage', 10)) if worker_result['data'] else 10
         
-        account_result = supabase_request('GET', 'hs_accounts', filters={'id': account_id})
-        client_rate = safe_float(account_result['data'][0].get('client_rate', 15)) if account_result['data'] else 15
+        # Calculate hours worked in this pay period
+        hours_worked = 0
+        hours_submissions = supabase_request('GET', 'hs_submissions', filters={
+            'worker_id': user_id,
+            'account_id': account_id,
+            'submission_type': 'hours'
+        })
+        
+        if hours_submissions['data']:
+            for sub in hours_submissions['data']:
+                sub_date = datetime.strptime(sub.get('date', ''), '%Y-%m-%d').date() if sub.get('date') else None
+                if sub_date and pay_period_start <= sub_date <= submission_date:
+                    if sub.get('status') != 'rejected':
+                        hours_worked += safe_float(sub.get('hours', 0))
+        
+        # Calculate earnings
+        client_rate = safe_float(account.get('client_rate', 15))
+        total_earnings = payment_amount
+        worker_payout = total_earnings * (worker_percentage / 100)
+        commission = total_earnings - worker_payout
         
         settings = get_settings()
         exchange_rate = settings.get('exchange_rate', 150)
-        
-        payment_amount = safe_float(payment_amount)
-        worker_payout = payment_amount * (worker_percentage / 100)
-        your_revenue = payment_amount - worker_payout
         
         submission_data = {
             'id': str(uuid.uuid4()),
             'worker_id': user_id,
             'account_id': account_id,
             'date': date,
-            'hours': 0,
+            'hours': hours_worked,
             'screenshot_url': payment_proof_url,
-            'notes': f"Payment Ref: {payment_reference} | Amount: ${payment_amount:.2f} | Worker Share: {worker_percentage}%",
+            'notes': f"Payment Ref: {payment_reference} | Amount: ${payment_amount:.2f} | Worker Share: {worker_percentage}% | Hours: {hours_worked}h",
             'submission_type': 'payment_proof',
             'status': 'pending',
             'client_rate': client_rate,
             'worker_percentage': worker_percentage,
-            'total_earnings_usd': payment_amount,
-            'commission_usd': your_revenue,
+            'total_earnings_usd': total_earnings,
+            'commission_usd': commission,
             'worker_payout_usd': worker_payout,
             'worker_payout_kes': worker_payout * exchange_rate,
             'payment_proof_url': payment_proof_url,
             'payment_reference': payment_reference,
             'payment_confirmed': False,
-            'payment_proof_uploaded_at': datetime.utcnow().isoformat(),
+            'hours_worked_in_period': hours_worked,
+            'pay_period_start': pay_period_start.isoformat(),
+            'pay_period_end': submission_date.isoformat(),
             'created_at': datetime.utcnow().isoformat(),
             'updated_at': datetime.utcnow().isoformat()
         }
@@ -1107,7 +1174,7 @@ def api_submit_payment_proof():
         if response.get('data'):
             return jsonify({
                 'success': True,
-                'message': f'✅ Payment proof submitted successfully! You will earn ${worker_payout:.2f} ({worker_percentage}%)',
+                'message': f'✅ Payment proof submitted successfully! ${worker_payout:.2f} ({worker_percentage}%) for {hours_worked}h worked',
                 'submission_id': response['data'][0]['id'] if response['data'] else None
             })
         else:
@@ -1141,13 +1208,9 @@ def api_upload():
         unique_filename = f"{uuid.uuid4().hex}_{filename}"
         
         bucket_name = 'uploads'
-        
-        # Read file content
         file_content = file.read()
         
-        # Upload to Supabase Storage using public endpoint
         url = f"{SUPABASE_URL}/storage/v1/object/public/{bucket_name}/{unique_filename}"
-        
         headers = {
             'apikey': SUPABASE_KEY,
             'Authorization': f'Bearer {SUPABASE_KEY}',
@@ -1158,7 +1221,6 @@ def api_upload():
         print(f"📤 File size: {len(file_content)} bytes")
         
         response = requests.post(url, headers=headers, data=file_content)
-        
         print(f"📤 Response status: {response.status_code}")
         
         if response.status_code in [200, 201, 204]:
@@ -1169,7 +1231,6 @@ def api_upload():
                 'filename': unique_filename
             })
         else:
-            # Try alternative endpoint
             alt_url = f"{SUPABASE_URL}/storage/v1/object/{bucket_name}/{unique_filename}"
             alt_response = requests.post(alt_url, headers=headers, data=file_content)
             
@@ -1191,6 +1252,75 @@ def api_upload():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+# ============================================================
+# API ACCOUNTS - UPDATED WITH PAYDAY
+# ============================================================
+
+@app.route('/api/accounts', methods=['GET', 'POST', 'PUT', 'DELETE'])
+@login_required
+@admin_required
+def api_accounts():
+    if request.method == 'GET':
+        try:
+            result = supabase_request('GET', 'hs_accounts')
+            return jsonify({'success': True, 'data': result['data']})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+    
+    elif request.method == 'POST':
+        try:
+            data = request.get_json()
+            account_data = {
+                'id': str(uuid.uuid4()),
+                'name': data.get('name'),
+                'platform': data.get('platform'),
+                'location': data.get('location'),
+                'client_rate': safe_float(data.get('client_rate', 15)),
+                'payday': data.get('payday', 'Sunday'),
+                'proxy_id': data.get('proxy_id'),
+                'status': data.get('status', 'active'),
+                'created_at': datetime.utcnow().isoformat(),
+                'updated_at': datetime.utcnow().isoformat()
+            }
+            result = supabase_request('POST', 'hs_accounts', data=account_data)
+            return jsonify({'success': True, 'data': result['data'], 'message': 'Account added successfully!'})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+    
+    elif request.method == 'PUT':
+        try:
+            data = request.get_json()
+            account_id = data.get('id')
+            if not account_id:
+                return jsonify({'success': False, 'error': 'Account ID required'}), 400
+            
+            update_data = {
+                'name': data.get('name'),
+                'platform': data.get('platform'),
+                'location': data.get('location'),
+                'client_rate': safe_float(data.get('client_rate', 15)),
+                'payday': data.get('payday', 'Sunday'),
+                'proxy_id': data.get('proxy_id'),
+                'status': data.get('status', 'active'),
+                'updated_at': datetime.utcnow().isoformat()
+            }
+            update_data = {k: v for k, v in update_data.items() if v is not None}
+            
+            result = supabase_request('PATCH', 'hs_accounts', data=update_data, filters={'id': account_id})
+            return jsonify({'success': True, 'data': result['data'], 'message': 'Account updated successfully!'})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+    
+    elif request.method == 'DELETE':
+        try:
+            account_id = request.args.get('id')
+            if not account_id:
+                return jsonify({'success': False, 'error': 'Account ID required'}), 400
+            supabase_request('DELETE', 'hs_accounts', filters={'id': account_id})
+            return jsonify({'success': True, 'message': 'Account deleted successfully!'})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
 
 # ============================================================
 # MY SUBMISSIONS
@@ -1323,7 +1453,6 @@ def api_approvals():
             'updated_at': datetime.utcnow().isoformat()
         }
         
-        # Payment proof approval - Credit the worker
         if submission_type == 'payment_proof' and status == 'approved':
             worker_payout = safe_float(submission_data.get('worker_payout_usd'))
             
@@ -1365,7 +1494,6 @@ def api_approvals():
                 'approved_at': datetime.utcnow().isoformat()
             }), 200
         
-        # Hours approval
         elif submission_type == 'hours':
             result = supabase_request('PATCH', 'hs_submissions', data=update_data, filters={'id': submission_id})
             
@@ -1442,7 +1570,6 @@ def confirm_payment():
         exchange_rate = settings.get('exchange_rate', 150)
         worker_payout_kes = worker_payout_usd * exchange_rate
         
-        # Update submission to paid
         update_data = {
             'payment_confirmed': True,
             'payment_confirmed_by': admin_id,
@@ -1452,7 +1579,6 @@ def confirm_payment():
             'updated_at': datetime.utcnow().isoformat()
         }
         
-        # Try to add KES fields if they exist
         try:
             update_data['exchange_rate_used'] = exchange_rate
             update_data['worker_payout_kes'] = worker_payout_kes
@@ -1461,7 +1587,6 @@ def confirm_payment():
         
         result = supabase_request('PATCH', 'hs_submissions', data=update_data, filters={'id': submission_id})
         
-        # Update worker earnings
         if worker_id and worker_payout_usd > 0:
             try:
                 worker_result = supabase_request('GET', 'hs_users', filters={'id': worker_id})
@@ -1923,7 +2048,6 @@ def accounts():
         flash(f'Error: {str(e)}', 'danger')
         return render_template('accounts.html', accounts=[], proxies=[], user_name=session.get('user_name'), now=datetime.now(), stats=get_handshake_stats())
 
-
 # ============================================================
 # PROXIES
 # ============================================================
@@ -2335,11 +2459,7 @@ def verification():
         for worker_id, worker in worker_dict.items():
             worker_subs = [s for s in all_submissions if s.get('worker_id') == worker_id]
             
-            # ============================================================
-            # 🔥 EVEN IF NO SUBMISSIONS, ADD WORKER WITH EMPTY DATA
-            # ============================================================
             if not worker_subs:
-                # Add worker with no submissions
                 worker_data.append({
                     'worker_id': worker_id,
                     'worker_name': worker.get('name', 'Unknown'),
@@ -2370,9 +2490,6 @@ def verification():
                 })
                 continue
             
-            # ============================================================
-            # 🔥 GROUP BY WEEK (Monday to Sunday)
-            # ============================================================
             weekly_data = {}
             
             for s in worker_subs:
@@ -2389,7 +2506,6 @@ def verification():
                 except:
                     continue
                 
-                # Calculate week (Monday to Sunday)
                 week_start = submission_date - timedelta(days=submission_date.weekday())
                 week_key = week_start.isoformat()
                 
@@ -2439,7 +2555,6 @@ def verification():
                     })
             
             if not weekly_data:
-                # Worker has submissions but all were rejected or no valid dates
                 worker_data.append({
                     'worker_id': worker_id,
                     'worker_name': worker.get('name', 'Unknown'),
@@ -2470,9 +2585,6 @@ def verification():
                 })
                 continue
             
-            # ============================================================
-            # 🔥 PROCESS EACH WEEK
-            # ============================================================
             week_results = []
             total_hours_all = 0
             total_payment_all = 0
@@ -2489,7 +2601,6 @@ def verification():
                 expected = week['hours'] * client_rate
                 difference = week['payment'] - expected
                 
-                # Calculate days between hours and payment
                 days_between = "N/A"
                 if week['has_hours'] and week['has_payment']:
                     last_hour_date = week['hours_submissions'][-1]['date'] if week['hours_submissions'] else None
@@ -2502,7 +2613,6 @@ def verification():
                         except:
                             pass
                 
-                # Determine week status
                 if week['has_hours'] and week['has_payment'] and abs(difference) <= 2:
                     week_status = 'matched'
                     week_status_text = '✅ MATCHED'
@@ -2565,7 +2675,6 @@ def verification():
                     client_rate = week['client_rate']
             
             if total_hours_all == 0 and total_payment_all == 0:
-                # Worker has submissions but all are zero
                 worker_data.append({
                     'worker_id': worker_id,
                     'worker_name': worker.get('name', 'Unknown'),
@@ -2596,13 +2705,11 @@ def verification():
                 })
                 continue
             
-            # Count weeks by status
             matched_count = sum(1 for w in week_results if w['status'] == 'matched')
             pending_count = sum(1 for w in week_results if w['status'] == 'pending_payment')
             fraud_count = sum(1 for w in week_results if w['status'] == 'fraud')
             issue_count = sum(1 for w in week_results if w['status'] in ['overpaid', 'underpaid', 'unknown'])
             
-            # Determine overall status
             if matched_count == len(week_results) and len(week_results) > 0:
                 overall_status = 'matched'
                 overall_status_text = f'✅ All {len(week_results)} Weeks Matched'
@@ -2624,7 +2731,6 @@ def verification():
                 overall_status_text = '⚠️ Mixed Status'
                 overall_status_color = 'yellow'
             
-            # Determine hours group
             if total_hours_all == 0:
                 hours_group = 'no_hours'
                 group_label = '🚫 No Hours'
@@ -2673,7 +2779,6 @@ def verification():
         
         print(f"✅ Processed {len(worker_data)} workers with data")
         
-        # Group workers
         grouped = {
             'high_performer': [],
             'good_worker': [],
@@ -2689,7 +2794,6 @@ def verification():
         for key in grouped:
             grouped[key].sort(key=lambda x: x['total_hours'], reverse=True)
         
-        # Calculate stats
         total_workers = len(worker_data)
         matched_workers = sum(1 for w in worker_data if w.get('weeks_matched', 0) == w.get('total_weeks', 0) and w.get('total_weeks', 0) > 0)
         pending_payment = sum(1 for w in worker_data if w.get('weeks_pending', 0) > 0 and w.get('weeks_matched', 0) == 0)
@@ -2732,6 +2836,7 @@ def verification():
             now=datetime.now(),
             stats=get_handshake_stats()
         )
+
 # ============================================================
 # PAYMENT PROCESSING
 # ============================================================
@@ -3051,18 +3156,6 @@ def export_report(report_type):
 # ANNOUNCEMENTS
 # ============================================================
 
-# ============================================================
-# ANNOUNCEMENTS
-# ============================================================
-
-# ============================================================
-# ANNOUNCEMENTS
-# ============================================================
-
-# ============================================================
-# ANNOUNCEMENTS - FIXED VERSION
-# ============================================================
-
 @app.route('/announcements')
 @login_required
 def announcements():
@@ -3078,29 +3171,24 @@ def announcements():
         print(f"👤 User: {user_name} ({user_role}) - ID: {user_id}")
         print("=" * 60)
         
-        # Get all announcements
         announcements_response = supabase_request('GET', 'hs_announcements')
         all_announcements = announcements_response['data'] if announcements_response['data'] else []
         
-        # Get all users
         users_response = supabase_request('GET', 'hs_users')
         all_users = users_response['data'] if users_response['data'] else []
         
         print(f"📊 Total announcements: {len(all_announcements)}")
         print(f"👥 Total users: {len(all_users)}")
         
-        # Process announcements
         processed_announcements = []
         for announcement in all_announcements:
             try:
-                # Parse read_by
                 read_by = announcement.get('read_by', '[]')
                 if isinstance(read_by, str):
                     read_by = json.loads(read_by) if read_by else []
                 elif not isinstance(read_by, list):
                     read_by = []
                 
-                # Parse target_users
                 target_users = announcement.get('target_users', '[]')
                 if isinstance(target_users, str):
                     target_users = json.loads(target_users) if target_users else []
@@ -3118,7 +3206,6 @@ def announcements():
                     'sender_role': announcement.get('created_by_role') or 'Admin',
                     'priority': announcement.get('priority', 'normal'),
                     'created_at': announcement.get('created_at', datetime.utcnow().isoformat()),
-                    # ✅ FIX: Set is_read based on read_by, don't auto-mark
                     'is_read': user_id in read_by if user_id else False
                 }
                 processed_announcements.append(processed)
@@ -3126,10 +3213,8 @@ def announcements():
                 print(f"⚠️ Error processing announcement: {e}")
                 continue
         
-        # Sort by created_at descending (newest first)
         processed_announcements.sort(key=lambda x: x.get('created_at', ''), reverse=True)
         
-        # Filter announcements for this user
         filtered_announcements = []
         for announcement in processed_announcements:
             audience = announcement.get('audience', 'all')
@@ -3146,13 +3231,8 @@ def announcements():
         
         print(f"📊 Showing {len(filtered_announcements)} announcements after filtering")
         
-        # ✅ REMOVED: The auto-mark-read code that was here!
-        # Now the frontend will handle marking as read via the Intersection Observer
-        
-        # Get stats
         stats = get_handshake_stats()
         
-        # Choose template based on role
         if user_role == 'admin':
             template = 'announcements.html'
         else:
@@ -3188,11 +3268,10 @@ def announcements():
             stats=get_handshake_stats(),
             is_admin=False
         )
+
 @app.route('/api/announcements', methods=['GET', 'POST'])
 @login_required
 def api_announcements():
-    """API endpoint for announcements - Chat system with role-based permissions"""
-    
     if request.method == 'GET':
         try:
             result = supabase_request('GET', 'hs_announcements')
@@ -3225,30 +3304,20 @@ def api_announcements():
             
             data = request.get_json()
             
-            # Required fields
             if not data.get('title'):
                 return jsonify({'success': False, 'error': 'Title is required'}), 400
             if not data.get('message'):
                 return jsonify({'success': False, 'error': 'Message is required'}), 400
             
-            # ============================================================
-            # 🔥 RECIPIENT MAPPING - With role-based permissions
-            # ============================================================
             recipient_type = data.get('recipient_type', 'all_users')
             
-            # ============================================================
-            # 🔥 PERMISSION CHECK - Who can send to whom
-            # ============================================================
             allowed_recipients = []
             
             if user_role == 'admin':
-                # Admin can send to everyone
                 allowed_recipients = ['all_workers', 'all_admins', 'all_users', 'specific_worker', 'specific_admin']
             else:
-                # Worker can only send to workers and all users
                 allowed_recipients = ['all_workers', 'all_users', 'specific_worker']
                 
-                # ❌ Block workers from sending to admins
                 if recipient_type in ['all_admins', 'specific_admin']:
                     return jsonify({
                         'success': False, 
@@ -3261,9 +3330,6 @@ def api_announcements():
                     'error': f'❌ You are not allowed to send to: {recipient_type}'
                 }), 403
             
-            # ============================================================
-            # 🔥 MAP RECIPIENT TO AUDIENCE
-            # ============================================================
             audience_map = {
                 'all_workers': 'workers',
                 'all_admins': 'admins',
@@ -3275,9 +3341,6 @@ def api_announcements():
             
             print(f"📤 User: {user_name} ({user_role}) sending to: {recipient_type} → Audience: {audience}")
             
-            # ============================================================
-            # 🔥 GET TARGET USERS
-            # ============================================================
             target_users = []
             
             if recipient_type == 'all_workers':
@@ -3313,9 +3376,6 @@ def api_announcements():
                     target_users = [recipient_id]
                     print(f"📤 Target: 1 specific user ({recipient_id})")
             
-            # ============================================================
-            # 🔥 BUILD ANNOUNCEMENT DATA
-            # ============================================================
             announcement_data = {
                 'id': str(uuid.uuid4()),
                 'title': data.get('title'),
@@ -3354,12 +3414,9 @@ def api_announcements():
             traceback.print_exc()
             return jsonify({'success': False, 'error': str(e)}), 500
 
-
 @app.route('/api/announcements/<announcement_id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required
 def api_announcement_detail(announcement_id):
-    """API endpoint for single announcement operations"""
-    
     if request.method == 'GET':
         try:
             result = supabase_request('GET', 'hs_announcements', filters={'id': announcement_id})
@@ -3439,11 +3496,9 @@ def api_announcement_detail(announcement_id):
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
 
-
 @app.route('/api/announcements/<announcement_id>/read', methods=['PATCH'])
 @login_required
 def api_mark_announcement_read(announcement_id):
-    """Mark an announcement as read for the current user"""
     try:
         user_id = session.get('user_id')
         
@@ -3469,11 +3524,9 @@ def api_mark_announcement_read(announcement_id):
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
 @app.route('/api/announcements/mark-all-read', methods=['PATCH'])
 @login_required
 def api_mark_all_announcements_read():
-    """Mark all announcements as read for the current user"""
     try:
         user_id = session.get('user_id')
         
@@ -3499,16 +3552,14 @@ def api_mark_all_announcements_read():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
-        # ============================================================
-# ADMIN MESSAGES - Real-time Chat
+# ============================================================
+# ADMIN MESSAGES
 # ============================================================
 
 @app.route('/admin-messages')
 @login_required
 @admin_required
 def admin_messages():
-    """Admin messages page with real-time chat"""
     try:
         user_id = session.get('user_id')
         user_name = session.get('user_name', 'Admin')
@@ -3519,31 +3570,25 @@ def admin_messages():
         print(f"👤 Admin: {user_name} ({user_id})")
         print("=" * 60)
         
-        # Get all users (except current admin)
         users_response = supabase_request('GET', 'hs_users')
         all_users = users_response['data'] if users_response['data'] else []
         
-        # Filter out current user
         filtered_users = [u for u in all_users if u.get('id') != user_id]
         
         print(f"👥 Found {len(filtered_users)} other users")
         
-        # Get all announcements/messages
         announcements_response = supabase_request('GET', 'hs_announcements')
         all_announcements = announcements_response['data'] if announcements_response['data'] else []
         
-        # Process messages for display
         processed_messages = []
         for msg in all_announcements:
             try:
-                # Parse read_by
                 read_by = msg.get('read_by', '[]')
                 if isinstance(read_by, str):
                     read_by = json.loads(read_by) if read_by else []
                 elif not isinstance(read_by, list):
                     read_by = []
                 
-                # Parse target_users
                 target_users = msg.get('target_users', '[]')
                 if isinstance(target_users, str):
                     target_users = json.loads(target_users) if target_users else []
@@ -3569,7 +3614,6 @@ def admin_messages():
         
         print(f"📊 Found {len(processed_messages)} total messages")
         
-        # Get stats
         stats = get_handshake_stats()
         
         return render_template('admin_messages.html',
@@ -3590,15 +3634,13 @@ def admin_messages():
         flash('Error loading messages', 'danger')
         return redirect(url_for('admin_dashboard'))
 
-
 # ============================================================
-# WORKER MESSAGES - Real-time Chat
+# WORKER MESSAGES
 # ============================================================
 
 @app.route('/worker-messages')
 @login_required
 def worker_messages():
-    """Worker messages page with real-time chat"""
     try:
         user_id = session.get('user_id')
         user_name = session.get('user_name', 'Worker')
@@ -3610,31 +3652,25 @@ def worker_messages():
         print(f"👤 Worker: {user_name} ({user_id})")
         print("=" * 60)
         
-        # Get all users (except current worker)
         users_response = supabase_request('GET', 'hs_users')
         all_users = users_response['data'] if users_response['data'] else []
         
-        # Filter out current user
         filtered_users = [u for u in all_users if u.get('id') != user_id]
         
         print(f"👥 Found {len(filtered_users)} other users")
         
-        # Get all announcements/messages
         announcements_response = supabase_request('GET', 'hs_announcements')
         all_announcements = announcements_response['data'] if announcements_response['data'] else []
         
-        # Process messages for display
         processed_messages = []
         for msg in all_announcements:
             try:
-                # Parse read_by
                 read_by = msg.get('read_by', '[]')
                 if isinstance(read_by, str):
                     read_by = json.loads(read_by) if read_by else []
                 elif not isinstance(read_by, list):
                     read_by = []
                 
-                # Parse target_users
                 target_users = msg.get('target_users', '[]')
                 if isinstance(target_users, str):
                     target_users = json.loads(target_users) if target_users else []
@@ -3660,7 +3696,6 @@ def worker_messages():
         
         print(f"📊 Found {len(processed_messages)} total messages")
         
-        # Get stats
         stats = get_handshake_stats()
         
         return render_template('worker_messages.html',
@@ -3680,6 +3715,7 @@ def worker_messages():
         traceback.print_exc()
         flash('Error loading messages', 'danger')
         return redirect(url_for('worker_dashboard'))
+
 # ============================================================
 # RUN APP
 # ============================================================
@@ -3695,15 +3731,9 @@ if __name__ == '__main__':
     print("   👤 Manager: manager@handshake.com / manager123")
     print("   👷 Worker: worker@handshake.com / worker123")
     print("=" * 60)
-    print("📊 REPORTS AVAILABLE:")
-    print("   📋 Submissions Report")
-    print("   👤 Workers Report")
-    print("   📂 Accounts Report")
-    print("   💰 Payments Report")
-    print("=" * 60)
     print("📌 FEATURES:")
     print("   ✅ Hours: 1 submission every 24 hours")
-    print("   ✅ Payment Proof: 1 submission per week (7 days)")
+    print("   ✅ Payment Proof: Must match account payday (Sunday/Thursday/etc.)")
     print("   ✅ Admin Dashboard with stats")
     print("   ✅ Worker Dashboard with assignments")
     print("   ✅ Manager Dashboard with oversight")
@@ -3713,7 +3743,6 @@ if __name__ == '__main__':
     print("   ✅ Verification dashboard")
     print("   ✅ Export reports to CSV")
     print("   ✅ Workers are credited when payment proofs are approved")
-    print("   ✅ Fixed payment proof date validation (7 days between submissions)")
     print("   ✅ WhatsApp Click-to-Chat for sending login credentials")
     print("   ✅ Announcements system with read tracking")
     print("=" * 60)
