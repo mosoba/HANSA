@@ -858,7 +858,7 @@ def api_submit_hours():
         if not hours or hours <= 0:
             return jsonify({'success': False, 'error': 'Valid hours required'}), 400
         
-        # ✅ CHECK 24-HOUR RULE
+        # ✅ CHECK 24-HOUR RULE - FIXED TIMEZONE
         last_submission = supabase_request('GET', 'hs_submissions', filters={
             'worker_id': user_id,
             'account_id': account_id,
@@ -869,8 +869,15 @@ def api_submit_hours():
             sorted_subs = sorted(last_submission['data'], 
                 key=lambda x: x.get('created_at', ''), reverse=True)
             if sorted_subs:
-                last_time = datetime.fromisoformat(sorted_subs[0]['created_at'])
-                now = datetime.utcnow()
+                from datetime import timezone
+                
+                last_time_str = sorted_subs[0]['created_at']
+                if last_time_str.endswith('Z'):
+                    last_time_str = last_time_str[:-1]
+                last_time = datetime.fromisoformat(last_time_str)
+                last_time = last_time.replace(tzinfo=timezone.utc)
+                
+                now = datetime.now(timezone.utc)
                 hours_diff = (now - last_time).total_seconds() / 3600
                 
                 if hours_diff < 24:
