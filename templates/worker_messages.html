@@ -710,7 +710,7 @@ function stopAutoSort() {
 }
 
 // ============================================================
-// 📋 LOAD MESSAGES - SMOOTH VERSION
+// 📋 LOAD MESSAGES - FIXED VERSION
 // ============================================================
 function loadMessages(contactId) {
     const container = document.getElementById('chatMessages');
@@ -721,22 +721,24 @@ function loadMessages(contactId) {
     // Filter messages
     let messages = [];
     if (contactId === 'group') {
+        // Group chat: Show all messages sent to everyone
         messages = allMessages.filter(m => {
             const audience = m.audience || '';
             return audience === 'all' || audience === 'all_users';
         });
     } else {
+        // Individual chat: ONLY show messages between the two users
+        // ✅ FIX: Removed isToAll condition so group messages don't appear here
         messages = allMessages.filter(m => {
             const senderId = m.sender_id || '';
             const targetUsers = m.target_users || [];
-            const audience = m.audience || '';
             
+            // Direct messages only
             const isFromContact = senderId === contactId;
             const isToContact = targetUsers.includes(contactId);
-            const isToAll = audience === 'all' || audience === 'all_users';
             const isFromMeToContact = senderId === currentUserId && targetUsers.includes(contactId);
             
-            return isFromContact || isToContact || isToAll || isFromMeToContact;
+            return isFromContact || isToContact || isFromMeToContact;
         });
     }
     
