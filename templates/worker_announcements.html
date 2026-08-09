@@ -188,7 +188,7 @@
 
 .audience-pills {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 8px;
 }
 .audience-pills .pill {
@@ -670,8 +670,29 @@
                         <span class="emoji">👑</span>
                         <span class="pill-label">Admins</span>
                     </div>
+                    <!-- ✅ ADDED: Specific Worker option -->
+                    <div class="pill" data-value="specific_worker" onclick="selectAudience('specific_worker')">
+                        <span class="emoji">🎯</span>
+                        <span class="pill-label">Specific</span>
+                    </div>
                 </div>
                 <input type="hidden" id="audience" value="all">
+            </div>
+
+            <!-- ✅ ADDED: Specific Worker Dropdown -->
+            <div class="form-group" id="specificWorkerGroup" style="display:none;">
+                <label>
+                    <span class="icon-label"><i class="fas fa-user-check"></i></span>
+                    Select Worker <span class="required">*</span>
+                </label>
+                <select id="specificWorker">
+                    <option value="">-- Select a worker --</option>
+                    {% for user in users %}
+                        {% if user.role == 'worker' %}
+                        <option value="{{ user.id }}">{{ user.name or 'Unknown' }} ({{ user.email }})</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
             </div>
 
             <div class="form-group">
@@ -810,6 +831,12 @@ function selectAudience(value) {
         el.classList.toggle('active', el.dataset.value === value);
     });
     document.getElementById('audience').value = value;
+    
+    // ✅ ADDED: Show/hide specific worker dropdown
+    const specificGroup = document.getElementById('specificWorkerGroup');
+    if (specificGroup) {
+        specificGroup.style.display = value === 'specific_worker' ? 'block' : 'none';
+    }
 }
 
 // ============================================================
@@ -858,7 +885,7 @@ function filterAnnouncements(filter, btn) {
 }
 
 // ============================================================
-// SEND ANNOUNCEMENT
+// SEND ANNOUNCEMENT - ✅ FIXED with specific worker support
 // ============================================================
 async function sendAnnouncement(event) {
     event.preventDefault();
@@ -872,6 +899,7 @@ async function sendAnnouncement(event) {
     const message = document.getElementById('message').value.trim();
     const audience = document.getElementById('audience').value;
     const priority = document.getElementById('priority').value;
+    const specificWorker = document.getElementById('specificWorker')?.value || '';
     
     if (!title || !message) {
         showToast('Please fill in all required fields', 'warning');
@@ -880,16 +908,40 @@ async function sendAnnouncement(event) {
         return;
     }
     
+    // ✅ ADDED: Map audience to recipient_type
+    let recipient_type = 'all_users';
+    let recipient_id = null;
+    
+    if (audience === 'all') {
+        recipient_type = 'all_users';
+    } else if (audience === 'workers') {
+        recipient_type = 'all_workers';
+    } else if (audience === 'admins') {
+        recipient_type = 'all_admins';
+    } else if (audience === 'specific_worker') {
+        if (!specificWorker) {
+            showToast('Please select a worker', 'warning');
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = originalText;
+            return;
+        }
+        recipient_type = 'specific_worker';
+        recipient_id = specificWorker;
+    }
+    
     try {
+        const payload = {
+            title: title,
+            message: message,
+            recipient_type: recipient_type,
+            priority: priority
+        };
+        if (recipient_id) payload.recipient_id = recipient_id;
+        
         const response = await fetch('/api/announcements', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                title: title,
-                message: message,
-                audience: audience,
-                priority: priority
-            })
+            body: JSON.stringify(payload)
         });
         
         const result = await response.json();
@@ -909,6 +961,10 @@ async function sendAnnouncement(event) {
                     el.classList.add('active-normal');
                 }
             });
+            if (document.getElementById('specificWorker')) {
+                document.getElementById('specificWorker').value = '';
+                document.getElementById('specificWorkerGroup').style.display = 'none';
+            }
             selectAudience('all');
             setTimeout(() => location.reload(), 1000);
         } else {
