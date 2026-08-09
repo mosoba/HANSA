@@ -670,7 +670,6 @@
                         <span class="emoji">👑</span>
                         <span class="pill-label">Admins</span>
                     </div>
-                    <!-- ✅ ADDED: Specific Worker option -->
                     <div class="pill" data-value="specific_worker" onclick="selectAudience('specific_worker')">
                         <span class="emoji">🎯</span>
                         <span class="pill-label">Specific</span>
@@ -679,7 +678,6 @@
                 <input type="hidden" id="audience" value="all">
             </div>
 
-            <!-- ✅ ADDED: Specific Worker Dropdown -->
             <div class="form-group" id="specificWorkerGroup" style="display:none;">
                 <label>
                     <span class="icon-label"><i class="fas fa-user-check"></i></span>
@@ -750,7 +748,6 @@
         <div class="list-body" id="announcementsList">
             {% if announcements %}
                 {% for announcement in announcements %}
-                <!-- ✅ FIXED: Using current_user_id instead of session.user_id -->
                 <div class="announce-card 
                             {% if current_user_id not in announcement.read_by %}unread{% endif %}
                             {% if announcement.priority == 'high' %}high-priority{% endif %}" 
@@ -761,7 +758,6 @@
                     <div class="card-top">
                         <div class="card-title">
                             {{ announcement.title }}
-                            <!-- ✅ FIXED: Using current_user_id not in announcement.read_by -->
                             {% if current_user_id not in announcement.read_by %}
                             <span class="badge-new">New</span>
                             {% endif %}
@@ -784,7 +780,6 @@
                     <div class="card-body">{{ announcement.message }}</div>
                     <div class="card-footer">
                         <div class="read-status">
-                            <!-- ✅ FIXED: Using current_user_id in announcement.read_by -->
                             {% if current_user_id in announcement.read_by %}
                                 <span class="read"><i class="fas fa-check-circle"></i> Read</span>
                             {% else %}
@@ -792,7 +787,6 @@
                             {% endif %}
                         </div>
                         <div class="actions">
-                            <!-- ✅ FIXED: Using current_user_id not in announcement.read_by -->
                             {% if current_user_id not in announcement.read_by %}
                             <button class="read-btn" onclick="markRead('{{ announcement.id }}')">
                                 <i class="fas fa-check"></i> Mark Read
@@ -831,8 +825,6 @@ function selectAudience(value) {
         el.classList.toggle('active', el.dataset.value === value);
     });
     document.getElementById('audience').value = value;
-    
-    // ✅ ADDED: Show/hide specific worker dropdown
     const specificGroup = document.getElementById('specificWorkerGroup');
     if (specificGroup) {
         specificGroup.style.display = value === 'specific_worker' ? 'block' : 'none';
@@ -866,7 +858,6 @@ function filterAnnouncements(filter, btn) {
     document.querySelectorAll('#filterGroup button').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
     
-    // ✅ FIXED: Using current_user_id instead of session.user_id
     const currentUserId = '{{ current_user_id }}';
     
     document.querySelectorAll('.announce-card').forEach(item => {
@@ -885,7 +876,7 @@ function filterAnnouncements(filter, btn) {
 }
 
 // ============================================================
-// SEND ANNOUNCEMENT - ✅ FIXED with specific worker support
+// SEND ANNOUNCEMENT
 // ============================================================
 async function sendAnnouncement(event) {
     event.preventDefault();
@@ -908,7 +899,6 @@ async function sendAnnouncement(event) {
         return;
     }
     
-    // ✅ ADDED: Map audience to recipient_type
     let recipient_type = 'all_users';
     let recipient_id = null;
     
@@ -1007,7 +997,6 @@ async function markRead(id) {
                     readBtn.outerHTML = `<button class="marked-read" disabled><i class="fas fa-check-circle"></i> Read</button>`;
                 }
             }
-            // Update count
             const unreadCards = document.querySelectorAll('.announce-card.unread');
             document.querySelector('.count-badge').textContent = unreadCards.length;
         }
