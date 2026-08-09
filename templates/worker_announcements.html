@@ -729,19 +729,19 @@
         <div class="list-body" id="announcementsList">
             {% if announcements %}
                 {% for announcement in announcements %}
-                <!-- ✅ FIX: Use session.user_id in announcement.read_by instead of announcement.is_read -->
+                <!-- ✅ FIXED: Using current_user_id instead of session.user_id -->
                 <div class="announce-card 
-                            {% if session.user_id not in announcement.read_by %}unread{% endif %}
+                            {% if current_user_id not in announcement.read_by %}unread{% endif %}
                             {% if announcement.priority == 'high' %}high-priority{% endif %}" 
                      id="announcement-{{ announcement.id }}"
-                     data-read="{% if session.user_id in announcement.read_by %}read{% else %}unread{% endif %}"
+                     data-read="{% if current_user_id in announcement.read_by %}read{% else %}unread{% endif %}"
                      data-priority="{{ announcement.priority or 'normal' }}"
                      data-sender="{{ announcement.sender_id or '' }}">
                     <div class="card-top">
                         <div class="card-title">
                             {{ announcement.title }}
-                            <!-- ✅ FIX: Use session.user_id not in announcement.read_by -->
-                            {% if session.user_id not in announcement.read_by %}
+                            <!-- ✅ FIXED: Using current_user_id not in announcement.read_by -->
+                            {% if current_user_id not in announcement.read_by %}
                             <span class="badge-new">New</span>
                             {% endif %}
                             {% if announcement.priority == 'high' %}
@@ -763,16 +763,16 @@
                     <div class="card-body">{{ announcement.message }}</div>
                     <div class="card-footer">
                         <div class="read-status">
-                            <!-- ✅ FIX: Use session.user_id in announcement.read_by -->
-                            {% if session.user_id in announcement.read_by %}
+                            <!-- ✅ FIXED: Using current_user_id in announcement.read_by -->
+                            {% if current_user_id in announcement.read_by %}
                                 <span class="read"><i class="fas fa-check-circle"></i> Read</span>
                             {% else %}
                                 <span class="unread"><i class="fas fa-circle"></i> Unread</span>
                             {% endif %}
                         </div>
                         <div class="actions">
-                            <!-- ✅ FIX: Use session.user_id not in announcement.read_by -->
-                            {% if session.user_id not in announcement.read_by %}
+                            <!-- ✅ FIXED: Using current_user_id not in announcement.read_by -->
+                            {% if current_user_id not in announcement.read_by %}
                             <button class="read-btn" onclick="markRead('{{ announcement.id }}')">
                                 <i class="fas fa-check"></i> Mark Read
                             </button>
@@ -781,7 +781,7 @@
                                 <i class="fas fa-check-circle"></i> Read
                             </button>
                             {% endif %}
-                            {% if announcement.sender_id == session.user_id %}
+                            {% if announcement.sender_id == current_user_id %}
                             <button class="delete-btn" onclick="deleteAnnouncement('{{ announcement.id }}')">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -839,7 +839,8 @@ function filterAnnouncements(filter, btn) {
     document.querySelectorAll('#filterGroup button').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
     
-    const currentUserId = '{{ session.user_id }}';
+    // ✅ FIXED: Using current_user_id instead of session.user_id
+    const currentUserId = '{{ current_user_id }}';
     
     document.querySelectorAll('.announce-card').forEach(item => {
         const isRead = item.dataset.read === 'read';
