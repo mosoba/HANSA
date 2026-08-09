@@ -3,424 +3,348 @@
 {% block title %}Announcements - Handshake Manager{% endblock %}
 
 {% block page_title %}
-<div class="flex items-center gap-3">
-    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-200">
-        <i class="fas fa-bullhorn text-white text-xl"></i>
+<div class="flex items-center gap-4">
+    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-200/50">
+        <i class="fas fa-bullhorn text-white text-2xl"></i>
     </div>
     <div>
-        <h1 class="text-2xl font-bold text-gray-900">Announcements</h1>
-        <p class="text-sm text-gray-500">Send updates and announcements to your team</p>
+        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Announcements</h1>
+        <div class="flex items-center gap-3 mt-0.5">
+            <p class="text-sm text-gray-500">Keep your team informed and aligned</p>
+            <span class="px-2.5 py-0.5 text-xs font-medium bg-indigo-50 text-indigo-600 rounded-full border border-indigo-200">
+                {{ announcements|length }} total
+            </span>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-/* ===== MODERN ANNOUNCEMENTS SYSTEM ===== */
-:root {
-    --primary: #4f46e5;
-    --primary-light: #818cf8;
-    --primary-dark: #4338ca;
-    --success: #10b981;
-    --warning: #f59e0b;
-    --danger: #ef4444;
-    --gray-50: #f8fafc;
-    --gray-100: #f1f5f9;
-    --gray-200: #e2e8f0;
-    --gray-300: #cbd5e1;
-    --gray-400: #94a3b8;
-    --gray-500: #64748b;
-    --gray-600: #475569;
-    --gray-700: #334155;
-    --gray-800: #1e293b;
-    --gray-900: #0f172a;
-    --radius: 16px;
-    --shadow: 0 4px 24px rgba(0,0,0,0.06);
-    --shadow-lg: 0 8px 40px rgba(0,0,0,0.1);
-}
-
-/* ===== CONTAINER ===== */
-.announcements-container {
+/* ============================================================
+   SIMPLE ANNOUNCEMENTS - ADMIN WITH CREATE FORM
+   ============================================================ */
+.announcements-wrapper {
     display: grid;
     grid-template-columns: 420px 1fr;
-    gap: 28px;
-    height: calc(100vh - 260px);
+    gap: 24px;
     min-height: 550px;
 }
 
 /* ===== LEFT PANEL - CREATE ===== */
 .create-panel {
     background: white;
-    border-radius: var(--radius);
-    border: 1px solid var(--gray-200);
-    padding: 28px;
-    overflow-y: auto;
-    box-shadow: var(--shadow);
-    transition: all 0.3s;
+    border-radius: 16px;
+    border: 1px solid #e8edf4;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    height: fit-content;
+    position: sticky;
+    top: 20px;
 }
-.create-panel:hover {
-    box-shadow: var(--shadow-lg);
-}
-.create-panel::-webkit-scrollbar { width: 4px; }
-.create-panel::-webkit-scrollbar-track { background: var(--gray-100); border-radius: 10px; }
-.create-panel::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 10px; }
 
 .create-panel .panel-header {
     display: flex;
     align-items: center;
     gap: 14px;
-    margin-bottom: 28px;
-    padding-bottom: 20px;
-    border-bottom: 2px solid var(--gray-100);
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f0f4fa;
 }
-.create-panel .panel-header .icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
+.create-panel .panel-header .icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
     background: linear-gradient(135deg, #6366f1, #8b5cf6);
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 20px;
-    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+    font-size: 18px;
+    flex-shrink: 0;
 }
-.create-panel .panel-header h2 {
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--gray-900);
+.create-panel .panel-header .title-group h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
     margin: 0;
 }
-.create-panel .panel-header p {
+.create-panel .panel-header .title-group p {
     font-size: 13px;
-    color: var(--gray-500);
+    color: #94a3b8;
     margin: 0;
 }
 
-/* ===== FORM ===== */
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 .form-group label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    display: block;
     font-size: 13px;
     font-weight: 600;
-    color: var(--gray-700);
-    margin-bottom: 6px;
+    color: #1e293b;
+    margin-bottom: 4px;
 }
 .form-group label .required {
-    color: var(--danger);
+    color: #ef4444;
 }
-.form-group label .label-icon {
-    color: var(--primary);
-    font-size: 14px;
-}
-
 .form-group input,
 .form-group select,
 .form-group textarea {
     width: 100%;
-    padding: 12px 16px;
-    border-radius: 12px;
-    border: 2px solid var(--gray-200);
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1.5px solid #e2e8f0;
     font-size: 14px;
     transition: all 0.2s;
-    background: var(--gray-50);
+    background: #fafcff;
     font-family: inherit;
-    color: var(--gray-800);
-}
-.form-group input:hover,
-.form-group select:hover,
-.form-group textarea:hover {
-    background: white;
+    color: #0f172a;
 }
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: var(--primary);
+    border-color: #6366f1;
     background: white;
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.08);
+    box-shadow: 0 0 0 4px rgba(99,102,241,0.08);
 }
 .form-group textarea {
     resize: vertical;
-    min-height: 120px;
-    max-height: 200px;
+    min-height: 100px;
+    max-height: 180px;
     line-height: 1.6;
 }
-.form-group .helper {
-    font-size: 12px;
-    color: var(--gray-400);
-    margin-top: 6px;
-    display: flex;
-    justify-content: space-between;
-}
-.form-group .helper .char-count {
-    font-weight: 600;
-    color: var(--gray-500);
-}
-.form-group .helper .char-count.over {
-    color: var(--danger);
-}
 
-/* ===== AUDIENCE SELECTOR ===== */
-.audience-selector {
+.audience-pills {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: 8px;
 }
-.audience-selector .audience-option {
-    padding: 12px 8px;
-    border-radius: 12px;
-    border: 2px solid var(--gray-200);
+.audience-pills .pill {
+    padding: 10px 6px;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
     text-align: center;
     cursor: pointer;
     transition: all 0.2s;
     background: white;
 }
-.audience-selector .audience-option:hover {
-    border-color: var(--primary-light);
-    background: #eef2ff;
-    transform: translateY(-2px);
+.audience-pills .pill:hover {
+    border-color: #a5b4fc;
+    background: #f8faff;
 }
-.audience-selector .audience-option.selected {
-    border-color: var(--primary);
+.audience-pills .pill.active {
+    border-color: #6366f1;
     background: #eef2ff;
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
 }
-.audience-selector .audience-option .emoji {
-    font-size: 22px;
+.audience-pills .pill .emoji {
+    font-size: 20px;
     display: block;
-    margin-bottom: 4px;
 }
-.audience-selector .audience-option .label {
+.audience-pills .pill .pill-label {
     font-size: 12px;
     font-weight: 600;
-    color: var(--gray-700);
+    color: #475569;
 }
-.audience-selector .audience-option.selected .label {
-    color: var(--primary);
+.audience-pills .pill.active .pill-label {
+    color: #6366f1;
 }
 
-/* ===== PRIORITY TOGGLE ===== */
-.priority-toggle {
+.priority-group {
     display: flex;
     gap: 8px;
 }
-.priority-toggle .priority-option {
+.priority-group .prio-btn {
     flex: 1;
     padding: 10px;
-    border-radius: 12px;
-    border: 2px solid var(--gray-200);
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
     text-align: center;
     cursor: pointer;
     transition: all 0.2s;
     background: white;
     font-weight: 500;
     font-size: 13px;
-    color: var(--gray-600);
+    color: #64748b;
 }
-.priority-toggle .priority-option:hover {
-    border-color: var(--gray-300);
-}
-.priority-toggle .priority-option.selected-normal {
-    border-color: var(--primary);
+.priority-group .prio-btn.active-normal {
+    border-color: #6366f1;
     background: #eef2ff;
-    color: var(--primary);
+    color: #6366f1;
 }
-.priority-toggle .priority-option.selected-high {
-    border-color: var(--danger);
+.priority-group .prio-btn.active-high {
+    border-color: #ef4444;
     background: #fef2f2;
-    color: var(--danger);
+    color: #ef4444;
 }
-.priority-toggle .priority-option .prio-icon {
+.priority-group .prio-btn .prio-icon {
     font-size: 16px;
     display: block;
-    margin-bottom: 2px;
 }
 
-/* ===== SEND BUTTON ===== */
 .btn-send {
     width: 100%;
-    padding: 14px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    padding: 12px;
+    background: linear-gradient(135deg, #6366f1, #7c3aed);
     color: white;
     border: none;
-    border-radius: 14px;
+    border-radius: 12px;
     font-weight: 700;
-    font-size: 16px;
+    font-size: 15px;
     cursor: pointer;
     transition: all 0.3s;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    margin-top: 8px;
-    position: relative;
-    overflow: hidden;
-}
-.btn-send::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-    transition: left 0.5s;
-}
-.btn-send:hover::before {
-    left: 100%;
+    gap: 8px;
 }
 .btn-send:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.35);
-}
-.btn-send:active {
-    transform: translateY(0);
+    box-shadow: 0 8px 30px rgba(99,102,241,0.35);
 }
 .btn-send:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    transform: none;
-}
-.btn-send i {
-    font-size: 18px;
+    transform: none !important;
 }
 
-/* ===== RIGHT PANEL - LIST ===== */
+/* ===== RIGHT PANEL ===== */
 .list-panel {
     background: white;
-    border-radius: var(--radius);
-    border: 1px solid var(--gray-200);
+    border-radius: 16px;
+    border: 1px solid #e8edf4;
     overflow: hidden;
-    box-shadow: var(--shadow);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
     display: flex;
     flex-direction: column;
 }
 
-.list-panel .list-header {
-    padding: 18px 24px;
-    border-bottom: 1px solid var(--gray-200);
+.list-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid #f0f4fa;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    background: #fafcff;
     flex-shrink: 0;
-    background: var(--gray-50);
 }
-.list-panel .list-header .left {
+.list-header .left-group {
     display: flex;
     align-items: center;
     gap: 12px;
 }
-.list-panel .list-header .left h3 {
+.list-header .left-group h4 {
     font-size: 16px;
     font-weight: 700;
-    color: var(--gray-800);
+    color: #0f172a;
     margin: 0;
 }
-.list-panel .list-header .left .count-badge {
+.list-header .left-group .count-badge {
     padding: 2px 12px;
     border-radius: 20px;
     background: #eef2ff;
-    color: var(--primary);
+    color: #6366f1;
     font-size: 12px;
     font-weight: 600;
 }
-.list-panel .list-header .filter-group {
+.list-header .filter-pills {
     display: flex;
     gap: 4px;
+    flex-wrap: wrap;
 }
-.list-panel .list-header .filter-group button {
-    padding: 6px 14px;
+.list-header .filter-pills button {
+    padding: 4px 14px;
     border-radius: 20px;
     border: 1px solid transparent;
     background: transparent;
     font-size: 12px;
     font-weight: 500;
-    color: var(--gray-500);
+    color: #94a3b8;
     cursor: pointer;
     transition: all 0.2s;
 }
-.list-panel .list-header .filter-group button:hover {
-    background: var(--gray-100);
-    color: var(--gray-700);
+.list-header .filter-pills button:hover {
+    background: #f1f4f9;
+    color: #475569;
 }
-.list-panel .list-header .filter-group button.active {
+.list-header .filter-pills button.active {
     background: #eef2ff;
-    border-color: var(--primary);
-    color: var(--primary);
+    border-color: #6366f1;
+    color: #6366f1;
 }
 
-.list-panel .list-body {
+.list-body {
+    padding: 16px 20px;
     flex: 1;
     overflow-y: auto;
-    padding: 16px 20px;
+    max-height: 600px;
 }
-.list-panel .list-body::-webkit-scrollbar { width: 4px; }
-.list-panel .list-body::-webkit-scrollbar-track { background: var(--gray-100); border-radius: 10px; }
-.list-panel .list-body::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 10px; }
+.list-body::-webkit-scrollbar {
+    width: 4px;
+}
+.list-body::-webkit-scrollbar-track {
+    background: #f1f4f9;
+    border-radius: 10px;
+}
+.list-body::-webkit-scrollbar-thumb {
+    background: #d1d9e6;
+    border-radius: 10px;
+}
 
-/* ===== ANNOUNCEMENT ITEM ===== */
-.announcement-item {
+/* ===== ANNOUNCEMENT CARD ===== */
+.announce-card {
     background: white;
-    border-radius: 14px;
-    border: 1px solid var(--gray-200);
-    padding: 18px 20px;
+    border-radius: 12px;
+    border: 1px solid #e8edf4;
+    padding: 16px 18px;
     margin-bottom: 10px;
-    transition: all 0.3s;
-    position: relative;
+    transition: all 0.25s ease;
 }
-.announcement-item:hover {
-    border-color: var(--gray-300);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
-    transform: translateX(4px);
+.announce-card:hover {
+    border-color: #d1d9e6;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
-.announcement-item.unread {
-    border-left: 4px solid var(--primary);
-    background: #f8fafc;
+.announce-card.unread {
+    border-left: 4px solid #6366f1;
+    background: #fafcff;
 }
-.announcement-item.high-priority {
+.announce-card.high-priority {
     border-color: #fca5a5;
-    background: #fef2f2;
+    background: #fefaf9;
 }
-.announcement-item.high-priority.unread {
-    border-left: 4px solid var(--danger);
+.announce-card.high-priority.unread {
+    border-left: 4px solid #ef4444;
 }
 
-.announcement-item .item-header {
+.announce-card .card-top {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 12px;
     flex-wrap: wrap;
 }
-.announcement-item .item-header .title {
+.announce-card .card-top .card-title {
     font-weight: 700;
     font-size: 15px;
-    color: var(--gray-900);
+    color: #0f172a;
     display: flex;
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
 }
-.announcement-item .item-header .title .new-badge {
-    background: var(--danger);
+.announce-card .card-top .card-title .badge-new {
+    background: #ef4444;
     color: white;
     font-size: 9px;
     padding: 2px 10px;
     border-radius: 12px;
     font-weight: 700;
     text-transform: uppercase;
-    animation: pulse-badge 2s infinite;
 }
-@keyframes pulse-badge {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-}
-.announcement-item .item-header .title .priority-badge {
+.announce-card .card-top .card-title .badge-priority {
     padding: 2px 10px;
     border-radius: 12px;
     font-size: 10px;
@@ -430,164 +354,142 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    border: 1px solid #fca5a5;
 }
-.announcement-item .item-header .meta {
+.announce-card .card-top .card-meta {
     display: flex;
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
     font-size: 12px;
-    color: var(--gray-500);
+    color: #94a3b8;
     flex-shrink: 0;
 }
-.announcement-item .item-header .meta .sender {
+.announce-card .card-top .card-meta .sender-name {
     font-weight: 600;
-    color: var(--primary);
+    color: #6366f1;
 }
-.announcement-item .item-header .meta .audience-badge {
+.announce-card .card-top .card-meta .audience-tag {
     padding: 2px 10px;
     border-radius: 12px;
     font-size: 10px;
     font-weight: 600;
 }
-.announcement-item .item-header .meta .audience-badge.all {
-    background: #dbeafe;
-    color: #1d4ed8;
-}
-.announcement-item .item-header .meta .audience-badge.workers {
-    background: #d1fae5;
-    color: #065f46;
-}
-.announcement-item .item-header .meta .audience-badge.admins {
-    background: #fef3c7;
-    color: #92400e;
-}
-.announcement-item .item-header .meta .audience-badge.specific {
-    background: #ede9fe;
-    color: #5b21b6;
-}
+.announce-card .card-top .card-meta .audience-tag.all { background: #dbeafe; color: #1d4ed8; }
+.announce-card .card-top .card-meta .audience-tag.workers { background: #d1fae5; color: #065f46; }
+.announce-card .card-top .card-meta .audience-tag.admins { background: #fef3c7; color: #92400e; }
 
-.announcement-item .item-body {
+.announce-card .card-body {
     margin-top: 8px;
     font-size: 14px;
-    color: var(--gray-600);
-    line-height: 1.7;
-    padding: 12px 16px;
-    background: var(--gray-50);
-    border-radius: 10px;
-    border: 1px solid var(--gray-100);
+    color: #475569;
+    line-height: 1.6;
+    padding: 10px 14px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #f0f4fa;
 }
 
-.announcement-item .item-footer {
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid var(--gray-100);
+.announce-card .card-footer {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f0f4fa;
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
     gap: 8px;
 }
-.announcement-item .item-footer .read-status {
+.announce-card .card-footer .read-status {
     font-size: 12px;
-    color: var(--gray-500);
+    color: #94a3b8;
     display: flex;
     align-items: center;
     gap: 8px;
 }
-.announcement-item .item-footer .read-status .read {
-    color: var(--success);
-}
-.announcement-item .item-footer .read-status .unread {
-    color: var(--warning);
-}
-.announcement-item .item-footer .read-status .read-count {
-    color: var(--gray-400);
+.announce-card .card-footer .read-status .read { color: #22c55e; }
+.announce-card .card-footer .read-status .unread { color: #f59e0b; }
+.announce-card .card-footer .read-status .read-count {
+    color: #94a3b8;
     font-size: 11px;
 }
-.announcement-item .item-footer .actions {
+.announce-card .card-footer .actions {
     display: flex;
     gap: 6px;
 }
-.announcement-item .item-footer .actions button {
-    padding: 5px 14px;
+.announce-card .card-footer .actions button {
+    padding: 4px 12px;
     border-radius: 8px;
     border: none;
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
-    background: var(--gray-100);
-    color: var(--gray-600);
+    background: #f1f4f9;
+    color: #64748b;
 }
-.announcement-item .item-footer .actions button:hover {
-    background: var(--gray-200);
+.announce-card .card-footer .actions button:hover {
+    background: #e2e8f0;
 }
-.announcement-item .item-footer .actions .delete-btn:hover {
+.announce-card .card-footer .actions .delete-btn:hover {
     background: #fee2e2;
-    color: var(--danger);
+    color: #dc2626;
 }
-.announcement-item .item-footer .actions .read-btn:hover {
+.announce-card .card-footer .actions .read-btn:hover {
     background: #d1fae5;
     color: #065f46;
 }
 
 /* ===== EMPTY STATE ===== */
 .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 20px;
-    color: var(--gray-400);
     text-align: center;
+    padding: 60px 20px;
+    color: #94a3b8;
 }
 .empty-state i {
-    font-size: 56px;
-    margin-bottom: 16px;
+    font-size: 48px;
+    margin-bottom: 12px;
     opacity: 0.3;
-    color: var(--primary);
+    color: #6366f1;
 }
 .empty-state h3 {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
-    color: var(--gray-600);
-    margin: 0;
+    color: #475569;
 }
 .empty-state p {
     font-size: 14px;
-    max-width: 320px;
-    margin: 8px auto 0;
+    margin: 4px auto 0;
+    max-width: 300px;
 }
 
 /* ===== TOAST ===== */
-.toast {
+.toast-modern {
     position: fixed;
-    top: 24px;
-    right: 24px;
+    top: 20px;
+    right: 20px;
     z-index: 99999;
-    padding: 16px 24px;
-    border-radius: 14px;
+    padding: 12px 20px;
+    border-radius: 12px;
     color: white;
     font-weight: 500;
     font-size: 14px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
     animation: slideInRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     display: flex;
     align-items: center;
-    gap: 12px;
-    max-width: 420px;
+    gap: 10px;
+    max-width: 400px;
 }
-.toast.success { background: var(--success); }
-.toast.error { background: var(--danger); }
-.toast.warning { background: var(--warning); }
-.toast.info { background: #3b82f6; }
-.toast .close {
+.toast-modern.success { background: #22c55e; }
+.toast-modern.error { background: #ef4444; }
+.toast-modern.warning { background: #f59e0b; }
+.toast-modern.info { background: #3b82f6; }
+.toast-modern .close-btn {
     cursor: pointer;
     opacity: 0.7;
-    transition: 0.2s;
 }
-.toast .close:hover { opacity: 1; }
+.toast-modern .close-btn:hover { opacity: 1; }
 
 @keyframes slideInRight {
     from { transform: translateX(120%); opacity: 0; }
@@ -596,34 +498,27 @@
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
-    .announcements-container {
+    .announcements-wrapper {
         grid-template-columns: 1fr;
-        height: auto;
-    }
-    .create-panel { max-height: 500px; }
-    .list-panel { min-height: 400px; }
-}
-
-@media (max-width: 640px) {
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-    .audience-selector {
-        grid-template-columns: 1fr 1fr 1fr;
-    }
-    .announcement-item .item-header {
-        flex-direction: column;
-    }
-    .list-panel .list-header {
-        flex-direction: column;
-        gap: 12px;
-        align-items: stretch;
-    }
-    .list-panel .list-header .filter-group {
-        flex-wrap: wrap;
     }
     .create-panel {
-        padding: 20px;
+        position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    .audience-pills {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+    .list-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .announce-card .card-top {
+        flex-direction: column;
+    }
+    .create-panel {
+        padding: 16px;
     }
 }
 </style>
@@ -631,57 +526,45 @@
 
 {% block content %}
 
-<div class="announcements-container">
+<div class="announcements-wrapper">
 
     <!-- ===== LEFT PANEL - CREATE ===== -->
     <div class="create-panel">
         <div class="panel-header">
-            <div class="icon"><i class="fas fa-pen-fancy"></i></div>
-            <div>
-                <h2>Create Announcement</h2>
-                <p>Share updates with your team instantly</p>
+            <div class="icon-box"><i class="fas fa-pen-fancy"></i></div>
+            <div class="title-group">
+                <h3>New Announcement</h3>
+                <p>Share updates with your team</p>
             </div>
         </div>
 
         <form id="announcementForm" onsubmit="sendAnnouncement(event)">
-            <!-- Title -->
             <div class="form-group">
-                <label>
-                    <span class="label-icon"><i class="fas fa-heading"></i></span>
-                    Title <span class="required">*</span>
-                </label>
+                <label>Title <span class="required">*</span></label>
                 <input type="text" id="title" placeholder="What's the announcement about?" required>
             </div>
 
-            <!-- Audience -->
             <div class="form-group">
-                <label>
-                    <span class="label-icon"><i class="fas fa-users"></i></span>
-                    Audience <span class="required">*</span>
-                </label>
-                <div class="audience-selector" id="audienceSelector">
-                    <div class="audience-option selected" data-value="all" onclick="selectAudience('all')">
+                <label>Audience <span class="required">*</span></label>
+                <div class="audience-pills" id="audienceSelector">
+                    <div class="pill active" data-value="all" onclick="selectAudience('all')">
                         <span class="emoji">👥</span>
-                        <span class="label">Everyone</span>
+                        <span class="pill-label">Everyone</span>
                     </div>
-                    <div class="audience-option" data-value="workers" onclick="selectAudience('workers')">
+                    <div class="pill" data-value="workers" onclick="selectAudience('workers')">
                         <span class="emoji">👷</span>
-                        <span class="label">Workers</span>
+                        <span class="pill-label">Workers</span>
                     </div>
-                    <div class="audience-option" data-value="admins" onclick="selectAudience('admins')">
+                    <div class="pill" data-value="admins" onclick="selectAudience('admins')">
                         <span class="emoji">👑</span>
-                        <span class="label">Admins</span>
+                        <span class="pill-label">Admins</span>
                     </div>
                 </div>
                 <input type="hidden" id="audience" value="all">
             </div>
 
-            <!-- Specific Worker -->
             <div class="form-group" id="specificWorkerGroup" style="display:none;">
-                <label>
-                    <span class="label-icon"><i class="fas fa-user-check"></i></span>
-                    Select Worker
-                </label>
+                <label>Select Worker</label>
                 <select id="specificWorker">
                     <option value="">-- Select a worker --</option>
                     {% for user in users %}
@@ -692,18 +575,14 @@
                 </select>
             </div>
 
-            <!-- Priority -->
             <div class="form-group">
-                <label>
-                    <span class="label-icon"><i class="fas fa-flag"></i></span>
-                    Priority
-                </label>
-                <div class="priority-toggle" id="priorityToggle">
-                    <div class="priority-option selected-normal" data-value="normal" onclick="selectPriority('normal')">
+                <label>Priority</label>
+                <div class="priority-group" id="priorityToggle">
+                    <div class="prio-btn active-normal" data-value="normal" onclick="selectPriority('normal')">
                         <span class="prio-icon">📌</span>
                         Normal
                     </div>
-                    <div class="priority-option" data-value="high" onclick="selectPriority('high')">
+                    <div class="prio-btn" data-value="high" onclick="selectPriority('high')">
                         <span class="prio-icon">⚠️</span>
                         High Priority
                     </div>
@@ -711,37 +590,28 @@
                 <input type="hidden" id="priority" value="normal">
             </div>
 
-            <!-- Message -->
             <div class="form-group">
-                <label>
-                    <span class="label-icon"><i class="fas fa-comment-dots"></i></span>
-                    Message <span class="required">*</span>
-                </label>
+                <label>Message <span class="required">*</span></label>
                 <textarea id="message" placeholder="Write your announcement here..." required></textarea>
-                <div class="helper">
-                    <span><span id="charCount">0</span> characters</span>
-                    <span>Max 2000 characters</span>
+                <div style="font-size:12px;color:#94a3b8;margin-top:4px;">
+                    <span id="charCount">0</span> characters
                 </div>
             </div>
 
-            <!-- Send Button -->
             <button type="submit" class="btn-send" id="sendBtn">
                 <i class="fas fa-paper-plane"></i> Send Announcement
             </button>
         </form>
     </div>
 
-    <!-- ===== RIGHT PANEL - LIST ===== -->
+    <!-- ===== RIGHT PANEL ===== -->
     <div class="list-panel">
         <div class="list-header">
-            <div class="left">
-                <h3>
-                    <i class="fas fa-bullhorn text-indigo-500"></i>
-                    Announcements
-                </h3>
+            <div class="left-group">
+                <h4><i class="fas fa-bullhorn text-indigo-500"></i> Announcements</h4>
                 <span class="count-badge">{{ announcements|length }}</span>
             </div>
-            <div class="filter-group" id="filterGroup">
+            <div class="filter-pills" id="filterGroup">
                 <button class="active" data-filter="all" onclick="filterAnnouncements('all', this)">All</button>
                 <button data-filter="unread" onclick="filterAnnouncements('unread', this)">Unread</button>
                 <button data-filter="read" onclick="filterAnnouncements('read', this)">Read</button>
@@ -752,26 +622,26 @@
         <div class="list-body" id="announcementsList">
             {% if announcements %}
                 {% for announcement in announcements %}
-                <div class="announcement-item 
+                <div class="announce-card 
                             {% if not announcement.is_read %}unread{% endif %}
                             {% if announcement.priority == 'high' %}high-priority{% endif %}" 
                      id="announcement-{{ announcement.id }}"
                      data-read="{% if announcement.is_read %}read{% else %}unread{% endif %}"
-                     data-priority="{{ announcement.priority }}">
-                    <div class="item-header">
-                        <div class="title">
+                     data-priority="{{ announcement.priority or 'normal' }}">
+                    <div class="card-top">
+                        <div class="card-title">
                             {{ announcement.title }}
                             {% if not announcement.is_read %}
-                            <span class="new-badge">New</span>
+                            <span class="badge-new">New</span>
                             {% endif %}
                             {% if announcement.priority == 'high' %}
-                            <span class="priority-badge"><i class="fas fa-exclamation-triangle"></i> High Priority</span>
+                            <span class="badge-priority"><i class="fas fa-exclamation-triangle"></i> High Priority</span>
                             {% endif %}
                         </div>
-                        <div class="meta">
-                            <span class="sender"><i class="far fa-user"></i> {{ announcement.sender_name or 'System' }}</span>
+                        <div class="card-meta">
+                            <span class="sender-name"><i class="far fa-user"></i> {{ announcement.sender_name or 'System' }}</span>
                             <span><i class="far fa-clock"></i> {{ announcement.created_at[:16]|replace('T', ' ') if announcement.created_at else 'Just now' }}</span>
-                            <span class="audience-badge {{ announcement.audience or 'all' }}">
+                            <span class="audience-tag {{ announcement.audience or 'all' }}">
                                 {% if announcement.audience == 'all' %}👥 Everyone
                                 {% elif announcement.audience == 'workers' %}👷 Workers
                                 {% elif announcement.audience == 'admins' %}👑 Admins
@@ -780,8 +650,8 @@
                             </span>
                         </div>
                     </div>
-                    <div class="item-body">{{ announcement.message }}</div>
-                    <div class="item-footer">
+                    <div class="card-body">{{ announcement.message }}</div>
+                    <div class="card-footer">
                         <div class="read-status">
                             {% if announcement.is_read %}
                                 <span class="read"><i class="fas fa-check-circle"></i> Read</span>
@@ -821,8 +691,8 @@
 // AUDIENCE SELECTOR
 // ============================================================
 function selectAudience(value) {
-    document.querySelectorAll('.audience-option').forEach(el => {
-        el.classList.toggle('selected', el.dataset.value === value);
+    document.querySelectorAll('.audience-pills .pill').forEach(el => {
+        el.classList.toggle('active', el.dataset.value === value);
     });
     document.getElementById('audience').value = value;
     
@@ -834,10 +704,10 @@ function selectAudience(value) {
 // PRIORITY SELECTOR
 // ============================================================
 function selectPriority(value) {
-    document.querySelectorAll('.priority-option').forEach(el => {
-        el.className = 'priority-option';
+    document.querySelectorAll('.priority-group .prio-btn').forEach(el => {
+        el.className = 'prio-btn';
         if (el.dataset.value === value) {
-            el.classList.add(value === 'normal' ? 'selected-normal' : 'selected-high');
+            el.classList.add(value === 'normal' ? 'active-normal' : 'active-high');
         }
     });
     document.getElementById('priority').value = value;
@@ -847,8 +717,7 @@ function selectPriority(value) {
 // CHARACTER COUNTER
 // ============================================================
 document.getElementById('message').addEventListener('input', function() {
-    const count = this.value.length;
-    document.getElementById('charCount').textContent = count;
+    document.getElementById('charCount').textContent = this.value.length;
 });
 
 // ============================================================
@@ -858,22 +727,19 @@ function filterAnnouncements(filter, btn) {
     document.querySelectorAll('#filterGroup button').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
     
-    const items = document.querySelectorAll('.announcement-item');
-    items.forEach(item => {
-        let show = true;
+    document.querySelectorAll('.announce-card').forEach(item => {
         const isRead = item.dataset.read === 'read';
         const priority = item.dataset.priority || 'normal';
-        
+        let show = true;
         if (filter === 'unread' && isRead) show = false;
         if (filter === 'read' && !isRead) show = false;
         if (filter === 'high' && priority !== 'high') show = false;
-        
         item.style.display = show ? '' : 'none';
     });
 }
 
 // ============================================================
-// SEND ANNOUNCEMENT - FIXED
+// SEND ANNOUNCEMENT
 // ============================================================
 async function sendAnnouncement(event) {
     event.preventDefault();
@@ -896,15 +762,15 @@ async function sendAnnouncement(event) {
         return;
     }
     
-    let recipient_type = audience;
+    let recipient_type = 'all_users';
     let recipient_id = null;
     
-    if (audience === 'workers') {
+    if (audience === 'all') {
+        recipient_type = 'all_users';
+    } else if (audience === 'workers') {
         recipient_type = 'all_workers';
     } else if (audience === 'admins') {
         recipient_type = 'all_admins';
-    } else if (audience === 'all') {
-        recipient_type = 'all_users';
     } else if (audience === 'specific_worker') {
         if (!specificWorker) {
             showToast('Please select a worker', 'warning');
@@ -916,17 +782,19 @@ async function sendAnnouncement(event) {
         recipient_id = specificWorker;
     }
     
+    const payload = {
+        title: title,
+        message: message,
+        recipient_type: recipient_type,
+        priority: priority
+    };
+    if (recipient_id) payload.recipient_id = recipient_id;
+    
     try {
         const response = await fetch('/api/announcements', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                title: title,
-                message: message,
-                recipient_type: recipient_type,
-                recipient_id: recipient_id,
-                priority: priority
-            })
+            body: JSON.stringify(payload)
         });
         
         const result = await response.json();
@@ -940,6 +808,12 @@ async function sendAnnouncement(event) {
             document.getElementById('message').value = '';
             document.getElementById('charCount').textContent = '0';
             document.getElementById('priority').value = 'normal';
+            document.querySelectorAll('.priority-group .prio-btn').forEach(el => {
+                el.className = 'prio-btn';
+                if (el.dataset.value === 'normal') {
+                    el.classList.add('active-normal');
+                }
+            });
             document.getElementById('specificWorker').value = '';
             document.getElementById('specificWorkerGroup').style.display = 'none';
             selectAudience('all');
@@ -957,7 +831,12 @@ async function sendAnnouncement(event) {
 // ============================================================
 // MARK AS READ
 // ============================================================
+let markedRead = new Set();
+
 async function markRead(id) {
+    if (markedRead.has(id)) return;
+    markedRead.add(id);
+    
     try {
         const response = await fetch(`/api/announcements/${id}/read`, {
             method: 'PATCH'
@@ -972,16 +851,41 @@ async function markRead(id) {
                 if (status) {
                     status.innerHTML = `<span class="read"><i class="fas fa-check-circle"></i> Read</span>`;
                 }
-                const newBadge = card.querySelector('.new-badge');
+                const newBadge = card.querySelector('.badge-new');
                 if (newBadge) newBadge.remove();
                 const readBtn = card.querySelector('.read-btn');
                 if (readBtn) readBtn.remove();
             }
-            showToast('✅ Marked as read', 'success');
+            // Update count
+            const unreadCards = document.querySelectorAll('.announce-card.unread');
+            document.querySelector('.count-badge').textContent = unreadCards.length;
         }
     } catch (error) {
-        showToast('❌ Error: ' + error.message, 'error');
+        console.error('Error marking as read:', error);
     }
+}
+
+// ============================================================
+// AUTO-MARK AS READ WHEN CARD COMES INTO VIEW
+// ============================================================
+function setupAutoRead() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const card = entry.target;
+                const id = card.id?.replace('announcement-', '');
+                if (id && card.dataset.read === 'unread') {
+                    markRead(id);
+                }
+            }
+        });
+    }, {
+        threshold: 0.3
+    });
+    
+    document.querySelectorAll('.announce-card.unread').forEach(card => {
+        observer.observe(card);
+    });
 }
 
 // ============================================================
@@ -1004,6 +908,8 @@ async function deleteAnnouncement(id) {
                 setTimeout(() => card.remove(), 300);
             }
             showToast('✅ Announcement deleted', 'success');
+            const totalCards = document.querySelectorAll('.announce-card').length;
+            document.querySelector('.count-badge').textContent = totalCards;
         }
     } catch (error) {
         showToast('❌ Error: ' + error.message, 'error');
@@ -1014,17 +920,23 @@ async function deleteAnnouncement(id) {
 // SHOW TOAST
 // ============================================================
 function showToast(message, type = 'success') {
-    document.querySelectorAll('.toast').forEach(el => el.remove());
-    
+    document.querySelectorAll('.toast-modern').forEach(el => el.remove());
     const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
+    toast.className = `toast-modern ${type}`;
     toast.innerHTML = `
         <span>${message}</span>
-        <span class="close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></span>
+        <span class="close-btn" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></span>
     `;
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 4000);
 }
+
+// ============================================================
+// INITIALIZE
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+    setupAutoRead();
+});
 </script>
 
 {% endblock %}
