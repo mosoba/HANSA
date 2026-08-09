@@ -3,118 +3,431 @@
 {% block title %}Announcements - Handshake Manager{% endblock %}
 
 {% block page_title %}
-<div class="flex items-center gap-3">
-    <i class="fas fa-bullhorn text-indigo-500 text-2xl"></i>
-    <span>Announcements</span>
-    <span class="text-sm font-normal text-slate-400 bg-white px-3 py-1 rounded-full border border-gray-200">
-        {{ announcements|length }} total
-    </span>
+<div class="flex items-center gap-4">
+    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-200/50">
+        <i class="fas fa-bullhorn text-white text-2xl"></i>
+    </div>
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Announcements</h1>
+        <div class="flex items-center gap-3 mt-0.5">
+            <p class="text-sm text-gray-500">Stay informed with team updates</p>
+            <span class="px-2.5 py-0.5 text-xs font-medium bg-indigo-50 text-indigo-600 rounded-full border border-indigo-200">
+                {{ announcements|length }} total
+            </span>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
-{% block page_subtitle %}Stay updated with the latest announcements from your team{% endblock %}
-
 {% block extra_css %}
 <style>
-/* ===== WORKER ANNOUNCEMENTS ===== */
-.announcements-container {
-    max-width: 900px;
-    margin: 0 auto;
+/* ============================================================
+   WORLD-CLASS ANNOUNCEMENTS UI - WORKER VERSION
+   ============================================================ */
+:root {
+    --primary: #4f46e5;
+    --primary-light: #818cf8;
+    --primary-dark: #4338ca;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --gray-50: #f8fafc;
+    --gray-100: #f1f5f9;
+    --gray-200: #e2e8f0;
+    --gray-300: #cbd5e1;
+    --gray-400: #94a3b8;
+    --gray-500: #64748b;
+    --gray-600: #475569;
+    --gray-700: #334155;
+    --gray-800: #1e293b;
+    --gray-900: #0f172a;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow: 0 1px 3px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
+    --radius: 16px;
 }
 
-/* ===== STATS BAR ===== */
-.stats-bar {
+.announcements-wrapper {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-bottom: 24px;
+    grid-template-columns: 420px 1fr;
+    gap: 28px;
+    height: calc(100vh - 280px);
+    min-height: 550px;
 }
-.stats-bar .stat-card {
-    background: white;
-    border-radius: 14px;
-    border: 1px solid #e5e7eb;
-    padding: 14px 18px;
-    text-align: center;
-    transition: all 0.2s;
-}
-.stats-bar .stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-}
-.stats-bar .stat-card .number {
-    font-size: 22px;
-    font-weight: 800;
-    color: #0f172a;
-}
-.stats-bar .stat-card .label {
-    font-size: 11px;
-    color: #94a3b8;
-    font-weight: 500;
-    margin-top: 2px;
-}
-.stats-bar .stat-card.unread .number { color: #ef4444; }
-.stats-bar .stat-card.high .number { color: #f59e0b; }
-.stats-bar .stat-card.total .number { color: #6366f1; }
-.stats-bar .stat-card.read .number { color: #22c55e; }
 
-/* ===== ANNOUNCEMENT ITEM ===== */
-.announcement-item {
+/* ===== LEFT PANEL - CREATE ===== */
+.create-panel {
     background: white;
-    border-radius: 16px;
-    border: 1px solid #e5e7eb;
-    padding: 20px 24px;
-    margin-bottom: 12px;
-    transition: all 0.3s;
+    border-radius: var(--radius);
+    border: 1px solid var(--gray-200);
+    padding: 28px 24px;
+    overflow-y: auto;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+}
+.create-panel:hover {
+    box-shadow: var(--shadow-md);
+}
+.create-panel::-webkit-scrollbar { width: 4px; }
+.create-panel::-webkit-scrollbar-track { background: var(--gray-100); border-radius: 10px; }
+.create-panel::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 10px; }
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+    padding-bottom: 18px;
+    border-bottom: 2px solid var(--gray-100);
+}
+.panel-header .icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--primary), #7c3aed);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    box-shadow: 0 4px 16px rgba(79, 70, 229, 0.3);
+    flex-shrink: 0;
+}
+.panel-header .title-group h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin: 0;
+    line-height: 1.2;
+}
+.panel-header .title-group p {
+    font-size: 13px;
+    color: var(--gray-400);
+    margin: 0;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 5px;
+}
+.form-group label .required {
+    color: var(--danger);
+}
+.form-group label .icon-label {
+    color: var(--primary);
+    font-size: 14px;
+}
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 11px 16px;
+    border-radius: 12px;
+    border: 2px solid var(--gray-200);
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background: var(--gray-50);
+    font-family: inherit;
+    color: var(--gray-800);
+}
+.form-group input:hover,
+.form-group select:hover {
+    background: white;
+}
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.08);
+}
+.form-group textarea {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 2px solid var(--gray-200);
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background: var(--gray-50);
+    font-family: inherit;
+    color: var(--gray-800);
+    resize: vertical;
+    min-height: 160px;
+    max-height: 300px;
+    line-height: 1.7;
+}
+.form-group textarea:hover {
+    background: white;
+}
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.08);
+}
+.form-group .helper-text {
+    font-size: 12px;
+    color: var(--gray-400);
+    margin-top: 5px;
+    display: flex;
+    justify-content: space-between;
+}
+.form-group .helper-text .char-count {
+    font-weight: 600;
+    color: var(--gray-500);
+}
+
+.audience-pills {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+.audience-pills .pill {
+    padding: 12px 8px;
+    border-radius: 12px;
+    border: 2px solid var(--gray-200);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+}
+.audience-pills .pill:hover {
+    border-color: var(--primary-light);
+    background: #eef2ff;
+    transform: translateY(-2px);
+}
+.audience-pills .pill.active {
+    border-color: var(--primary);
+    background: #eef2ff;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+}
+.audience-pills .pill .emoji {
+    font-size: 22px;
+    display: block;
+    margin-bottom: 2px;
+}
+.audience-pills .pill .pill-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-600);
+}
+.audience-pills .pill.active .pill-label {
+    color: var(--primary);
+}
+
+.priority-group {
+    display: flex;
+    gap: 8px;
+}
+.priority-group .prio-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 12px;
+    border: 2px solid var(--gray-200);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--gray-600);
+}
+.priority-group .prio-btn:hover {
+    border-color: var(--gray-300);
+    transform: translateY(-1px);
+}
+.priority-group .prio-btn.active-normal {
+    border-color: var(--primary);
+    background: #eef2ff;
+    color: var(--primary);
+}
+.priority-group .prio-btn.active-high {
+    border-color: var(--danger);
+    background: #fef2f2;
+    color: var(--danger);
+}
+.priority-group .prio-btn .prio-icon {
+    font-size: 16px;
+    display: block;
+    margin-bottom: 1px;
+}
+
+.btn-send {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--primary), #7c3aed);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 4px;
     position: relative;
     overflow: hidden;
 }
-.announcement-item:hover {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-    border-color: #cbd5e1;
-}
-.announcement-item.unread {
-    border-left: 4px solid #6366f1;
-    background: #f8fafc;
-}
-.announcement-item.unread::before {
+.btn-send::before {
     content: '';
     position: absolute;
     top: 0;
-    right: 0;
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, transparent 50%, rgba(99, 102, 241, 0.05) 50%);
-    pointer-events: none;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.6s ease;
 }
-.announcement-item.high-priority {
-    background: #fef2f2;
+.btn-send:hover::before {
+    left: 100%;
+}
+.btn-send:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(79, 70, 229, 0.35);
+}
+.btn-send:active {
+    transform: translateY(0);
+}
+.btn-send:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+.btn-send i {
+    font-size: 18px;
+}
+
+/* ===== RIGHT PANEL ===== */
+.list-panel {
+    background: white;
+    border-radius: var(--radius);
+    border: 1px solid var(--gray-200);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+}
+
+.list-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+    background: var(--gray-50);
+}
+.list-header .left-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.list-header .left-group h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin: 0;
+}
+.list-header .left-group .count-badge {
+    padding: 2px 14px;
+    border-radius: 20px;
+    background: #eef2ff;
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 600;
+}
+.list-header .filter-pills {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+.list-header .filter-pills button {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid transparent;
+    background: transparent;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gray-500);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.list-header .filter-pills button:hover {
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+.list-header .filter-pills button.active {
+    background: #eef2ff;
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.list-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+}
+.list-body::-webkit-scrollbar { width: 4px; }
+.list-body::-webkit-scrollbar-track { background: var(--gray-100); border-radius: 10px; }
+.list-body::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 10px; }
+
+/* ===== ANNOUNCEMENT CARD ===== */
+.announce-card {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid var(--gray-200);
+    padding: 18px 20px;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+.announce-card:hover {
+    border-color: var(--gray-300);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+    transform: translateX(4px);
+}
+.announce-card.unread {
+    border-left: 4px solid var(--primary);
+    background: #fafcff;
+}
+.announce-card.high-priority {
     border-color: #fca5a5;
+    background: #fefaf9;
 }
-.announcement-item.high-priority.unread {
-    border-left: 4px solid #ef4444;
-    background: #fee2e2;
+.announce-card.high-priority.unread {
+    border-left: 4px solid var(--danger);
 }
-.announcement-item .item-header {
+
+.announce-card .card-top {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 12px;
     flex-wrap: wrap;
-    margin-bottom: 6px;
 }
-.announcement-item .item-header .title-section {
+.announce-card .card-top .card-title {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--gray-900);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     flex-wrap: wrap;
 }
-.announcement-item .item-header .title {
-    font-weight: 700;
-    font-size: 16px;
-    color: #0f172a;
-}
-.announcement-item .item-header .new-badge {
-    background: #ef4444;
+.announce-card .card-top .card-title .badge-new {
+    background: var(--danger);
     color: white;
     font-size: 9px;
     padding: 2px 10px;
@@ -127,7 +440,7 @@
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.05); }
 }
-.announcement-item .item-header .priority-badge {
+.announce-card .card-top .card-title .badge-priority {
     padding: 2px 10px;
     border-radius: 12px;
     font-size: 10px;
@@ -137,446 +450,556 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    border: 1px solid #fca5a5;
 }
-.announcement-item .item-header .meta {
+.announce-card .card-top .card-meta {
     display: flex;
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
     font-size: 12px;
-    color: #94a3b8;
+    color: var(--gray-500);
     flex-shrink: 0;
 }
-.announcement-item .item-header .meta .sender {
-    font-weight: 500;
-    color: #6366f1;
+.announce-card .card-top .card-meta .sender-name {
+    font-weight: 600;
+    color: var(--primary);
 }
-.announcement-item .item-body {
+.announce-card .card-top .card-meta .audience-tag {
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+}
+.announce-card .card-top .card-meta .audience-tag.all { background: #dbeafe; color: #1d4ed8; }
+.announce-card .card-top .card-meta .audience-tag.workers { background: #d1fae5; color: #065f46; }
+.announce-card .card-top .card-meta .audience-tag.admins { background: #fef3c7; color: #92400e; }
+
+.announce-card .card-body {
+    margin-top: 8px;
     font-size: 14px;
-    color: #334155;
+    color: var(--gray-600);
     line-height: 1.7;
-    margin: 8px 0 12px 0;
     padding: 12px 16px;
-    background: #f8fafc;
+    background: var(--gray-50);
     border-radius: 10px;
-    border: 1px solid #f1f5f9;
+    border: 1px solid var(--gray-100);
+    max-height: 100px;
+    overflow-y: auto;
 }
-.announcement-item .item-body .message-content {
-    white-space: pre-wrap;
-    word-wrap: break-word;
-}
-.announcement-item .item-footer {
+.announce-card .card-body::-webkit-scrollbar { width: 3px; }
+.announce-card .card-body::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
+
+.announce-card .card-footer {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--gray-100);
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
     gap: 8px;
 }
-.announcement-item .item-footer .read-status {
+.announce-card .card-footer .read-status {
     font-size: 12px;
-    color: #94a3b8;
+    color: var(--gray-500);
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
-.announcement-item .item-footer .read-status .read { color: #22c55e; }
-.announcement-item .item-footer .read-status .unread { color: #f59e0b; }
-.announcement-item .item-footer .read-status .time-ago {
-    color: #94a3b8;
-    font-size: 11px;
+.announce-card .card-footer .read-status .read { 
+    color: var(--success); 
 }
-.announcement-item .item-footer .actions {
+.announce-card .card-footer .read-status .unread { 
+    color: var(--warning); 
+}
+.announce-card .card-footer .actions {
     display: flex;
     gap: 6px;
 }
-.announcement-item .item-footer .actions button {
-    padding: 5px 16px;
+.announce-card .card-footer .actions button {
+    padding: 5px 14px;
     border-radius: 8px;
     border: none;
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
     background: #eef2ff;
-    color: #4f46e5;
+    color: var(--primary);
 }
-.announcement-item .item-footer .actions button:hover {
+.announce-card .card-footer .actions button:hover {
     background: #e0e7ff;
-    transform: scale(1.02);
 }
-.announcement-item .item-footer .actions button.marked-read {
+.announce-card .card-footer .actions button.marked-read {
     background: #d1fae5;
     color: #065f46;
     cursor: default;
 }
-.announcement-item .item-footer .actions button.marked-read:hover {
-    transform: none;
+.announce-card .card-footer .actions .delete-btn {
+    background: #fef2f2;
+    color: #ef4444;
+}
+.announce-card .card-footer .actions .delete-btn:hover {
+    background: #fee2e2;
 }
 
-/* ===== EMPTY STATE ===== */
 .empty-state {
-    background: white;
-    border-radius: 16px;
-    border: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     padding: 60px 20px;
+    color: var(--gray-400);
     text-align: center;
-    color: #94a3b8;
 }
 .empty-state i {
     font-size: 56px;
     margin-bottom: 16px;
     opacity: 0.3;
-    color: #6366f1;
+    color: var(--primary);
 }
 .empty-state h3 {
     font-size: 20px;
     font-weight: 700;
-    color: #475569;
-    margin-bottom: 4px;
+    color: var(--gray-600);
+    margin: 0;
 }
 .empty-state p {
     font-size: 14px;
-    max-width: 350px;
-    margin: 0 auto;
-}
-
-/* ===== FILTER BAR ===== */
-.filter-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 16px;
-    background: white;
-    padding: 12px 20px;
-    border-radius: 14px;
-    border: 1px solid #e5e7eb;
-}
-.filter-bar .filter-group {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
-}
-.filter-bar .filter-group button {
-    padding: 5px 14px;
-    border-radius: 20px;
-    border: 1px solid #e2e8f0;
-    background: white;
-    font-size: 12px;
-    font-weight: 500;
-    color: #64748b;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.filter-bar .filter-group button:hover {
-    border-color: #6366f1;
-    color: #4f46e5;
-    background: #eef2ff;
-}
-.filter-bar .filter-group button.active {
-    background: #eef2ff;
-    border-color: #6366f1;
-    color: #4f46e5;
-}
-.filter-bar .search-box {
-    position: relative;
-}
-.filter-bar .search-box input {
-    padding: 6px 14px 6px 34px;
-    border-radius: 20px;
-    border: 1px solid #e2e8f0;
-    font-size: 13px;
-    background: #f8fafc;
-    transition: all 0.2s;
-    width: 200px;
-}
-.filter-bar .search-box input:focus {
-    outline: none;
-    border-color: #6366f1;
-    background: white;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-}
-.filter-bar .search-box i {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #94a3b8;
-    font-size: 13px;
+    max-width: 320px;
+    margin: 8px auto 0;
 }
 
 /* ===== TOAST ===== */
-.toast {
+.toast-modern {
     position: fixed;
-    top: 20px;
-    right: 20px;
+    top: 24px;
+    right: 24px;
     z-index: 99999;
-    padding: 14px 24px;
-    border-radius: 12px;
+    padding: 16px 24px;
+    border-radius: 14px;
     color: white;
     font-weight: 500;
     font-size: 14px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-    animation: slideInRight 0.4s ease;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    animation: slideInRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     display: flex;
     align-items: center;
     gap: 12px;
-    max-width: 400px;
+    max-width: 420px;
 }
-.toast.success { background: #22c55e; }
-.toast.error { background: #ef4444; }
-.toast.warning { background: #f59e0b; }
-.toast.info { background: #3b82f6; }
-.toast .close {
-    cursor: pointer;
-    opacity: 0.6;
-    transition: 0.2s;
+.toast-modern.success { background: var(--success); }
+.toast-modern.error { background: var(--danger); }
+.toast-modern.warning { background: var(--warning); }
+.toast-modern.info { background: #3b82f6; }
+.toast-modern .close-btn { 
+    cursor: pointer; 
+    opacity: 0.7; 
+    transition: 0.2s; 
 }
-.toast .close:hover { opacity: 1; }
+.toast-modern .close-btn:hover { opacity: 1; }
 
 @keyframes slideInRight {
-    from { transform: translateX(100%); opacity: 0; }
+    from { transform: translateX(120%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
 }
 
 /* ===== RESPONSIVE ===== */
-@media (max-width: 768px) {
-    .stats-bar {
-        grid-template-columns: repeat(2, 1fr);
+@media (max-width: 1024px) {
+    .announcements-wrapper {
+        grid-template-columns: 1fr;
+        height: auto;
     }
-    .filter-bar {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .filter-bar .search-box input {
-        width: 100%;
-    }
-    .announcement-item .item-header {
-        flex-direction: column;
-    }
-    .announcement-item .item-footer {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .announcement-item .item-footer .actions {
-        justify-content: flex-end;
-    }
+    .create-panel { max-height: 500px; }
+    .list-panel { min-height: 400px; }
 }
 
-@media (max-width: 480px) {
-    .stats-bar {
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
+@media (max-width: 640px) {
+    .audience-pills { grid-template-columns: 1fr 1fr 1fr; }
+    .announce-card .card-top { flex-direction: column; }
+    .list-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
     }
-    .stats-bar .stat-card {
-        padding: 10px 12px;
-    }
-    .stats-bar .stat-card .number {
-        font-size: 18px;
-    }
-    .announcement-item {
-        padding: 14px 16px;
-    }
-    .announcement-item .item-body {
-        padding: 10px 12px;
-        font-size: 13px;
-    }
+    .list-header .filter-pills { flex-wrap: wrap; }
+    .create-panel { padding: 20px 16px; }
 }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<div class="announcements-container">
+<div class="announcements-wrapper">
 
-    <!-- ===== STATS BAR ===== -->
-    <div class="stats-bar">
-        <div class="stat-card total">
-            <div class="number">{{ announcements|length }}</div>
-            <div class="label">📬 Total</div>
+    <!-- ===== LEFT PANEL - CREATE ===== -->
+    <div class="create-panel">
+        <div class="panel-header">
+            <div class="icon-box"><i class="fas fa-pen-fancy"></i></div>
+            <div class="title-group">
+                <h3>New Announcement</h3>
+                <p>Share updates with your team</p>
+            </div>
         </div>
-        <div class="stat-card unread">
-            <div class="number">{{ announcements|selectattr('is_read', 'equalto', False)|list|length }}</div>
-            <div class="label">🔴 Unread</div>
-        </div>
-        <div class="stat-card read">
-            <div class="number">{{ announcements|selectattr('is_read', 'equalto', True)|list|length }}</div>
-            <div class="label">✅ Read</div>
-        </div>
-        <div class="stat-card high">
-            <div class="number">{{ announcements|selectattr('priority', 'equalto', 'high')|list|length }}</div>
-            <div class="label">⚠️ High Priority</div>
-        </div>
-    </div>
 
-    <!-- ===== FILTER BAR ===== -->
-    <div class="filter-bar">
-        <div class="filter-group" id="filterGroup">
-            <button class="active" data-filter="all" onclick="filterAnnouncements('all', this)">All</button>
-            <button data-filter="unread" onclick="filterAnnouncements('unread', this)">Unread</button>
-            <button data-filter="read" onclick="filterAnnouncements('read', this)">Read</button>
-            <button data-filter="high" onclick="filterAnnouncements('high', this)">⚠️ High</button>
-        </div>
-        <div class="search-box">
-            <i class="fas fa-search"></i>
-            <input type="text" placeholder="Search announcements..." id="searchInput" onkeyup="searchAnnouncements()">
-        </div>
-    </div>
+        <form id="announcementForm" onsubmit="sendAnnouncement(event)">
+            <div class="form-group">
+                <label>
+                    <span class="icon-label"><i class="fas fa-heading"></i></span>
+                    Title <span class="required">*</span>
+                </label>
+                <input type="text" id="title" placeholder="What's the announcement about?" required>
+            </div>
 
-    <!-- ===== ANNOUNCEMENTS LIST ===== -->
-    <div id="announcementsList">
-        {% if announcements %}
-            {% for announcement in announcements %}
-            <div class="announcement-item 
-                        {% if not announcement.is_read %}unread{% endif %}
-                        {% if announcement.priority == 'high' %}high-priority{% endif %}"
-                 id="announcement-{{ announcement.id }}"
-                 data-read="{% if announcement.is_read %}read{% else %}unread{% endif %}"
-                 data-priority="{{ announcement.priority }}"
-                 data-title="{{ announcement.title|lower }}"
-                 data-message="{{ announcement.message|lower }}">
-                
-                <div class="item-header">
-                    <div class="title-section">
-                        <span class="title">{{ announcement.title }}</span>
-                        {% if not announcement.is_read %}
-                        <span class="new-badge">New</span>
-                        {% endif %}
-                        {% if announcement.priority == 'high' %}
-                        <span class="priority-badge"><i class="fas fa-exclamation-triangle"></i> High Priority</span>
-                        {% endif %}
+            <div class="form-group">
+                <label>
+                    <span class="icon-label"><i class="fas fa-users"></i></span>
+                    Audience <span class="required">*</span>
+                </label>
+                <div class="audience-pills" id="audienceSelector">
+                    <div class="pill active" data-value="all" onclick="selectAudience('all')">
+                        <span class="emoji">👥</span>
+                        <span class="pill-label">Everyone</span>
                     </div>
-                    <div class="meta">
-                        <span><i class="far fa-user"></i> <span class="sender">{{ announcement.sender_name or 'System' }}</span></span>
-                        <span><i class="far fa-clock"></i> {{ announcement.created_at[:16]|replace('T', ' ') if announcement.created_at else 'Just now' }}</span>
+                    <div class="pill" data-value="workers" onclick="selectAudience('workers')">
+                        <span class="emoji">👷</span>
+                        <span class="pill-label">Workers</span>
+                    </div>
+                    <div class="pill" data-value="admins" onclick="selectAudience('admins')">
+                        <span class="emoji">👑</span>
+                        <span class="pill-label">Admins</span>
                     </div>
                 </div>
-                
-                <div class="item-body">
-                    <div class="message-content">{{ announcement.message }}</div>
+                <input type="hidden" id="audience" value="all">
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <span class="icon-label"><i class="fas fa-flag"></i></span>
+                    Priority
+                </label>
+                <div class="priority-group" id="priorityToggle">
+                    <div class="prio-btn active-normal" data-value="normal" onclick="selectPriority('normal')">
+                        <span class="prio-icon">📌</span>
+                        Normal
+                    </div>
+                    <div class="prio-btn" data-value="high" onclick="selectPriority('high')">
+                        <span class="prio-icon">⚠️</span>
+                        High Priority
+                    </div>
                 </div>
-                
-                <div class="item-footer">
-                    <div class="read-status">
-                        {% if announcement.is_read %}
-                            <span class="read"><i class="fas fa-check-circle"></i> Read</span>
-                        {% else %}
-                            <span class="unread"><i class="fas fa-circle"></i> Unread</span>
-                        {% endif %}
-                        <span class="time-ago">
-                            • {{ announcement.created_at|time_since if announcement.created_at else 'Just now' }}
-                        </span>
-                    </div>
-                    <div class="actions">
-                        {% if not announcement.is_read %}
-                        <button onclick="markRead('{{ announcement.id }}')">
-                            <i class="fas fa-check"></i> Mark Read
-                        </button>
-                        {% else %}
-                        <button class="marked-read" disabled>
-                            <i class="fas fa-check-circle"></i> Read
-                        </button>
-                        {% endif %}
-                    </div>
+                <input type="hidden" id="priority" value="normal">
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <span class="icon-label"><i class="fas fa-comment-dots"></i></span>
+                    Message <span class="required">*</span>
+                </label>
+                <textarea id="message" placeholder="Write your announcement here..." required></textarea>
+                <div class="helper-text">
+                    <span><span id="charCount">0</span> characters</span>
+                    <span>Max 2000</span>
                 </div>
             </div>
-            {% endfor %}
-        {% else %}
-            <div class="empty-state">
-                <i class="fas fa-bullhorn"></i>
-                <h3>No announcements yet</h3>
-                <p>Check back later for updates from your team</p>
+
+            <button type="submit" class="btn-send" id="sendBtn">
+                <i class="fas fa-paper-plane"></i> Send Announcement
+            </button>
+        </form>
+    </div>
+
+    <!-- ===== RIGHT PANEL ===== -->
+    <div class="list-panel">
+        <div class="list-header">
+            <div class="left-group">
+                <h4><i class="fas fa-bullhorn text-indigo-500"></i> Announcements</h4>
+                <span class="count-badge">{{ announcements|length }}</span>
             </div>
-        {% endif %}
+            <div class="filter-pills" id="filterGroup">
+                <button class="active" data-filter="all" onclick="filterAnnouncements('all', this)">All</button>
+                <button data-filter="unread" onclick="filterAnnouncements('unread', this)">Unread</button>
+                <button data-filter="read" onclick="filterAnnouncements('read', this)">Read</button>
+                <button data-filter="high" onclick="filterAnnouncements('high', this)">⚠️ High</button>
+                <button data-filter="mine" onclick="filterAnnouncements('mine', this)">👤 Mine</button>
+            </div>
+        </div>
+
+        <div class="list-body" id="announcementsList">
+            {% if announcements %}
+                {% for announcement in announcements %}
+                <div class="announce-card 
+                            {% if not announcement.is_read %}unread{% endif %}
+                            {% if announcement.priority == 'high' %}high-priority{% endif %}" 
+                     id="announcement-{{ announcement.id }}"
+                     data-read="{% if announcement.is_read %}read{% else %}unread{% endif %}"
+                     data-priority="{{ announcement.priority or 'normal' }}"
+                     data-sender="{{ announcement.sender_id or '' }}">
+                    <div class="card-top">
+                        <div class="card-title">
+                            {{ announcement.title }}
+                            {% if not announcement.is_read %}
+                            <span class="badge-new">New</span>
+                            {% endif %}
+                            {% if announcement.priority == 'high' %}
+                            <span class="badge-priority"><i class="fas fa-exclamation-triangle"></i> High Priority</span>
+                            {% endif %}
+                        </div>
+                        <div class="card-meta">
+                            <span class="sender-name"><i class="far fa-user"></i> {{ announcement.sender_name or 'System' }}</span>
+                            <span><i class="far fa-clock"></i> {{ announcement.created_at[:16]|replace('T', ' ') if announcement.created_at else 'Just now' }}</span>
+                            <span class="audience-tag {{ announcement.audience or 'all' }}">
+                                {% if announcement.audience == 'all' %}👥 Everyone
+                                {% elif announcement.audience == 'workers' %}👷 Workers
+                                {% elif announcement.audience == 'admins' %}👑 Admins
+                                {% else %}🎯 Specific
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">{{ announcement.message }}</div>
+                    <div class="card-footer">
+                        <div class="read-status">
+                            {% if announcement.is_read %}
+                                <span class="read"><i class="fas fa-check-circle"></i> Read</span>
+                            {% else %}
+                                <span class="unread"><i class="fas fa-circle"></i> Unread</span>
+                            {% endif %}
+                        </div>
+                        <div class="actions">
+                            {% if not announcement.is_read %}
+                            <button class="read-btn" onclick="markRead('{{ announcement.id }}')">
+                                <i class="fas fa-check"></i> Mark Read
+                            </button>
+                            {% else %}
+                            <button class="marked-read" disabled>
+                                <i class="fas fa-check-circle"></i> Read
+                            </button>
+                            {% endif %}
+                            {% if announcement.sender_id == session.user_id %}
+                            <button class="delete-btn" onclick="deleteAnnouncement('{{ announcement.id }}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-bullhorn"></i>
+                    <h3>No announcements yet</h3>
+                    <p>Create your first announcement using the form on the left</p>
+                </div>
+            {% endif %}
+        </div>
     </div>
 </div>
 
 <script>
 // ============================================================
+// AUDIENCE SELECTOR
+// ============================================================
+function selectAudience(value) {
+    document.querySelectorAll('.audience-pills .pill').forEach(el => {
+        el.classList.toggle('active', el.dataset.value === value);
+    });
+    document.getElementById('audience').value = value;
+}
+
+// ============================================================
+// PRIORITY SELECTOR
+// ============================================================
+function selectPriority(value) {
+    document.querySelectorAll('.priority-group .prio-btn').forEach(el => {
+        el.className = 'prio-btn';
+        if (el.dataset.value === value) {
+            el.classList.add(value === 'normal' ? 'active-normal' : 'active-high');
+        }
+    });
+    document.getElementById('priority').value = value;
+}
+
+// ============================================================
+// CHARACTER COUNTER
+// ============================================================
+document.getElementById('message').addEventListener('input', function() {
+    document.getElementById('charCount').textContent = this.value.length;
+});
+
+// ============================================================
 // FILTER ANNOUNCEMENTS
 // ============================================================
 function filterAnnouncements(filter, btn) {
-    // Update active button
     document.querySelectorAll('#filterGroup button').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
     
-    const items = document.querySelectorAll('.announcement-item');
-    const searchQuery = document.getElementById('searchInput').value.toLowerCase();
-    let visibleCount = 0;
+    const currentUserId = '{{ session.user_id }}';
     
-    items.forEach(item => {
-        let show = true;
+    document.querySelectorAll('.announce-card').forEach(item => {
         const isRead = item.dataset.read === 'read';
         const priority = item.dataset.priority || 'normal';
-        const title = item.dataset.title || '';
-        const message = item.dataset.message || '';
+        const senderId = item.dataset.sender || '';
+        let show = true;
         
-        // Apply filter
         if (filter === 'unread' && isRead) show = false;
         if (filter === 'read' && !isRead) show = false;
         if (filter === 'high' && priority !== 'high') show = false;
-        
-        // Apply search
-        if (searchQuery && !title.includes(searchQuery) && !message.includes(searchQuery)) {
-            show = false;
-        }
+        if (filter === 'mine' && senderId !== currentUserId) show = false;
         
         item.style.display = show ? '' : 'none';
-        if (show) visibleCount++;
     });
 }
 
 // ============================================================
-// SEARCH ANNOUNCEMENTS
+// SEND ANNOUNCEMENT
 // ============================================================
-function searchAnnouncements() {
-    const activeFilter = document.querySelector('#filterGroup button.active');
-    const filter = activeFilter ? activeFilter.dataset.filter : 'all';
-    filterAnnouncements(filter, activeFilter);
+async function sendAnnouncement(event) {
+    event.preventDefault();
+    
+    const sendBtn = document.getElementById('sendBtn');
+    const originalText = sendBtn.innerHTML;
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    
+    const title = document.getElementById('title').value.trim();
+    const message = document.getElementById('message').value.trim();
+    const audience = document.getElementById('audience').value;
+    const priority = document.getElementById('priority').value;
+    
+    if (!title || !message) {
+        showToast('Please fill in all required fields', 'warning');
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = originalText;
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/announcements', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: title,
+                message: message,
+                audience: audience,
+                priority: priority
+            })
+        });
+        
+        const result = await response.json();
+        
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = originalText;
+        
+        if (result.success) {
+            showToast('✅ Announcement sent successfully!', 'success');
+            document.getElementById('title').value = '';
+            document.getElementById('message').value = '';
+            document.getElementById('charCount').textContent = '0';
+            document.getElementById('priority').value = 'normal';
+            document.querySelectorAll('.priority-group .prio-btn').forEach(el => {
+                el.className = 'prio-btn';
+                if (el.dataset.value === 'normal') {
+                    el.classList.add('active-normal');
+                }
+            });
+            selectAudience('all');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast('❌ ' + (result.error || 'Failed to send announcement'), 'error');
+        }
+    } catch (error) {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = originalText;
+        showToast('❌ Error: ' + error.message, 'error');
+    }
 }
 
 // ============================================================
 // MARK AS READ
 // ============================================================
+let markedRead = new Set();
+
 async function markRead(id) {
+    if (markedRead.has(id)) return;
+    markedRead.add(id);
+    
     try {
         const response = await fetch(`/api/announcements/${id}/read`, {
             method: 'PATCH'
         });
         const result = await response.json();
-        
         if (result.success) {
             const card = document.getElementById(`announcement-${id}`);
             if (card) {
-                // Update card styling
                 card.classList.remove('unread');
                 card.dataset.read = 'read';
-                
-                // Update read status
                 const status = card.querySelector('.read-status');
                 if (status) {
                     status.innerHTML = `<span class="read"><i class="fas fa-check-circle"></i> Read</span>`;
                 }
-                
-                // Remove new badge
-                const newBadge = card.querySelector('.new-badge');
+                const newBadge = card.querySelector('.badge-new');
                 if (newBadge) newBadge.remove();
-                
-                // Update action button
-                const actions = card.querySelector('.actions');
-                if (actions) {
-                    actions.innerHTML = `
-                        <button class="marked-read" disabled>
-                            <i class="fas fa-check-circle"></i> Read
-                        </button>
-                    `;
+                const readBtn = card.querySelector('.read-btn');
+                if (readBtn) {
+                    readBtn.outerHTML = `<button class="marked-read" disabled><i class="fas fa-check-circle"></i> Read</button>`;
                 }
-                
-                // Update stats
-                updateStats();
             }
-            showToast('✅ Marked as read', 'success');
+            // Update count
+            const unreadCards = document.querySelectorAll('.announce-card.unread');
+            document.querySelector('.count-badge').textContent = unreadCards.length;
+        }
+    } catch (error) {
+        console.error('Error marking as read:', error);
+    }
+}
+
+// ============================================================
+// AUTO-MARK AS READ WHEN CARD COMES INTO VIEW
+// ============================================================
+function setupAutoRead() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const card = entry.target;
+                const id = card.id?.replace('announcement-', '');
+                if (id && card.dataset.read === 'unread') {
+                    markRead(id);
+                }
+            }
+        });
+    }, {
+        threshold: 0.3
+    });
+    
+    document.querySelectorAll('.announce-card.unread').forEach(card => {
+        observer.observe(card);
+    });
+}
+
+// ============================================================
+// DELETE ANNOUNCEMENT
+// ============================================================
+async function deleteAnnouncement(id) {
+    if (!confirm('Delete this announcement permanently?')) return;
+    
+    try {
+        const response = await fetch(`/api/announcements/${id}`, {
+            method: 'DELETE'
+        });
+        const result = await response.json();
+        if (result.success) {
+            const card = document.getElementById(`announcement-${id}`);
+            if (card) {
+                card.style.transition = 'all 0.3s';
+                card.style.opacity = '0';
+                card.style.transform = 'translateX(-20px)';
+                setTimeout(() => card.remove(), 300);
+            }
+            showToast('✅ Announcement deleted', 'success');
+            const totalCards = document.querySelectorAll('.announce-card').length;
+            document.querySelector('.count-badge').textContent = totalCards;
         }
     } catch (error) {
         showToast('❌ Error: ' + error.message, 'error');
@@ -584,101 +1007,25 @@ async function markRead(id) {
 }
 
 // ============================================================
-// UPDATE STATS
-// ============================================================
-function updateStats() {
-    const items = document.querySelectorAll('.announcement-item');
-    let total = items.length;
-    let unread = 0;
-    let read = 0;
-    let high = 0;
-    
-    items.forEach(item => {
-        if (item.dataset.read === 'unread') unread++;
-        else read++;
-        if (item.dataset.priority === 'high') high++;
-    });
-    
-    document.querySelector('.stat-card.total .number').textContent = total;
-    document.querySelector('.stat-card.unread .number').textContent = unread;
-    document.querySelector('.stat-card.read .number').textContent = read;
-    document.querySelector('.stat-card.high .number').textContent = high;
-}
-
-// ============================================================
-// TIME SINCE FILTER (Add to context processor if needed)
-// ============================================================
-// In your app.py, add this context processor:
-/*
-@app.context_processor
-def utility_processor():
-    def time_since(date_str):
-        if not date_str:
-            return 'Just now'
-        try:
-            from datetime import datetime
-            dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
-            now = datetime.now(dt.tzinfo)
-            diff = now - dt
-            seconds = diff.total_seconds()
-            if seconds < 60: return 'Just now'
-            if seconds < 3600: return f'{int(seconds/60)}m ago'
-            if seconds < 86400: return f'{int(seconds/3600)}h ago'
-            if seconds < 604800: return f'{int(seconds/86400)}d ago'
-            return dt.strftime('%b %d')
-        except:
-            return 'Just now'
-    return {'time_since': time_since}
-*/
-
-// ============================================================
 // SHOW TOAST
 // ============================================================
 function showToast(message, type = 'success') {
-    document.querySelectorAll('.toast').forEach(el => el.remove());
-    
+    document.querySelectorAll('.toast-modern').forEach(el => el.remove());
     const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
+    toast.className = `toast-modern ${type}`;
     toast.innerHTML = `
         <span>${message}</span>
-        <span class="close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></span>
+        <span class="close-btn" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></span>
     `;
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 4000);
 }
 
 // ============================================================
-// KEYBOARD SHORTCUTS
-// ============================================================
-document.addEventListener('keydown', function(e) {
-    // Ctrl+F or Cmd+F to focus search
-    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-        e.preventDefault();
-        document.getElementById('searchInput').focus();
-    }
-    // Escape to clear search
-    if (e.key === 'Escape') {
-        const search = document.getElementById('searchInput');
-        if (document.activeElement === search) {
-            search.value = '';
-            searchAnnouncements();
-            search.blur();
-        }
-    }
-});
-
-// ============================================================
 // INITIALIZE
 // ============================================================
 document.addEventListener('DOMContentLoaded', function() {
-    // Show any flash messages
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                showToast('{{ message }}', '{{ category }}');
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+    setupAutoRead();
 });
 </script>
 
