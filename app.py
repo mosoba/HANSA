@@ -3883,6 +3883,7 @@ def api_use_identity(identity_id):
         data = request.get_json()
         platform = data.get('platform')
         account_name = data.get('account_name', '')
+        application_status = data.get('application_status', 'submitted')
         
         if not platform:
             return jsonify({'success': False, 'error': 'Platform is required'}), 400
@@ -3905,10 +3906,9 @@ def api_use_identity(identity_id):
             'identity_id': identity_id,
             'platform': platform,
             'account_name': account_name,
-            'application_status': data.get('application_status', 'submitted'),
+            'application_status': application_status,
             'used_by': session.get('user_id'),
             'used_by_name': session.get('user_name', 'Admin'),
-            'notes': data.get('notes', ''),
             'used_at': datetime.utcnow().isoformat(),
             'created_at': datetime.utcnow().isoformat(),
             'updated_at': datetime.utcnow().isoformat()
