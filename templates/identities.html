@@ -10,7 +10,7 @@
     <div>
         <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Identities</h1>
         <div class="flex items-center gap-3 mt-0.5">
-            <p class="text-sm text-gray-500">Manage identities, upload documents & apply to platforms</p>
+            <p class="text-sm text-gray-500">Manage identities, documents & platform applications</p>
             <span class="px-2.5 py-0.5 text-xs font-medium bg-indigo-50 text-indigo-600 rounded-full border border-indigo-200">
                 {{ total }} total
             </span>
@@ -22,26 +22,20 @@
 {% block extra_css %}
 <style>
 /* ============================================================
-   PROFESSIONAL UI - CLEAN & MATURE
+   PROFESSIONAL SINGLE-COLUMN UI
    ============================================================ */
-.identities-wrapper {
-    display: grid;
-    grid-template-columns: 420px 1fr;
-    gap: 24px;
-    min-height: 550px;
-}
 
-/* Stats Cards - Professional */
+/* Stats Cards - Top Row */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-bottom: 20px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
 }
 .stat-card {
     background: white;
-    border-radius: 10px;
-    padding: 16px 20px;
+    border-radius: 12px;
+    padding: 18px 20px;
     border: 1px solid #e8edf4;
     box-shadow: 0 1px 3px rgba(0,0,0,0.03);
     transition: all 0.2s;
@@ -50,7 +44,7 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.06);
 }
 .stat-card .stat-number {
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 700;
     color: #0f172a;
     letter-spacing: -0.5px;
@@ -65,66 +59,66 @@
 .stat-card.total .stat-number { color: #4f46e5; }
 .stat-card.available .stat-number { color: #059669; }
 .stat-card.used .stat-number { color: #d97706; }
+.stat-card.platforms .stat-number { color: #7c3aed; }
 
-/* Left Panel - Create */
+/* Main Container - Full Width */
+.identities-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Create Panel - Top Section */
 .create-panel {
     background: white;
     border-radius: 12px;
     border: 1px solid #e8edf4;
-    padding: 24px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-    height: fit-content;
-    position: sticky;
-    top: 20px;
-    max-height: calc(100vh - 120px);
-    overflow-y: auto;
 }
-.create-panel::-webkit-scrollbar {
-    width: 4px;
-}
-.create-panel::-webkit-scrollbar-track {
-    background: #f1f4f9;
-    border-radius: 10px;
-}
-.create-panel::-webkit-scrollbar-thumb {
-    background: #d1d9e6;
-    border-radius: 10px;
-}
-
-.panel-header {
+.create-panel .panel-header {
     display: flex;
     align-items: center;
     gap: 14px;
     margin-bottom: 20px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid #f0f4fa;
 }
-.panel-header .icon-box {
-    width: 42px;
-    height: 42px;
+.create-panel .panel-header .icon-box {
+    width: 44px;
+    height: 44px;
     border-radius: 10px;
     background: #4f46e5;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 16px;
+    font-size: 18px;
     flex-shrink: 0;
 }
-.panel-header .title-group h3 {
-    font-size: 16px;
+.create-panel .panel-header .title-group h3 {
+    font-size: 18px;
     font-weight: 700;
     color: #0f172a;
     margin: 0;
 }
-.panel-header .title-group p {
-    font-size: 12px;
+.create-panel .panel-header .title-group p {
+    font-size: 13px;
     color: #94a3b8;
     margin: 0;
 }
 
+/* Form - Inline Grid */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+}
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
 .form-group {
-    margin-bottom: 14px;
+    margin-bottom: 0;
 }
 .form-group label {
     display: block;
@@ -157,48 +151,27 @@
     background: white;
     box-shadow: 0 0 0 3px rgba(79,70,229,0.08);
 }
-.form-group input::placeholder,
-.form-group textarea::placeholder {
-    color: #94a3b8;
-}
 .form-group textarea {
     resize: vertical;
     min-height: 48px;
-    max-height: 100px;
+    max-height: 80px;
     line-height: 1.5;
 }
 
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-
-.section-title {
-    font-size: 11px;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin: 16px 0 8px 0;
-    padding: 6px 0;
-    border-bottom: 1px solid #f0f4fa;
-}
-
-/* Photo Upload - Professional */
+/* Photo Upload - Inline */
 .photo-upload-group {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
     gap: 12px;
 }
 .photo-upload-box {
     border: 2px dashed #d1d9e6;
     border-radius: 8px;
-    padding: 16px 12px;
+    padding: 12px 20px;
     text-align: center;
     cursor: pointer;
     transition: all 0.2s;
     background: #fafcff;
+    flex: 1;
 }
 .photo-upload-box:hover {
     border-color: #818cf8;
@@ -206,19 +179,18 @@
 }
 .photo-upload-box .preview-img {
     max-width: 100%;
-    max-height: 70px;
+    max-height: 60px;
     border-radius: 4px;
     display: none;
 }
 .photo-upload-box .placeholder-icon {
-    font-size: 22px;
+    font-size: 20px;
     color: #94a3b8;
 }
 .photo-upload-box .label-text {
     font-size: 11px;
     color: #94a3b8;
     display: block;
-    margin-top: 2px;
 }
 .photo-upload-box.has-image {
     border-color: #22c55e;
@@ -227,8 +199,7 @@
 }
 
 .btn-submit {
-    width: 100%;
-    padding: 12px;
+    padding: 10px 32px;
     background: #4f46e5;
     color: white;
     border: none;
@@ -237,11 +208,9 @@
     font-size: 14px;
     cursor: pointer;
     transition: all 0.2s;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
     gap: 8px;
-    margin-top: 6px;
 }
 .btn-submit:hover {
     background: #4338ca;
@@ -250,176 +219,190 @@
 .btn-submit:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    box-shadow: none;
 }
 
-/* Right Panel - List */
-.list-panel {
-    background: white;
-    border-radius: 12px;
-    border: 1px solid #e8edf4;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #f0f4fa;
+}
+
+/* ===== IDENTITY CARDS LIST ===== */
+.identity-list {
     display: flex;
     flex-direction: column;
-}
-
-.list-header {
-    padding: 14px 20px;
-    border-bottom: 1px solid #f0f4fa;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    background: #fafcff;
-}
-.list-header .left-group {
-    display: flex;
-    align-items: center;
     gap: 12px;
-}
-.list-header .left-group h4 {
-    font-size: 15px;
-    font-weight: 700;
-    color: #0f172a;
-    margin: 0;
-}
-.list-header .left-group .count-badge {
-    padding: 2px 14px;
-    border-radius: 20px;
-    background: #eef2ff;
-    color: #4f46e5;
-    font-size: 11px;
-    font-weight: 600;
-}
-.list-header .filter-pills {
-    display: flex;
-    gap: 4px;
-}
-.list-header .filter-pills button {
-    padding: 4px 14px;
-    border-radius: 20px;
-    border: 1px solid transparent;
-    background: transparent;
-    font-size: 11px;
-    font-weight: 500;
-    color: #94a3b8;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.list-header .filter-pills button:hover {
-    background: #f1f4f9;
-    color: #475569;
-}
-.list-header .filter-pills button.active {
-    background: #eef2ff;
-    border-color: #4f46e5;
-    color: #4f46e5;
-}
-
-.list-body {
-    padding: 16px 20px;
-    flex: 1;
-    overflow-y: auto;
-    max-height: 500px;
-}
-.list-body::-webkit-scrollbar {
-    width: 4px;
-}
-.list-body::-webkit-scrollbar-track {
-    background: #f1f4f9;
-    border-radius: 10px;
-}
-.list-body::-webkit-scrollbar-thumb {
-    background: #d1d9e6;
-    border-radius: 10px;
 }
 
 /* Identity Card - Professional */
 .identity-card {
     background: white;
-    border-radius: 8px;
+    border-radius: 12px;
     border: 1px solid #e8edf4;
-    padding: 14px 16px;
-    margin-bottom: 10px;
+    padding: 20px 24px;
     transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
 .identity-card:hover {
     border-color: #d1d9e6;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.05);
 }
 .identity-card.used {
-    border-left: 3px solid #f59e0b;
+    border-left: 4px solid #f59e0b;
 }
 .identity-card.available {
-    border-left: 3px solid #22c55e;
+    border-left: 4px solid #22c55e;
 }
 
-.card-top {
+/* Card Header */
+.card-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    gap: 10px;
+    align-items: flex-start;
     flex-wrap: wrap;
+    gap: 12px;
 }
-.card-top .identity-name {
+.card-header .identity-name {
     font-weight: 700;
-    font-size: 15px;
+    font-size: 18px;
     color: #0f172a;
 }
-.card-top .identity-name .usage-badge {
-    font-size: 10px;
+.card-header .identity-name .badge-status {
+    font-size: 11px;
     font-weight: 600;
-    padding: 1px 12px;
+    padding: 2px 14px;
     border-radius: 20px;
-    margin-left: 6px;
+    margin-left: 10px;
 }
-.card-top .identity-name .usage-badge.used { background: #fef3c7; color: #92400e; }
-.card-top .identity-name .usage-badge.available { background: #d1fae5; color: #065f46; }
+.badge-status.used { background: #fef3c7; color: #92400e; }
+.badge-status.available { background: #d1fae5; color: #065f46; }
 
-.card-details {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 4px;
-    margin-top: 6px;
-    font-size: 12px;
-    color: #64748b;
+.card-header .card-actions-top {
+    display: flex;
+    gap: 6px;
 }
-.card-details span {
+.card-header .card-actions-top button {
+    padding: 4px 14px;
+    border-radius: 6px;
+    border: none;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.card-header .card-actions-top .btn-edit {
+    background: #eef2ff;
+    color: #4f46e5;
+}
+.card-header .card-actions-top .btn-edit:hover {
+    background: #e0e7ff;
+}
+.card-header .card-actions-top .btn-delete {
+    background: #fee2e2;
+    color: #dc2626;
+}
+.card-header .card-actions-top .btn-delete:hover {
+    background: #fecaca;
+}
+
+/* Card Body */
+.card-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-top: 12px;
+    padding: 12px 0;
+    border-top: 1px solid #f0f4fa;
+}
+.card-body .detail-item {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
+    font-size: 13px;
+    color: #64748b;
 }
-.card-details .label {
+.card-body .detail-item .label {
     color: #94a3b8;
     font-weight: 500;
 }
+.card-body .detail-item i {
+    color: #94a3b8;
+    width: 16px;
+}
 
-/* Usage Tags - Clean */
+/* ID Photos Preview */
+.id-photos {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+.id-photos img {
+    height: 40px;
+    width: auto;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+}
+
+/* Usage Tags - Bottom Section */
+.usage-section {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f0f4fa;
+}
+.usage-section .usage-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
 .usage-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 8px;
+    gap: 8px;
 }
 .usage-tag {
-    font-size: 10px;
-    font-weight: 600;
-    padding: 2px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 14px;
     border-radius: 20px;
     background: #f1f4f9;
     color: #475569;
     border: 1px solid #e8edf4;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
-.usage-tag .status {
-    font-size: 9px;
+.usage-tag .status-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
 }
-.usage-tag .status.pending { color: #d97706; }
-.usage-tag .status.submitted { color: #2563eb; }
-.usage-tag .status.interview { color: #7c3aed; }
-.usage-tag .status.approved { color: #059669; }
-.usage-tag .status.rejected { color: #dc2626; }
+.usage-tag .status-badge:hover {
+    transform: scale(1.05);
+}
+.usage-tag .status-badge.pending { background: #fef3c7; color: #92400e; }
+.usage-tag .status-badge.submitted { background: #dbeafe; color: #1d4ed8; }
+.usage-tag .status-badge.interview { background: #ede9fe; color: #5b21b6; }
+.usage-tag .status-badge.approved { background: #d1fae5; color: #059669; }
+.usage-tag .status-badge.rejected { background: #fee2e2; color: #dc2626; }
+
+.usage-tag .edit-notes-btn {
+    cursor: pointer;
+    font-size: 10px;
+    opacity: 0.5;
+    transition: 0.2s;
+}
+.usage-tag .edit-notes-btn:hover {
+    opacity: 1;
+}
 
 .usage-tag.rws { background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
 .usage-tag.handshake { background: #d1fae5; color: #065f46; border-color: #a7f3d0; }
@@ -429,64 +412,40 @@
 .usage-tag.fiverr { background: #fef3c7; color: #92400e; border-color: #fde68a; }
 .usage-tag.other { background: #f1f4f9; color: #475569; border-color: #e2e8f0; }
 
-/* Available tag */
-.usage-tag.available-tag {
-    background: #d1fae5;
-    color: #065f46;
-    border-color: #a7f3d0;
-}
-.usage-tag.can-apply-tag {
-    background: #fef3c7;
-    color: #92400e;
-    border-color: #fde68a;
-}
-
+/* Card Actions */
 .card-actions {
-    margin-top: 10px;
-    padding-top: 10px;
+    margin-top: 12px;
+    padding-top: 12px;
     border-top: 1px solid #f0f4fa;
     display: flex;
-    gap: 6px;
+    gap: 8px;
     flex-wrap: wrap;
 }
 .card-actions button {
-    padding: 3px 12px;
+    padding: 5px 16px;
     border-radius: 6px;
     border: none;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
 }
-.card-actions .view-btn {
+.card-actions .btn-view {
     background: #f1f4f9;
     color: #475569;
 }
-.card-actions .view-btn:hover {
+.card-actions .btn-view:hover {
     background: #e2e8f0;
 }
-.card-actions .edit-btn {
-    background: #eef2ff;
-    color: #4f46e5;
-}
-.card-actions .edit-btn:hover {
-    background: #e0e7ff;
-}
-.card-actions .apply-btn {
+.card-actions .btn-apply {
     background: #dbeafe;
     color: #1d4ed8;
 }
-.card-actions .apply-btn:hover {
+.card-actions .btn-apply:hover {
     background: #bfdbfe;
 }
-.card-actions .delete-btn {
-    background: #fee2e2;
-    color: #dc2626;
-}
-.card-actions .delete-btn:hover {
-    background: #fecaca;
-}
 
+/* Empty State */
 .empty-state {
     text-align: center;
     padding: 60px 20px;
@@ -508,9 +467,7 @@
     margin-top: 4px;
 }
 
-/* ============================================================
-   APPLY MODAL
-   ============================================================ */
+/* ===== MODALS ===== */
 .modal-overlay {
     display: none;
     position: fixed;
@@ -530,7 +487,7 @@
     background: white;
     border-radius: 12px;
     padding: 32px;
-    max-width: 480px;
+    max-width: 520px;
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
@@ -541,7 +498,6 @@
 }
 .modal-content::-webkit-scrollbar-track {
     background: #f1f4f9;
-    border-radius: 10px;
 }
 .modal-content::-webkit-scrollbar-thumb {
     background: #d1d9e6;
@@ -559,6 +515,9 @@
     font-weight: 700;
     color: #0f172a;
     margin: 0;
+}
+.modal-header h3 i {
+    margin-right: 8px;
 }
 .modal-header .close-modal {
     background: none;
@@ -624,10 +583,15 @@
     resize: vertical;
     min-height: 60px;
     max-height: 100px;
-    line-height: 1.5;
 }
 
-.modal-body .btn-apply {
+.modal-body .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.modal-body .btn-primary {
     width: 100%;
     padding: 12px;
     background: #4f46e5;
@@ -642,18 +606,17 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    margin-top: 6px;
 }
-.modal-body .btn-apply:hover {
+.modal-body .btn-primary:hover {
     background: #4338ca;
     box-shadow: 0 4px 16px rgba(79,70,229,0.25);
 }
-.modal-body .btn-apply:disabled {
+.modal-body .btn-primary:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
-/* Toast - Professional */
+/* Toast */
 .toast-modern {
     position: fixed;
     top: 20px;
@@ -678,7 +641,6 @@
 .toast-modern .close-btn {
     cursor: pointer;
     opacity: 0.7;
-    transition: 0.2s;
 }
 .toast-modern .close-btn:hover { opacity: 1; }
 
@@ -689,38 +651,38 @@
 
 /* Responsive */
 @media (max-width: 1024px) {
-    .identities-wrapper {
-        grid-template-columns: 1fr;
-    }
-    .create-panel {
-        position: static;
-        max-height: none;
-    }
     .stats-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .form-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .card-body {
+        grid-template-columns: 1fr 1fr;
     }
 }
 @media (max-width: 640px) {
     .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: 1fr 1fr;
     }
-    .form-row {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    .form-grid-2 {
         grid-template-columns: 1fr;
     }
     .photo-upload-group {
+        flex-direction: column;
+    }
+    .card-body {
         grid-template-columns: 1fr;
-    }
-    .list-header {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .card-top {
-        flex-direction: column;
-        align-items: flex-start;
     }
     .modal-content {
         padding: 20px;
         margin: 10px;
+    }
+    .modal-body .form-row {
+        grid-template-columns: 1fr;
     }
 }
 </style>
@@ -728,26 +690,44 @@
 
 {% block content %}
 
-<div class="identities-wrapper">
+<div class="identities-container">
 
-    <!-- LEFT PANEL - CREATE -->
+    <!-- ===== STATS ===== -->
+    <div class="stats-grid">
+        <div class="stat-card total">
+            <div class="stat-number">{{ total }}</div>
+            <div class="stat-label">Total Identities</div>
+        </div>
+        <div class="stat-card available">
+            <div class="stat-number">{{ available_count }}</div>
+            <div class="stat-label">Available</div>
+        </div>
+        <div class="stat-card used">
+            <div class="stat-number">{{ used_count }}</div>
+            <div class="stat-label">In Use</div>
+        </div>
+        <div class="stat-card platforms">
+            <div class="stat-number">{{ platforms|length }}</div>
+            <div class="stat-label">Platforms</div>
+        </div>
+    </div>
+
+    <!-- ===== CREATE PANEL ===== -->
     <div class="create-panel">
         <div class="panel-header">
             <div class="icon-box"><i class="fas fa-user-plus"></i></div>
             <div class="title-group">
-                <h3>Add Identity</h3>
-                <p>Enter identity details & upload documents</p>
+                <h3>Add New Identity</h3>
+                <p>Enter identity details and upload ID photos</p>
             </div>
         </div>
 
         <form id="identityForm" onsubmit="saveIdentity(event)">
-            <!-- Personal Details -->
-            <div class="form-group">
-                <label>Full Name <span class="required">*</span></label>
-                <input type="text" id="full_name" placeholder="Enter full name" required>
-            </div>
-
-            <div class="form-row">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Full Name <span class="required">*</span></label>
+                    <input type="text" id="full_name" placeholder="Enter full name" required>
+                </div>
                 <div class="form-group">
                     <label>Phone Number</label>
                     <input type="text" id="phone_number" placeholder="+254 700 000 000">
@@ -758,157 +738,167 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <label>SSN / ID Number</label>
-                <input type="text" id="ssn" placeholder="XXX-XX-XXXX">
-            </div>
-
-            <!-- ID Photos -->
-            <div class="section-title">Document Photos</div>
-            <div class="photo-upload-group">
-                <div class="photo-upload-box" id="frontBox" onclick="document.getElementById('frontUpload').click()">
-                    <i class="fas fa-camera placeholder-icon"></i>
-                    <span class="label-text">Front Side</span>
-                    <input type="file" id="frontUpload" accept="image/*" style="display:none" onchange="previewImage(this, 'frontPreview', 'frontBox')">
-                    <img id="frontPreview" class="preview-img">
-                    <input type="hidden" id="id_front_url">
+            <div class="form-grid-2" style="margin-top:14px;">
+                <div class="form-group">
+                    <label>SSN / ID Number</label>
+                    <input type="text" id="ssn" placeholder="XXX-XX-XXXX">
                 </div>
-                <div class="photo-upload-box" id="backBox" onclick="document.getElementById('backUpload').click()">
-                    <i class="fas fa-camera placeholder-icon"></i>
-                    <span class="label-text">Back Side</span>
-                    <input type="file" id="backUpload" accept="image/*" style="display:none" onchange="previewImage(this, 'backPreview', 'backBox')">
-                    <img id="backPreview" class="preview-img">
-                    <input type="hidden" id="id_back_url">
+                <div class="form-group">
+                    <label>Platform Credentials</label>
+                    <input type="text" id="platform_credentials" placeholder="Username / Password">
                 </div>
             </div>
 
-            <div class="form-group">
-                <label>Platform Credentials</label>
-                <input type="text" id="platform_credentials" placeholder="Username / Password">
+            <div style="margin-top:14px;">
+                <label style="font-size:12px;font-weight:600;color:#1e293b;display:block;margin-bottom:4px;">ID Photos</label>
+                <div class="photo-upload-group">
+                    <div class="photo-upload-box" id="frontBox" onclick="document.getElementById('frontUpload').click()">
+                        <i class="fas fa-camera placeholder-icon"></i>
+                        <span class="label-text">Front Side</span>
+                        <input type="file" id="frontUpload" accept="image/*" style="display:none" onchange="previewImage(this, 'frontPreview', 'frontBox')">
+                        <img id="frontPreview" class="preview-img">
+                        <input type="hidden" id="id_front_url">
+                    </div>
+                    <div class="photo-upload-box" id="backBox" onclick="document.getElementById('backUpload').click()">
+                        <i class="fas fa-camera placeholder-icon"></i>
+                        <span class="label-text">Back Side</span>
+                        <input type="file" id="backUpload" accept="image/*" style="display:none" onchange="previewImage(this, 'backPreview', 'backBox')">
+                        <img id="backPreview" class="preview-img">
+                        <input type="hidden" id="id_back_url">
+                    </div>
+                </div>
             </div>
 
-            <div class="form-group" style="margin-top:14px;">
-                <label>General Notes</label>
-                <textarea id="notes" placeholder="Additional notes about this identity"></textarea>
+            <div class="form-grid" style="margin-top:14px;">
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="notes" placeholder="Additional notes"></textarea>
+                </div>
             </div>
 
-            <button type="submit" class="btn-submit" id="submitBtn">
-                <i class="fas fa-save"></i> Save Identity
-            </button>
+            <div class="form-actions">
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    <i class="fas fa-save"></i> Save Identity
+                </button>
+            </div>
         </form>
     </div>
 
-    <!-- RIGHT PANEL - LIST -->
-    <div class="list-panel">
-        <div class="list-header">
-            <div class="left-group">
-                <h4><i class="fas fa-id-card text-indigo-500"></i> Identities</h4>
-                <span class="count-badge">{{ identities|length }}</span>
-            </div>
-            <div class="filter-pills" id="filterGroup">
-                <button class="active" data-filter="all" onclick="filterIdentities('all', this)">All</button>
-                <button data-filter="available" onclick="filterIdentities('available', this)">Available</button>
-                <button data-filter="used" onclick="filterIdentities('used', this)">Used</button>
-            </div>
+    <!-- ===== IDENTITY LIST ===== -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h3 style="font-size:16px;font-weight:700;color:#0f172a;margin:0;">
+            <i class="fas fa-id-card text-indigo-500"></i> All Identities
+            <span style="font-weight:400;color:#94a3b8;font-size:13px;margin-left:8px;">({{ identities|length }})</span>
+        </h3>
+        <div style="display:flex;gap:4px;" id="filterGroup">
+            <button class="active" data-filter="all" onclick="filterIdentities('all', this)" style="padding:4px 14px;border-radius:20px;border:1px solid transparent;background:transparent;font-size:12px;font-weight:500;color:#94a3b8;cursor:pointer;transition:all 0.2s;">All</button>
+            <button data-filter="available" onclick="filterIdentities('available', this)" style="padding:4px 14px;border-radius:20px;border:1px solid transparent;background:transparent;font-size:12px;font-weight:500;color:#94a3b8;cursor:pointer;transition:all 0.2s;">Available</button>
+            <button data-filter="used" onclick="filterIdentities('used', this)" style="padding:4px 14px;border-radius:20px;border:1px solid transparent;background:transparent;font-size:12px;font-weight:500;color:#94a3b8;cursor:pointer;transition:all 0.2s;">Used</button>
         </div>
+    </div>
 
-        <div class="list-body" id="identitiesList">
-            <!-- Stats -->
-            <div class="stats-grid">
-                <div class="stat-card total">
-                    <div class="stat-number">{{ total }}</div>
-                    <div class="stat-label">Total</div>
-                </div>
-                <div class="stat-card available">
-                    <div class="stat-number">{{ available_count }}</div>
-                    <div class="stat-label">Available</div>
-                </div>
-                <div class="stat-card used">
-                    <div class="stat-number">{{ used_count }}</div>
-                    <div class="stat-label">Used</div>
-                </div>
-            </div>
-
-            <!-- Identity Cards -->
-            {% if identities %}
-                {% for identity in identities %}
-                <div class="identity-card {% if identity.usage %}used{% else %}available{% endif %}" 
-                     id="identity-{{ identity.id }}"
-                     data-used="{% if identity.usage %}true{% else %}false{% endif %}">
-                    
-                    <div class="card-top">
-                        <div class="identity-name">
-                            {{ identity.full_name or 'Unknown' }}
-                            <span class="usage-badge {% if identity.usage %}used{% else %}available{% endif %}">
-                                {% if identity.usage %}Used ({{ identity.usage|length }}){% else %}Available{% endif %}
-                            </span>
-                        </div>
+    <div class="identity-list" id="identitiesList">
+        {% if identities %}
+            {% for identity in identities %}
+            <div class="identity-card {% if identity.usage %}used{% else %}available{% endif %}" 
+                 id="identity-{{ identity.id }}"
+                 data-used="{% if identity.usage %}true{% else %}false{% endif %}">
+                
+                <!-- Card Header -->
+                <div class="card-header">
+                    <div class="identity-name">
+                        {{ identity.full_name or 'Unknown' }}
+                        <span class="badge-status {% if identity.usage %}used{% else %}available{% endif %}">
+                            {% if identity.usage %}Used ({{ identity.usage|length }}){% else %}Available{% endif %}
+                        </span>
                     </div>
-
-                    <div class="card-details">
-                        <span><span class="label">📞</span> {{ identity.phone_number or 'N/A' }}</span>
-                        <span><span class="label">✉️</span> {{ identity.email or 'N/A' }}</span>
-                        <span><span class="label">🪪</span> {{ identity.ssn or 'N/A' }}</span>
+                    <div class="card-actions-top">
+                        <button class="btn-edit" onclick="openEditModal('{{ identity.id }}')">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn-delete" onclick="deleteIdentity('{{ identity.id }}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>
+                </div>
 
-                    <!-- ID Photos Preview -->
-                    {% if identity.id_front_url or identity.id_back_url %}
-                    <div style="display:flex;gap:6px;margin-top:4px;">
-                        {% if identity.id_front_url %}
-                        <img src="{{ identity.id_front_url }}" alt="Front ID" style="height:36px;width:auto;border-radius:4px;border:1px solid #e2e8f0;">
-                        {% endif %}
-                        {% if identity.id_back_url %}
-                        <img src="{{ identity.id_back_url }}" alt="Back ID" style="height:36px;width:auto;border-radius:4px;border:1px solid #e2e8f0;">
-                        {% endif %}
+                <!-- Card Body - Details -->
+                <div class="card-body">
+                    <div class="detail-item">
+                        <i class="fas fa-phone"></i>
+                        <span class="label">Phone:</span>
+                        <span>{{ identity.phone_number or 'N/A' }}</span>
                     </div>
+                    <div class="detail-item">
+                        <i class="fas fa-envelope"></i>
+                        <span class="label">Email:</span>
+                        <span>{{ identity.email or 'N/A' }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-id-card"></i>
+                        <span class="label">SSN:</span>
+                        <span>{{ identity.ssn or 'N/A' }}</span>
+                    </div>
+                </div>
+
+                <!-- ID Photos -->
+                {% if identity.id_front_url or identity.id_back_url %}
+                <div class="id-photos">
+                    {% if identity.id_front_url %}
+                    <img src="{{ identity.id_front_url }}" alt="Front ID">
                     {% endif %}
+                    {% if identity.id_back_url %}
+                    <img src="{{ identity.id_back_url }}" alt="Back ID">
+                    {% endif %}
+                </div>
+                {% endif %}
 
-                    <!-- Usage Tags - Shows which platforms already used -->
+                <!-- Usage Section -->
+                <div class="usage-section">
+                    <div class="usage-label">Platform Usage</div>
                     <div class="usage-tags">
                         {% if identity.usage %}
                             {% for u in identity.usage %}
                             <span class="usage-tag {{ u.platform|lower|replace(' ', '')|default('other') }}">
-                                ✅ {{ u.platform }}
-                                <span class="status {{ u.application_status|default('pending') }}">
-                                    ({{ u.application_status|upper|default('PENDING') }})
+                                {{ u.platform }}
+                                {% if u.account_name %}→ {{ u.account_name }}{% endif %}
+                                <span class="status-badge {{ u.application_status|default('pending') }}" 
+                                      onclick="changeStatus('{{ u.id }}', '{{ u.application_status|default('pending') }}')"
+                                      title="Click to change status">
+                                    {{ u.application_status|upper|default('PENDING') }}
                                 </span>
+                                <i class="fas fa-edit edit-notes-btn" onclick="updateUsageNotes('{{ u.id }}')" title="Edit notes"></i>
                             </span>
                             {% endfor %}
-                            <span class="usage-tag can-apply-tag">
+                            <span class="usage-tag" style="background:#fef3c7;color:#92400e;border-color:#fde68a;">
                                 🔄 Can apply to other platforms
                             </span>
                         {% else %}
-                            <span class="usage-tag available-tag">
+                            <span class="usage-tag" style="background:#d1fae5;color:#065f46;border-color:#a7f3d0;">
                                 ✅ Available for all platforms
                             </span>
                         {% endif %}
                     </div>
+                </div>
 
-                    <!-- Card Actions - Apply button ALWAYS visible -->
-                    <div class="card-actions">
-                        <button class="view-btn" onclick="viewIdentity('{{ identity.id }}')">
-                            <i class="fas fa-eye"></i> View
-                        </button>
-                        <button class="edit-btn" onclick="editIdentity('{{ identity.id }}')">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
-                        <button class="apply-btn" onclick="openApplyModal('{{ identity.id }}', '{{ identity.full_name }}')">
-                            <i class="fas fa-paper-plane"></i> Apply
-                        </button>
-                        <button class="delete-btn" onclick="deleteIdentity('{{ identity.id }}')">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
-                    </div>
+                <!-- Card Actions -->
+                <div class="card-actions">
+                    <button class="btn-view" onclick="viewIdentity('{{ identity.id }}')">
+                        <i class="fas fa-eye"></i> View Details
+                    </button>
+                    <button class="btn-apply" onclick="openApplyModal('{{ identity.id }}', '{{ identity.full_name }}')">
+                        <i class="fas fa-paper-plane"></i> Apply to Platform
+                    </button>
                 </div>
-                {% endfor %}
-            {% else %}
-                <div class="empty-state">
-                    <i class="fas fa-id-card"></i>
-                    <h3>No Identities</h3>
-                    <p>Add your first identity using the form</p>
-                </div>
-            {% endif %}
-        </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-id-card"></i>
+                <h3>No Identities</h3>
+                <p>Add your first identity using the form above</p>
+            </div>
+        {% endif %}
     </div>
 </div>
 
@@ -960,11 +950,66 @@
                 
                 <div class="form-group">
                     <label>Notes</label>
-                    <textarea id="applyNotes" placeholder="Additional notes about this application"></textarea>
+                    <textarea id="applyNotes" placeholder="Additional notes"></textarea>
                 </div>
                 
-                <button type="submit" class="btn-apply" id="applyBtn">
+                <button type="submit" class="btn-primary" id="applyBtn">
                     <i class="fas fa-check"></i> Apply & Mark Used
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     EDIT MODAL
+     ============================================================ -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-edit text-indigo-500"></i> Edit Identity</h3>
+            <button class="close-modal" onclick="closeEditModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <form id="editForm" onsubmit="saveEdit(event)">
+                <input type="hidden" id="editIdentityId">
+                
+                <div class="form-group">
+                    <label>Full Name <span class="required">*</span></label>
+                    <input type="text" id="edit_full_name" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="text" id="edit_phone_number">
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="edit_email">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>SSN / ID Number</label>
+                    <input type="text" id="edit_ssn">
+                </div>
+
+                <div class="form-group">
+                    <label>Platform Credentials</label>
+                    <input type="text" id="edit_platform_credentials" placeholder="Username / Password">
+                </div>
+
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="edit_notes" rows="3"></textarea>
+                </div>
+                
+                <button type="submit" class="btn-primary" id="editBtn">
+                    <i class="fas fa-save"></i> Update Identity
                 </button>
             </form>
         </div>
@@ -985,7 +1030,6 @@ function previewImage(input, previewId, boxId) {
         preview.src = e.target.result;
         preview.style.display = 'block';
         document.getElementById(boxId).classList.add('has-image');
-        
         uploadFile(file, previewId);
     };
     reader.readAsDataURL(file);
@@ -1006,7 +1050,6 @@ async function uploadFile(file, previewId) {
             document.getElementById(inputId + '_url').value = result.url;
         }
     } catch (error) {
-        console.error('Upload error:', error);
         showToast('Failed to upload photo', 'error');
     }
 }
@@ -1068,8 +1111,18 @@ async function saveIdentity(event) {
 // FILTER IDENTITIES
 // ============================================================
 function filterIdentities(filter, btn) {
-    document.querySelectorAll('#filterGroup button').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
+    document.querySelectorAll('#filterGroup button').forEach(b => {
+        b.classList.remove('active');
+        b.style.background = 'transparent';
+        b.style.color = '#94a3b8';
+        b.style.borderColor = 'transparent';
+    });
+    if (btn) {
+        btn.classList.add('active');
+        btn.style.background = '#eef2ff';
+        btn.style.color = '#4f46e5';
+        btn.style.borderColor = '#4f46e5';
+    }
     
     document.querySelectorAll('.identity-card').forEach(item => {
         const isUsed = item.dataset.used === 'true';
@@ -1087,16 +1140,16 @@ function viewIdentity(id) {
     const card = document.getElementById(`identity-${id}`);
     if (!card) return;
     
-    const details = card.querySelector('.card-details');
-    const usageTags = card.querySelector('.usage-tags');
+    const details = card.querySelector('.card-body');
+    const photos = card.querySelector('.id-photos');
     
     if (details.style.display === 'none') {
         details.style.display = 'grid';
-        if (usageTags) usageTags.style.display = 'flex';
+        if (photos) photos.style.display = 'flex';
         showToast('Showing full details', 'info');
     } else {
         details.style.display = 'none';
-        if (usageTags) usageTags.style.display = 'none';
+        if (photos) photos.style.display = 'none';
     }
 }
 
@@ -1114,7 +1167,6 @@ function closeApplyModal() {
     document.getElementById('applyForm').reset();
 }
 
-// Close modal when clicking outside
 document.getElementById('applyModal')?.addEventListener('click', function(e) {
     if (e.target === this) closeApplyModal();
 });
@@ -1174,6 +1226,154 @@ async function submitApplication(event) {
 }
 
 // ============================================================
+// EDIT MODAL
+// ============================================================
+function openEditModal(identityId) {
+    document.getElementById('editIdentityId').value = identityId;
+    document.getElementById('editModal').classList.add('active');
+    
+    fetch(`/api/identities/${identityId}`)
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                const data = result.data;
+                document.getElementById('edit_full_name').value = data.full_name || '';
+                document.getElementById('edit_phone_number').value = data.phone_number || '';
+                document.getElementById('edit_email').value = data.email || '';
+                document.getElementById('edit_ssn').value = data.ssn || '';
+                document.getElementById('edit_platform_credentials').value = data.platform_credentials || '';
+                document.getElementById('edit_notes').value = data.notes || '';
+            } else {
+                showToast('Error loading identity data', 'error');
+            }
+        })
+        .catch(error => {
+            showToast('Error: ' + error.message, 'error');
+        });
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').classList.remove('active');
+    document.getElementById('editForm').reset();
+}
+
+document.getElementById('editModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeEditModal();
+});
+
+// ============================================================
+// SAVE EDIT
+// ============================================================
+async function saveEdit(event) {
+    event.preventDefault();
+    
+    const btn = document.getElementById('editBtn');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+    
+    const identityId = document.getElementById('editIdentityId').value;
+    
+    const data = {
+        full_name: document.getElementById('edit_full_name').value.trim(),
+        phone_number: document.getElementById('edit_phone_number').value.trim(),
+        email: document.getElementById('edit_email').value.trim(),
+        ssn: document.getElementById('edit_ssn').value.trim(),
+        platform_credentials: document.getElementById('edit_platform_credentials').value.trim(),
+        notes: document.getElementById('edit_notes').value.trim()
+    };
+    
+    if (!data.full_name) {
+        showToast('Full name is required', 'warning');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/identities/${identityId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        
+        if (result.success) {
+            showToast('✅ Identity updated successfully!', 'success');
+            closeEditModal();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast('❌ ' + result.error, 'error');
+        }
+    } catch (error) {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast('❌ Error: ' + error.message, 'error');
+    }
+}
+
+// ============================================================
+// CHANGE STATUS
+// ============================================================
+function changeStatus(usageId, currentStatus) {
+    const statuses = ['pending', 'submitted', 'interview', 'approved', 'rejected'];
+    const currentIndex = statuses.indexOf(currentStatus);
+    const nextIndex = (currentIndex + 1) % statuses.length;
+    const newStatus = statuses[nextIndex];
+    
+    if (!confirm(`Change status from ${currentStatus.toUpperCase()} to ${newStatus.toUpperCase()}?`)) {
+        return;
+    }
+    
+    fetch(`/api/identity-usage/${usageId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ application_status: newStatus })
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            showToast('✅ ' + result.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast('❌ ' + result.error, 'error');
+        }
+    })
+    .catch(error => {
+        showToast('❌ Error: ' + error.message, 'error');
+    });
+}
+
+// ============================================================
+// UPDATE USAGE NOTES
+// ============================================================
+function updateUsageNotes(usageId) {
+    const notes = prompt('Enter notes for this application:');
+    if (notes === null) return;
+    
+    fetch(`/api/identity-usage/${usageId}/notes`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: notes })
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            showToast('✅ Notes updated!', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast('❌ ' + result.error, 'error');
+        }
+    })
+    .catch(error => {
+        showToast('❌ Error: ' + error.message, 'error');
+    });
+}
+
+// ============================================================
 // DELETE IDENTITY
 // ============================================================
 async function deleteIdentity(id) {
@@ -1200,13 +1400,6 @@ async function deleteIdentity(id) {
 }
 
 // ============================================================
-// EDIT IDENTITY
-// ============================================================
-function editIdentity(id) {
-    showToast('Edit feature coming soon', 'info');
-}
-
-// ============================================================
 // SHOW TOAST
 // ============================================================
 function showToast(message, type = 'success') {
@@ -1220,6 +1413,15 @@ function showToast(message, type = 'success') {
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 4000);
 }
+
+// Init filter styles
+document.querySelectorAll('#filterGroup button').forEach(b => {
+    if (b.classList.contains('active')) {
+        b.style.background = '#eef2ff';
+        b.style.color = '#4f46e5';
+        b.style.borderColor = '#4f46e5';
+    }
+});
 </script>
 
 {% endblock %}
