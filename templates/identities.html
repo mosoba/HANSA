@@ -10,7 +10,7 @@
     <div>
         <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Identities</h1>
         <div class="flex items-center gap-3 mt-0.5">
-            <p class="text-sm text-gray-500">Manage identities with document tracking & platform usage</p>
+            <p class="text-sm text-gray-500">Manage identities, upload documents & apply to platforms</p>
             <span class="px-2.5 py-0.5 text-xs font-medium bg-indigo-50 text-indigo-600 rounded-full border border-indigo-200">
                 {{ total }} total
             </span>
@@ -224,32 +224,6 @@
     border-color: #22c55e;
     border-style: solid;
     background: #f0fdf4;
-}
-
-/* Usage Entry - Clean */
-.usage-entry {
-    background: #f8fafc;
-    border-radius: 8px;
-    padding: 14px;
-    margin-bottom: 10px;
-    border: 1px solid #e8edf4;
-}
-.usage-entry .app-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-.usage-entry .remove-usage {
-    color: #ef4444;
-    cursor: pointer;
-    float: right;
-    font-size: 13px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    transition: 0.2s;
-}
-.usage-entry .remove-usage:hover {
-    background: #fee2e2;
 }
 
 .btn-add-usage {
@@ -503,12 +477,12 @@
 .card-actions .edit-btn:hover {
     background: #e0e7ff;
 }
-.card-actions .use-btn {
-    background: #d1fae5;
-    color: #065f46;
+.card-actions .apply-btn {
+    background: #dbeafe;
+    color: #1d4ed8;
 }
-.card-actions .use-btn:hover {
-    background: #a7f3d0;
+.card-actions .apply-btn:hover {
+    background: #bfdbfe;
 }
 .card-actions .delete-btn {
     background: #fee2e2;
@@ -516,6 +490,15 @@
 }
 .card-actions .delete-btn:hover {
     background: #fecaca;
+}
+
+/* Apply Button - Special */
+.apply-btn {
+    background: #dbeafe !important;
+    color: #1d4ed8 !important;
+}
+.apply-btn:hover {
+    background: #bfdbfe !important;
 }
 
 .empty-state {
@@ -539,12 +522,157 @@
     margin-top: 4px;
 }
 
+/* ============================================================
+   APPLY MODAL
+   ============================================================ */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    max-width: 480px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.15);
+}
+.modal-content::-webkit-scrollbar {
+    width: 4px;
+}
+.modal-content::-webkit-scrollbar-track {
+    background: #f1f4f9;
+    border-radius: 10px;
+}
+.modal-content::-webkit-scrollbar-thumb {
+    background: #d1d9e6;
+    border-radius: 10px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.modal-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+.modal-header .close-modal {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #94a3b8;
+    padding: 4px;
+    transition: 0.2s;
+}
+.modal-header .close-modal:hover {
+    color: #0f172a;
+}
+
+.modal-body .identity-label {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e8edf4;
+}
+.modal-body .identity-label strong {
+    color: #0f172a;
+}
+
+.modal-body .form-group {
+    margin-bottom: 14px;
+}
+.modal-body .form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+.modal-body .form-group label .required {
+    color: #ef4444;
+}
+.modal-body .form-group input,
+.modal-body .form-group select,
+.modal-body .form-group textarea {
+    width: 100%;
+    padding: 9px 14px;
+    border-radius: 8px;
+    border: 1.5px solid #e2e8f0;
+    font-size: 13px;
+    transition: all 0.2s;
+    background: #fafcff;
+    font-family: inherit;
+    color: #0f172a;
+}
+.modal-body .form-group input:focus,
+.modal-body .form-group select:focus,
+.modal-body .form-group textarea:focus {
+    outline: none;
+    border-color: #4f46e5;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(79,70,229,0.08);
+}
+.modal-body .form-group textarea {
+    resize: vertical;
+    min-height: 60px;
+    max-height: 100px;
+    line-height: 1.5;
+}
+
+.modal-body .btn-apply {
+    width: 100%;
+    padding: 12px;
+    background: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+.modal-body .btn-apply:hover {
+    background: #4338ca;
+    box-shadow: 0 4px 16px rgba(79,70,229,0.25);
+}
+.modal-body .btn-apply:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 /* Toast - Professional */
 .toast-modern {
     position: fixed;
     top: 20px;
     right: 20px;
-    z-index: 99999;
+    z-index: 999999;
     padding: 14px 24px;
     border-radius: 10px;
     color: white;
@@ -596,9 +724,6 @@
     .photo-upload-group {
         grid-template-columns: 1fr;
     }
-    .usage-entry .app-row {
-        grid-template-columns: 1fr;
-    }
     .list-header {
         flex-direction: column;
         align-items: stretch;
@@ -606,6 +731,10 @@
     .card-top {
         flex-direction: column;
         align-items: flex-start;
+    }
+    .modal-content {
+        padding: 20px;
+        margin: 10px;
     }
 }
 </style>
@@ -621,7 +750,7 @@
             <div class="icon-box"><i class="fas fa-user-plus"></i></div>
             <div class="title-group">
                 <h3>Add Identity</h3>
-                <p>Enter identity details & platform usage</p>
+                <p>Enter identity details & upload documents</p>
             </div>
         </div>
 
@@ -671,49 +800,6 @@
                 <label>Platform Credentials</label>
                 <input type="text" id="platform_credentials" placeholder="Username / Password">
             </div>
-
-            <!-- Platform Usage -->
-            <div class="section-title">Platform Usage</div>
-            <div id="usageContainer">
-                <div class="usage-entry">
-                    <span class="remove-usage" onclick="removeUsage(this)" style="display:none">✕</span>
-                    <div class="app-row">
-                        <div class="form-group">
-                            <label>Platform <span class="required">*</span></label>
-                            <select class="usage-platform" required>
-                                <option value="">Select</option>
-                                {% for platform in platforms %}
-                                <option value="{{ platform }}">{{ platform }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Account Name</label>
-                            <input type="text" class="usage-account" placeholder="Account name">
-                        </div>
-                    </div>
-                    <div class="app-row">
-                        <div class="form-group">
-                            <label>Status</label>
-                            <select class="usage-status">
-                                <option value="pending">Pending</option>
-                                <option value="submitted">Submitted</option>
-                                <option value="interview">Interview</option>
-                                <option value="approved">Approved</option>
-                                <option value="rejected">Rejected</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Notes</label>
-                            <input type="text" class="usage-notes" placeholder="Additional notes">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <button type="button" class="btn-add-usage" onclick="addUsage()">
-                <i class="fas fa-plus"></i> Add Platform
-            </button>
 
             <div class="form-group" style="margin-top:14px;">
                 <label>General Notes</label>
@@ -814,8 +900,8 @@
                             <i class="fas fa-edit"></i> Edit
                         </button>
                         {% if not identity.usage %}
-                        <button class="use-btn" onclick="useIdentity('{{ identity.id }}')">
-                            <i class="fas fa-check"></i> Mark Used
+                        <button class="apply-btn" onclick="openApplyModal('{{ identity.id }}', '{{ identity.full_name }}')">
+                            <i class="fas fa-paper-plane"></i> Apply
                         </button>
                         {% endif %}
                         <button class="delete-btn" onclick="deleteIdentity('{{ identity.id }}')">
@@ -831,6 +917,65 @@
                     <p>Add your first identity using the form</p>
                 </div>
             {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     APPLY MODAL
+     ============================================================ -->
+<div class="modal-overlay" id="applyModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-paper-plane text-indigo-500"></i> Apply Identity</h3>
+            <button class="close-modal" onclick="closeApplyModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <div class="identity-label">
+                Applying: <strong id="applyIdentityName"></strong>
+            </div>
+            
+            <form id="applyForm" onsubmit="submitApplication(event)">
+                <input type="hidden" id="applyIdentityId">
+                
+                <div class="form-group">
+                    <label>Platform <span class="required">*</span></label>
+                    <select id="applyPlatform" required>
+                        <option value="">Select Platform</option>
+                        {% for platform in platforms %}
+                        <option value="{{ platform }}">{{ platform }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Account Name</label>
+                    <input type="text" id="applyAccountName" placeholder="e.g., Mercor_Account_001">
+                </div>
+                
+                <div class="form-group">
+                    <label>Application Status</label>
+                    <select id="applyStatus">
+                        <option value="pending">Pending</option>
+                        <option value="submitted" selected>Submitted</option>
+                        <option value="interview">Interview</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="applyNotes" placeholder="Additional notes about this application"></textarea>
+                </div>
+                
+                <button type="submit" class="btn-apply" id="applyBtn">
+                    <i class="fas fa-check"></i> Apply & Mark Used
+                </button>
+            </form>
         </div>
     </div>
 </div>
@@ -876,59 +1021,6 @@ async function uploadFile(file, previewId) {
 }
 
 // ============================================================
-// USAGE MANAGEMENT
-// ============================================================
-function addUsage() {
-    const container = document.getElementById('usageContainer');
-    const entry = document.createElement('div');
-    entry.className = 'usage-entry';
-    entry.innerHTML = `
-        <span class="remove-usage" onclick="removeUsage(this)">✕</span>
-        <div class="app-row">
-            <div class="form-group">
-                <label>Platform <span class="required">*</span></label>
-                <select class="usage-platform" required>
-                    <option value="">Select</option>
-                    {% for platform in platforms %}
-                    <option value="{{ platform }}">{{ platform }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Account Name</label>
-                <input type="text" class="usage-account" placeholder="Account name">
-            </div>
-        </div>
-        <div class="app-row">
-            <div class="form-group">
-                <label>Status</label>
-                <select class="usage-status">
-                    <option value="pending">Pending</option>
-                    <option value="submitted">Submitted</option>
-                    <option value="interview">Interview</option>
-                    <option value="approved">Approved</option>
-                    <option value="rejected">Rejected</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Notes</label>
-                <input type="text" class="usage-notes" placeholder="Additional notes">
-            </div>
-        </div>
-    `;
-    container.appendChild(entry);
-}
-
-function removeUsage(element) {
-    const container = document.getElementById('usageContainer');
-    if (container.children.length > 1) {
-        element.parentElement.remove();
-    } else {
-        showToast('Must have at least one platform', 'warning');
-    }
-}
-
-// ============================================================
 // SAVE IDENTITY
 // ============================================================
 async function saveIdentity(event) {
@@ -939,20 +1031,6 @@ async function saveIdentity(event) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
     
-    const usageEntries = document.querySelectorAll('.usage-entry');
-    const usage = [];
-    usageEntries.forEach(entry => {
-        const platform = entry.querySelector('.usage-platform').value;
-        if (platform) {
-            usage.push({
-                platform: platform,
-                account_name: entry.querySelector('.usage-account').value,
-                application_status: entry.querySelector('.usage-status').value,
-                notes: entry.querySelector('.usage-notes').value
-            });
-        }
-    });
-    
     const data = {
         full_name: document.getElementById('full_name').value.trim(),
         phone_number: document.getElementById('phone_number').value.trim(),
@@ -961,19 +1039,11 @@ async function saveIdentity(event) {
         id_front_url: document.getElementById('id_front_url').value,
         id_back_url: document.getElementById('id_back_url').value,
         platform_credentials: document.getElementById('platform_credentials').value.trim(),
-        notes: document.getElementById('notes').value.trim(),
-        usage: usage
+        notes: document.getElementById('notes').value.trim()
     };
     
     if (!data.full_name) {
         showToast('Please enter full name', 'warning');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-        return;
-    }
-    
-    if (usage.length === 0) {
-        showToast('Please add at least one platform', 'warning');
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
         return;
@@ -1040,39 +1110,76 @@ function viewIdentity(id) {
 }
 
 // ============================================================
-// USE IDENTITY
+// APPLY MODAL
 // ============================================================
-function useIdentity(id) {
-    const platform = prompt('Enter the platform (RWS, Handshake, Mercor, etc.):');
-    if (!platform) return;
+function openApplyModal(identityId, identityName) {
+    document.getElementById('applyIdentityId').value = identityId;
+    document.getElementById('applyIdentityName').textContent = identityName;
+    document.getElementById('applyModal').classList.add('active');
+}
+
+function closeApplyModal() {
+    document.getElementById('applyModal').classList.remove('active');
+    document.getElementById('applyForm').reset();
+}
+
+// Close modal when clicking outside
+document.getElementById('applyModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeApplyModal();
+});
+
+// ============================================================
+// SUBMIT APPLICATION
+// ============================================================
+async function submitApplication(event) {
+    event.preventDefault();
     
-    const accountName = prompt('Enter the account name:');
-    if (accountName === null) return;
+    const btn = document.getElementById('applyBtn');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Applying...';
     
-    const status = prompt('Enter status (pending, submitted, interview, approved, rejected):', 'submitted');
-    if (!status) return;
+    const identityId = document.getElementById('applyIdentityId').value;
+    const platform = document.getElementById('applyPlatform').value;
+    const accountName = document.getElementById('applyAccountName').value.trim();
+    const status = document.getElementById('applyStatus').value;
+    const notes = document.getElementById('applyNotes').value.trim();
     
-    fetch(`/api/identities/${id}/use`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            platform: platform,
-            account_name: accountName,
-            application_status: status
-        })
-    })
-    .then(res => res.json())
-    .then(result => {
+    if (!platform) {
+        showToast('Please select a platform', 'warning');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/identities/${identityId}/use`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                platform: platform,
+                account_name: accountName,
+                application_status: status,
+                notes: notes
+            })
+        });
+        const result = await response.json();
+        
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        
         if (result.success) {
-            showToast(result.message, 'success');
+            showToast('✅ ' + result.message, 'success');
+            closeApplyModal();
             setTimeout(() => location.reload(), 1000);
         } else {
-            showToast(result.error, 'error');
+            showToast('❌ ' + result.error, 'error');
         }
-    })
-    .catch(error => {
-        showToast('Error: ' + error.message, 'error');
-    });
+    } catch (error) {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast('❌ Error: ' + error.message, 'error');
+    }
 }
 
 // ============================================================
@@ -1105,7 +1212,7 @@ async function deleteIdentity(id) {
 // EDIT IDENTITY
 // ============================================================
 function editIdentity(id) {
-    showToast('Edit feature: Click on fields to edit directly', 'info');
+    showToast('Edit feature coming soon', 'info');
 }
 
 // ============================================================
