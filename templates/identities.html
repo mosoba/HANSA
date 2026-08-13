@@ -226,23 +226,6 @@
     background: #f0fdf4;
 }
 
-.btn-add-usage {
-    width: 100%;
-    padding: 10px;
-    background: #f8fafc;
-    color: #4f46e5;
-    border: 1px dashed #c7d2fe;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-    transition: all 0.2s;
-}
-.btn-add-usage:hover {
-    background: #eef2ff;
-    border-color: #818cf8;
-}
-
 .btn-submit {
     width: 100%;
     padding: 12px;
@@ -446,6 +429,18 @@
 .usage-tag.fiverr { background: #fef3c7; color: #92400e; border-color: #fde68a; }
 .usage-tag.other { background: #f1f4f9; color: #475569; border-color: #e2e8f0; }
 
+/* Available tag */
+.usage-tag.available-tag {
+    background: #d1fae5;
+    color: #065f46;
+    border-color: #a7f3d0;
+}
+.usage-tag.can-apply-tag {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fde68a;
+}
+
 .card-actions {
     margin-top: 10px;
     padding-top: 10px;
@@ -490,15 +485,6 @@
 }
 .card-actions .delete-btn:hover {
     background: #fecaca;
-}
-
-/* Apply Button - Special */
-.apply-btn {
-    background: #dbeafe !important;
-    color: #1d4ed8 !important;
-}
-.apply-btn:hover {
-    background: #bfdbfe !important;
 }
 
 .empty-state {
@@ -877,21 +863,28 @@
                     </div>
                     {% endif %}
 
-                    <!-- Usage Tags -->
-                    {% if identity.usage %}
+                    <!-- Usage Tags - Shows which platforms already used -->
                     <div class="usage-tags">
-                        {% for u in identity.usage %}
-                        <span class="usage-tag {{ u.platform|lower|replace(' ', '')|default('other') }}">
-                            {{ u.platform }} 
-                            {% if u.account_name %}→ {{ u.account_name }}{% endif %}
-                            <span class="status {{ u.application_status|default('pending') }}">
-                                {{ u.application_status|upper|default('PENDING') }}
+                        {% if identity.usage %}
+                            {% for u in identity.usage %}
+                            <span class="usage-tag {{ u.platform|lower|replace(' ', '')|default('other') }}">
+                                ✅ {{ u.platform }}
+                                <span class="status {{ u.application_status|default('pending') }}">
+                                    ({{ u.application_status|upper|default('PENDING') }})
+                                </span>
                             </span>
-                        </span>
-                        {% endfor %}
+                            {% endfor %}
+                            <span class="usage-tag can-apply-tag">
+                                🔄 Can apply to other platforms
+                            </span>
+                        {% else %}
+                            <span class="usage-tag available-tag">
+                                ✅ Available for all platforms
+                            </span>
+                        {% endif %}
                     </div>
-                    {% endif %}
 
+                    <!-- Card Actions - Apply button ALWAYS visible -->
                     <div class="card-actions">
                         <button class="view-btn" onclick="viewIdentity('{{ identity.id }}')">
                             <i class="fas fa-eye"></i> View
@@ -899,11 +892,9 @@
                         <button class="edit-btn" onclick="editIdentity('{{ identity.id }}')">
                             <i class="fas fa-edit"></i> Edit
                         </button>
-                        {% if not identity.usage %}
                         <button class="apply-btn" onclick="openApplyModal('{{ identity.id }}', '{{ identity.full_name }}')">
                             <i class="fas fa-paper-plane"></i> Apply
                         </button>
-                        {% endif %}
                         <button class="delete-btn" onclick="deleteIdentity('{{ identity.id }}')">
                             <i class="fas fa-trash"></i> Delete
                         </button>
