@@ -28,7 +28,6 @@ SUPABASE_KEY = 'sb_publishable_f3zLVxnd9ZlV4JiwxFBVPg_UkDDNKVm'
 @app.context_processor
 def utility_processor():
     def generate_whatsapp_link(phone_number, message):
-        """Generate WhatsApp click-to-chat link"""
         if not phone_number:
             return '#'
         phone_number = ''.join(filter(str.isdigit, str(phone_number)))
@@ -773,7 +772,7 @@ def worker_dashboard():
         )
 
 # ============================================================
-# SUBMIT HOURS - UPDATED WITH PAYDAY SUPPORT
+# SUBMIT HOURS
 # ============================================================
 
 @app.route('/submit-hours')
@@ -797,7 +796,6 @@ def submit_hours():
         accounts = []
         for acc in all_accounts:
             if acc['id'] in assigned_ids:
-                # Add payday to account
                 acc['payday'] = acc.get('payday', 'Sunday')
                 accounts.append(acc)
         
@@ -833,7 +831,7 @@ def submit_hours():
         )
 
 # ============================================================
-# API SUBMIT HOURS - UPDATED WITH 24-HOUR RULE
+# API SUBMIT HOURS
 # ============================================================
 
 @app.route('/api/submit-hours', methods=['POST'])
@@ -858,7 +856,6 @@ def api_submit_hours():
         if not hours or hours <= 0:
             return jsonify({'success': False, 'error': 'Valid hours required'}), 400
         
-        # ✅ CHECK 24-HOUR RULE - FIXED TIMEZONE
         last_submission = supabase_request('GET', 'hs_submissions', filters={
             'worker_id': user_id,
             'account_id': account_id,
@@ -887,7 +884,6 @@ def api_submit_hours():
                         'error': f'⏳ Must wait {remaining:.1f} hours before next submission (24-hour rule)'
                     }), 400
         
-        # Check for duplicate date
         check_response = supabase_request('GET', 'hs_submissions', filters={
             'worker_id': user_id,
             'account_id': account_id,
@@ -901,16 +897,13 @@ def api_submit_hours():
                 'error': 'You already submitted hours for this account on this date'
             }), 400
         
-        # Get account for rate calculations
         account_result = supabase_request('GET', 'hs_accounts', filters={'id': account_id})
         account = account_result['data'][0] if account_result['data'] else {}
         client_rate = safe_float(account.get('client_rate', 15))
         
-        # Get worker percentage
         worker_result = supabase_request('GET', 'hs_users', filters={'id': user_id})
         worker_percentage = safe_float(worker_result['data'][0].get('worker_percentage', 10)) if worker_result['data'] else 10
         
-        # Calculate earnings
         total_earnings = hours * client_rate
         worker_payout = total_earnings * (worker_percentage / 100)
         commission = total_earnings - worker_payout
@@ -982,7 +975,7 @@ def check_hours_submission():
         return jsonify({'exists': False})
 
 # ============================================================
-# API CHECK PAYMENT SUBMISSION - UPDATED WITH PAYDAY
+# API CHECK PAYMENT SUBMISSION
 # ============================================================
 
 @app.route('/api/check-payment-submission', methods=['GET'])
@@ -1001,7 +994,6 @@ def check_payment_submission():
         except:
             submission_date = datetime.utcnow().date()
         
-        # ✅ Check if date is the account's payday
         if account_id:
             account_result = supabase_request('GET', 'hs_accounts', filters={'id': account_id})
             if account_result['data']:
@@ -1052,7 +1044,7 @@ def check_payment_submission():
         return jsonify({'exists': False})
 
 # ============================================================
-# API SUBMIT PAYMENT PROOF - UPDATED WITH PAYDAY VALIDATION
+# API SUBMIT PAYMENT PROOF
 # ============================================================
 
 @app.route('/api/submit-payment-proof', methods=['POST'])
@@ -1079,7 +1071,6 @@ def api_submit_payment_proof():
         if not payment_proof_url:
             return jsonify({'success': False, 'error': 'Payment proof screenshot required'}), 400
         
-        # ✅ CHECK PAYDAY RULE
         account_result = supabase_request('GET', 'hs_accounts', filters={'id': account_id})
         if not account_result['data']:
             return jsonify({'success': False, 'error': 'Account not found'}), 404
@@ -1087,7 +1078,6 @@ def api_submit_payment_proof():
         account = account_result['data'][0]
         payday = account.get('payday', 'Sunday')
         
-        # Check if today is the payday
         submission_date = datetime.strptime(date, '%Y-%m-%d').date()
         
         days = {
@@ -1096,14 +1086,12 @@ def api_submit_payment_proof():
         }
         target_day = days.get(payday, 6)
         
-        # Check if submission date matches payday
         if submission_date.weekday() != target_day:
             return jsonify({
                 'success': False,
                 'error': f'❌ Payment proof must be submitted on {payday}. Today is {submission_date.strftime("%A")}.'
             }), 400
         
-        # ✅ Check if already submitted for this pay period
         pay_period_start = submission_date - timedelta(days=7)
         
         existing = supabase_request('GET', 'hs_submissions', filters={
@@ -1122,11 +1110,9 @@ def api_submit_payment_proof():
                             'error': f'⚠️ Payment proof already submitted for this pay period ({pay_period_start} to {submission_date})'
                         }), 400
         
-        # Get worker percentage
         worker_result = supabase_request('GET', 'hs_users', filters={'id': user_id})
         worker_percentage = safe_float(worker_result['data'][0].get('worker_percentage', 10)) if worker_result['data'] else 10
         
-        # Calculate hours worked in this pay period
         hours_worked = 0
         hours_submissions = supabase_request('GET', 'hs_submissions', filters={
             'worker_id': user_id,
@@ -1141,7 +1127,6 @@ def api_submit_payment_proof():
                     if sub.get('status') != 'rejected':
                         hours_worked += safe_float(sub.get('hours', 0))
         
-        # Calculate earnings
         client_rate = safe_float(account.get('client_rate', 15))
         total_earnings = payment_amount
         worker_payout = total_earnings * (worker_percentage / 100)
@@ -1261,7 +1246,7 @@ def api_upload():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # ============================================================
-# API ACCOUNTS - UPDATED WITH PAYDAY
+# API ACCOUNTS
 # ============================================================
 
 @app.route('/api/accounts', methods=['GET', 'POST', 'PUT', 'DELETE'])
@@ -3166,7 +3151,6 @@ def export_report(report_type):
 @app.route('/announcements')
 @login_required
 def announcements():
-    """Display announcements page - accessible to all logged-in users"""
     try:
         user_id = session.get('user_id')
         user_role = session.get('user_role', 'worker')
@@ -3724,6 +3708,280 @@ def worker_messages():
         return redirect(url_for('worker_dashboard'))
 
 # ============================================================
+# IDENTITIES - TRACK MZUNGU WITH FRONT/BACK PHOTOS
+# ============================================================
+
+@app.route('/identities')
+@login_required
+@admin_required
+def identities():
+    """Track identities with front/back ID photos and platform usage"""
+    try:
+        user_name = session.get('user_name', 'Admin')
+        
+        # Get all identities
+        identity_result = supabase_request('GET', 'hs_identities')
+        identity_list = identity_result['data'] if identity_result['data'] else []
+        
+        # Get all usage records
+        usage_result = supabase_request('GET', 'hs_identity_usage')
+        all_usage = usage_result['data'] if usage_result['data'] else []
+        
+        # Group usage by identity_id
+        usage_by_identity = {}
+        for u in all_usage:
+            iid = u.get('identity_id')
+            if iid not in usage_by_identity:
+                usage_by_identity[iid] = []
+            usage_by_identity[iid].append(u)
+        
+        # Add usage to each identity
+        for identity in identity_list:
+            identity['usage'] = usage_by_identity.get(identity['id'], [])
+            identity['used_platforms'] = [u.get('platform') for u in identity['usage'] if u.get('platform')]
+            identity['usage_count'] = len(identity['usage'])
+        
+        # Counts
+        total = len(identity_list)
+        used_count = len([i for i in identity_list if i.get('usage')])
+        available_count = total - used_count
+        
+        platforms = ['RWS', 'Handshake', 'Mercor', 'After Query', 'Upwork', 'Fiverr', 'Other']
+        
+        return render_template('identities.html',
+            identities=identity_list,
+            platforms=platforms,
+            total=total,
+            used_count=used_count,
+            available_count=available_count,
+            user_name=user_name,
+            now=datetime.now(),
+            stats=get_handshake_stats()
+        )
+    except Exception as e:
+        print(f"❌ Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        flash(f'Error: {str(e)}', 'danger')
+        return render_template('identities.html',
+            identities=[],
+            platforms=[],
+            total=0,
+            used_count=0,
+            available_count=0,
+            user_name=session.get('user_name'),
+            now=datetime.now(),
+            stats=get_handshake_stats()
+        )
+
+
+@app.route('/api/identities', methods=['GET', 'POST', 'PUT', 'DELETE'])
+@login_required
+@admin_required
+def api_identities():
+    if request.method == 'GET':
+        try:
+            result = supabase_request('GET', 'hs_identities')
+            return jsonify({'success': True, 'data': result['data']})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+    
+    elif request.method == 'POST':
+        try:
+            data = request.get_json()
+            
+            identity_id = str(uuid.uuid4())
+            identity_data = {
+                'id': identity_id,
+                'full_name': data.get('full_name'),
+                'phone_number': data.get('phone_number'),
+                'email': data.get('email'),
+                'ssn': data.get('ssn'),
+                'id_front_url': data.get('id_front_url'),
+                'id_back_url': data.get('id_back_url'),
+                'platform_credentials': data.get('platform_credentials', ''),
+                'notes': data.get('notes', ''),
+                'created_by': session.get('user_id'),
+                'created_by_name': session.get('user_name', 'Admin'),
+                'created_at': datetime.utcnow().isoformat(),
+                'updated_at': datetime.utcnow().isoformat()
+            }
+            
+            result = supabase_request('POST', 'hs_identities', data=identity_data)
+            
+            # Create usage records
+            usage = data.get('usage', [])
+            created_usage = []
+            
+            for u in usage:
+                if u.get('platform'):
+                    usage_data = {
+                        'id': str(uuid.uuid4()),
+                        'identity_id': identity_id,
+                        'platform': u.get('platform'),
+                        'account_name': u.get('account_name', ''),
+                        'application_status': u.get('application_status', 'pending'),
+                        'used_by': session.get('user_id'),
+                        'used_by_name': session.get('user_name', 'Admin'),
+                        'notes': u.get('notes', ''),
+                        'used_at': datetime.utcnow().isoformat(),
+                        'created_at': datetime.utcnow().isoformat(),
+                        'updated_at': datetime.utcnow().isoformat()
+                    }
+                    usage_result = supabase_request('POST', 'hs_identity_usage', data=usage_data)
+                    if usage_result.get('data'):
+                        created_usage.append(usage_result['data'][0])
+            
+            return jsonify({
+                'success': True,
+                'data': result['data'],
+                'usage': created_usage,
+                'message': f'Identity added with {len(created_usage)} platform usage records!'
+            })
+        except Exception as e:
+            print(f"❌ Error: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({'success': False, 'error': str(e)}), 500
+    
+    elif request.method == 'PUT':
+        try:
+            data = request.get_json()
+            identity_id = data.get('id')
+            if not identity_id:
+                return jsonify({'success': False, 'error': 'ID required'}), 400
+            
+            del data['id']
+            data['updated_at'] = datetime.utcnow().isoformat()
+            
+            result = supabase_request('PATCH', 'hs_identities', data=data, filters={'id': identity_id})
+            
+            return jsonify({'success': True, 'data': result['data'], 'message': 'Updated successfully!'})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+    
+    elif request.method == 'DELETE':
+        try:
+            identity_id = request.args.get('id')
+            if not identity_id:
+                return jsonify({'success': False, 'error': 'ID required'}), 400
+            
+            supabase_request('DELETE', 'hs_identity_usage', filters={'identity_id': identity_id})
+            supabase_request('DELETE', 'hs_identities', filters={'id': identity_id})
+            
+            return jsonify({'success': True, 'message': 'Deleted successfully!'})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/identities/<identity_id>/use', methods=['POST'])
+@login_required
+@admin_required
+def api_use_identity(identity_id):
+    """Mark an identity as used for a specific platform/account"""
+    try:
+        data = request.get_json()
+        platform = data.get('platform')
+        account_name = data.get('account_name', '')
+        
+        if not platform:
+            return jsonify({'success': False, 'error': 'Platform is required'}), 400
+        
+        # Check if already used for this platform
+        existing = supabase_request('GET', 'hs_identity_usage', filters={
+            'identity_id': identity_id,
+            'platform': platform
+        })
+        
+        if existing['data']:
+            return jsonify({
+                'success': False,
+                'error': f'❌ This identity is already used for {platform}!'
+            }), 400
+        
+        # Create usage record
+        usage_data = {
+            'id': str(uuid.uuid4()),
+            'identity_id': identity_id,
+            'platform': platform,
+            'account_name': account_name,
+            'application_status': data.get('application_status', 'submitted'),
+            'used_by': session.get('user_id'),
+            'used_by_name': session.get('user_name', 'Admin'),
+            'notes': data.get('notes', ''),
+            'used_at': datetime.utcnow().isoformat(),
+            'created_at': datetime.utcnow().isoformat(),
+            'updated_at': datetime.utcnow().isoformat()
+        }
+        
+        result = supabase_request('POST', 'hs_identity_usage', data=usage_data)
+        
+        return jsonify({
+            'success': True,
+            'data': result['data'],
+            'message': f'✅ Identity marked as USED for {platform}!'
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/identities/available/<platform>', methods=['GET'])
+@login_required
+@admin_required
+def api_get_available_identities(platform):
+    """Get identities that haven't been used for a specific platform"""
+    try:
+        identity_result = supabase_request('GET', 'hs_identities')
+        identity_list = identity_result['data'] if identity_result['data'] else []
+        
+        usage_result = supabase_request('GET', 'hs_identity_usage')
+        usage_list = usage_result['data'] if usage_result['data'] else []
+        
+        used_ids = [u.get('identity_id') for u in usage_list if u.get('platform') == platform]
+        
+        available = [i for i in identity_list if i['id'] not in used_ids]
+        
+        return jsonify({
+            'success': True,
+            'data': available,
+            'count': len(available)
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/identity-usage/<usage_id>/status', methods=['PATCH'])
+@login_required
+@admin_required
+def api_update_usage_status(usage_id):
+    """Update the status of an application"""
+    try:
+        data = request.get_json()
+        status = data.get('application_status')
+        
+        if not status:
+            return jsonify({'success': False, 'error': 'Status is required'}), 400
+        
+        valid_statuses = ['pending', 'submitted', 'interview', 'approved', 'rejected']
+        if status not in valid_statuses:
+            return jsonify({'success': False, 'error': f'Invalid status. Must be one of: {valid_statuses}'}), 400
+        
+        update_data = {
+            'application_status': status,
+            'updated_at': datetime.utcnow().isoformat()
+        }
+        
+        result = supabase_request('PATCH', 'hs_identity_usage', data=update_data, filters={'id': usage_id})
+        
+        return jsonify({
+            'success': True,
+            'data': result['data'],
+            'message': f'✅ Status updated to: {status.upper()}'
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# ============================================================
 # RUN APP
 # ============================================================
 
@@ -3738,20 +3996,11 @@ if __name__ == '__main__':
     print("   👤 Manager: manager@handshake.com / manager123")
     print("   👷 Worker: worker@handshake.com / worker123")
     print("=" * 60)
-    print("📌 FEATURES:")
-    print("   ✅ Hours: 1 submission every 24 hours")
-    print("   ✅ Payment Proof: Must match account payday (Sunday/Thursday/etc.)")
-    print("   ✅ Admin Dashboard with stats")
-    print("   ✅ Worker Dashboard with assignments")
-    print("   ✅ Manager Dashboard with oversight")
-    print("   ✅ Full CRUD for Accounts, Workers, Managers")
-    print("   ✅ Approval workflow for hours")
-    print("   ✅ Payment processing & confirmation")
-    print("   ✅ Verification dashboard")
-    print("   ✅ Export reports to CSV")
-    print("   ✅ Workers are credited when payment proofs are approved")
-    print("   ✅ WhatsApp Click-to-Chat for sending login credentials")
-    print("   ✅ Announcements system with read tracking")
+    print("📌 NEW FEATURES:")
+    print("   ✅ Identities with Front/Back ID photos")
+    print("   ✅ Multiple platforms per identity (RWS, Handshake, Mercor, etc.)")
+    print("   ✅ Track which platforms each identity is used for")
+    print("   ✅ Application status tracking per platform")
     print("=" * 60)
     
     os.makedirs('static/uploads', exist_ok=True)
