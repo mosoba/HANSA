@@ -1,0 +1,1105 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Identities - Handshake Manager{% endblock %}
+
+{% block page_title %}
+<div class="flex items-center gap-4">
+    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-200/50">
+        <i class="fas fa-id-card text-white text-2xl"></i>
+    </div>
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Identities</h1>
+        <div class="flex items-center gap-3 mt-0.5">
+            <p class="text-sm text-gray-500">Store identities with front/back photos & track platform usage</p>
+            <span class="px-2.5 py-0.5 text-xs font-medium bg-indigo-50 text-indigo-600 rounded-full border border-indigo-200">
+                {{ total }} total
+            </span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.identities-wrapper {
+    display: grid;
+    grid-template-columns: 440px 1fr;
+    gap: 24px;
+    min-height: 550px;
+}
+
+/* Stats Cards */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 14px 16px;
+    border: 1px solid #e8edf4;
+    text-align: center;
+}
+.stat-card .stat-number {
+    font-size: 28px;
+    font-weight: 700;
+    color: #0f172a;
+}
+.stat-card .stat-label {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+.stat-card.total .stat-number { color: #6366f1; }
+.stat-card.available .stat-number { color: #22c55e; }
+.stat-card.used .stat-number { color: #f59e0b; }
+
+/* Left Panel - Create */
+.create-panel {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e8edf4;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    height: fit-content;
+    position: sticky;
+    top: 20px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+.create-panel::-webkit-scrollbar {
+    width: 4px;
+}
+.create-panel::-webkit-scrollbar-track {
+    background: #f1f4f9;
+    border-radius: 10px;
+}
+.create-panel::-webkit-scrollbar-thumb {
+    background: #d1d9e6;
+    border-radius: 10px;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #f0f4fa;
+}
+.panel-header .icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #6366f1, #7c3aed);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+.panel-header .title-group h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+.panel-header .title-group p {
+    font-size: 12px;
+    color: #94a3b8;
+    margin: 0;
+}
+
+.form-group {
+    margin-bottom: 12px;
+}
+.form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 3px;
+}
+.form-group label .required {
+    color: #ef4444;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1.5px solid #e2e8f0;
+    font-size: 13px;
+    transition: all 0.2s;
+    background: #fafcff;
+    font-family: inherit;
+    color: #0f172a;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #6366f1;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(99,102,241,0.08);
+}
+.form-group textarea {
+    resize: vertical;
+    min-height: 50px;
+    max-height: 100px;
+    line-height: 1.5;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 10px 0 6px 0;
+    padding: 4px 0;
+    border-bottom: 1px dashed #e2e8f0;
+}
+
+/* Photo Upload */
+.photo-upload-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.photo-upload-box {
+    border: 2px dashed #e2e8f0;
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #fafcff;
+}
+.photo-upload-box:hover {
+    border-color: #6366f1;
+    background: #eef2ff;
+}
+.photo-upload-box .preview-img {
+    max-width: 100%;
+    max-height: 80px;
+    border-radius: 6px;
+    display: none;
+}
+.photo-upload-box .placeholder-icon {
+    font-size: 24px;
+    color: #94a3b8;
+}
+.photo-upload-box .label-text {
+    font-size: 11px;
+    color: #94a3b8;
+    display: block;
+}
+.photo-upload-box.has-image {
+    border-color: #22c55e;
+    border-style: solid;
+}
+
+/* Usage Entry */
+.usage-entry {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    border: 1px solid #e8edf4;
+}
+.usage-entry .app-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.usage-entry .remove-usage {
+    color: #ef4444;
+    cursor: pointer;
+    float: right;
+    font-size: 14px;
+}
+.usage-entry .remove-usage:hover {
+    color: #dc2626;
+}
+
+.btn-add-usage {
+    width: 100%;
+    padding: 8px;
+    background: #eef2ff;
+    color: #6366f1;
+    border: 1px dashed #6366f1;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+.btn-add-usage:hover {
+    background: #e0e7ff;
+}
+
+.btn-submit {
+    width: 100%;
+    padding: 10px;
+    background: linear-gradient(135deg, #6366f1, #7c3aed);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(99,102,241,0.35);
+}
+.btn-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Right Panel - List */
+.list-panel {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e8edf4;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    display: flex;
+    flex-direction: column;
+}
+
+.list-header {
+    padding: 12px 18px;
+    border-bottom: 1px solid #f0f4fa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    background: #fafcff;
+}
+.list-header .left-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.list-header .left-group h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+.list-header .left-group .count-badge {
+    padding: 2px 12px;
+    border-radius: 20px;
+    background: #eef2ff;
+    color: #6366f1;
+    font-size: 11px;
+    font-weight: 600;
+}
+.list-header .filter-pills {
+    display: flex;
+    gap: 3px;
+    flex-wrap: wrap;
+}
+.list-header .filter-pills button {
+    padding: 3px 10px;
+    border-radius: 14px;
+    border: 1px solid transparent;
+    background: transparent;
+    font-size: 10px;
+    font-weight: 500;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.list-header .filter-pills button:hover {
+    background: #f1f4f9;
+    color: #475569;
+}
+.list-header .filter-pills button.active {
+    background: #eef2ff;
+    border-color: #6366f1;
+    color: #6366f1;
+}
+
+.list-body {
+    padding: 12px 16px;
+    flex: 1;
+    overflow-y: auto;
+    max-height: 500px;
+}
+.list-body::-webkit-scrollbar {
+    width: 4px;
+}
+.list-body::-webkit-scrollbar-track {
+    background: #f1f4f9;
+    border-radius: 10px;
+}
+.list-body::-webkit-scrollbar-thumb {
+    background: #d1d9e6;
+    border-radius: 10px;
+}
+
+/* Identity Card */
+.identity-card {
+    background: white;
+    border-radius: 10px;
+    border: 1px solid #e8edf4;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    transition: all 0.2s ease;
+}
+.identity-card:hover {
+    border-color: #d1d9e6;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.identity-card.used {
+    border-left: 4px solid #f59e0b;
+}
+.identity-card.available {
+    border-left: 4px solid #22c55e;
+}
+
+.card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.card-top .identity-name {
+    font-weight: 700;
+    font-size: 14px;
+    color: #0f172a;
+}
+.card-top .identity-name .usage-badge {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 1px 10px;
+    border-radius: 12px;
+    margin-left: 4px;
+}
+.card-top .identity-name .usage-badge.used { background: #fef3c7; color: #92400e; }
+.card-top .identity-name .usage-badge.available { background: #d1fae5; color: #065f46; }
+
+.card-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 4px;
+    margin-top: 6px;
+    font-size: 11px;
+    color: #64748b;
+}
+.card-details span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.card-details .label {
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+/* Usage Tags */
+.usage-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+}
+.usage-tag {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 12px;
+    background: #f1f4f9;
+    color: #475569;
+}
+.usage-tag .status {
+    font-size: 8px;
+}
+.usage-tag .status.pending { color: #f59e0b; }
+.usage-tag .status.submitted { color: #3b82f6; }
+.usage-tag .status.interview { color: #8b5cf6; }
+.usage-tag .status.approved { color: #22c55e; }
+.usage-tag .status.rejected { color: #ef4444; }
+
+.usage-tag.rws { background: #dbeafe; color: #1d4ed8; }
+.usage-tag.handshake { background: #d1fae5; color: #065f46; }
+.usage-tag.mercor { background: #fef3c7; color: #92400e; }
+.usage-tag.afterquery { background: #fce4ec; color: #c62828; }
+.usage-tag.upwork { background: #ede9fe; color: #5b21b6; }
+.usage-tag.fiverr { background: #fef3c7; color: #92400e; }
+.usage-tag.other { background: #f1f4f9; color: #475569; }
+
+.card-actions {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #f0f4fa;
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+.card-actions button {
+    padding: 2px 10px;
+    border-radius: 6px;
+    border: none;
+    font-size: 10px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.card-actions .edit-btn {
+    background: #eef2ff;
+    color: #6366f1;
+}
+.card-actions .edit-btn:hover {
+    background: #e0e7ff;
+}
+.card-actions .delete-btn {
+    background: #fee2e2;
+    color: #ef4444;
+}
+.card-actions .delete-btn:hover {
+    background: #fecaca;
+}
+.card-actions .use-btn {
+    background: #d1fae5;
+    color: #065f46;
+}
+.card-actions .use-btn:hover {
+    background: #a7f3d0;
+}
+.card-actions .view-btn {
+    background: #fef3c7;
+    color: #92400e;
+}
+.card-actions .view-btn:hover {
+    background: #fde68a;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: #94a3b8;
+}
+.empty-state i {
+    font-size: 44px;
+    margin-bottom: 10px;
+    opacity: 0.3;
+}
+.empty-state h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #475569;
+}
+.empty-state p {
+    font-size: 13px;
+}
+
+/* Toast */
+.toast-modern {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 99999;
+    padding: 12px 20px;
+    border-radius: 12px;
+    color: white;
+    font-weight: 500;
+    font-size: 14px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    animation: slideInRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 400px;
+}
+.toast-modern.success { background: #22c55e; }
+.toast-modern.error { background: #ef4444; }
+.toast-modern.warning { background: #f59e0b; }
+.toast-modern .close-btn {
+    cursor: pointer;
+    opacity: 0.7;
+}
+.toast-modern .close-btn:hover { opacity: 1; }
+
+@keyframes slideInRight {
+    from { transform: translateX(120%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .identities-wrapper {
+        grid-template-columns: 1fr;
+    }
+    .create-panel {
+        position: static;
+        max-height: none;
+    }
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+@media (max-width: 640px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    .photo-upload-group {
+        grid-template-columns: 1fr;
+    }
+    .usage-entry .app-row {
+        grid-template-columns: 1fr;
+    }
+    .list-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .card-top {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="identities-wrapper">
+
+    <!-- LEFT PANEL - CREATE -->
+    <div class="create-panel">
+        <div class="panel-header">
+            <div class="icon-box"><i class="fas fa-user-plus"></i></div>
+            <div class="title-group">
+                <h3>New Identity</h3>
+                <p>Add identity with front/back photos</p>
+            </div>
+        </div>
+
+        <form id="identityForm" onsubmit="saveIdentity(event)">
+            <!-- Personal Details -->
+            <div class="form-group">
+                <label>Full Name <span class="required">*</span></label>
+                <input type="text" id="full_name" placeholder="e.g., John Doe" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="text" id="phone_number" placeholder="+254 700 000 000">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email" placeholder="john@example.com">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>SSN / ID Number</label>
+                <input type="text" id="ssn" placeholder="e.g., 123-45-6789">
+            </div>
+
+            <!-- ID Photos -->
+            <div class="section-title">📸 ID Photos</div>
+            <div class="photo-upload-group">
+                <div class="photo-upload-box" id="frontBox" onclick="document.getElementById('frontUpload').click()">
+                    <i class="fas fa-camera placeholder-icon"></i>
+                    <span class="label-text">Front Side</span>
+                    <input type="file" id="frontUpload" accept="image/*" style="display:none" onchange="previewImage(this, 'frontPreview', 'frontBox')">
+                    <img id="frontPreview" class="preview-img">
+                    <input type="hidden" id="id_front_url">
+                </div>
+                <div class="photo-upload-box" id="backBox" onclick="document.getElementById('backUpload').click()">
+                    <i class="fas fa-camera placeholder-icon"></i>
+                    <span class="label-text">Back Side</span>
+                    <input type="file" id="backUpload" accept="image/*" style="display:none" onchange="previewImage(this, 'backPreview', 'backBox')">
+                    <img id="backPreview" class="preview-img">
+                    <input type="hidden" id="id_back_url">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Platform Credentials</label>
+                <input type="text" id="platform_credentials" placeholder="Username/Password">
+            </div>
+
+            <!-- Usage - Multiple Platforms/Accounts -->
+            <div class="section-title">📋 Platform Usage</div>
+            <div id="usageContainer">
+                <div class="usage-entry">
+                    <span class="remove-usage" onclick="removeUsage(this)" style="display:none">✕</span>
+                    <div class="app-row">
+                        <div class="form-group">
+                            <label>Platform <span class="required">*</span></label>
+                            <select class="usage-platform" required>
+                                <option value="">Select</option>
+                                {% for platform in platforms %}
+                                <option value="{{ platform }}">{{ platform }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Account Name</label>
+                            <input type="text" class="usage-account" placeholder="Account name">
+                        </div>
+                    </div>
+                    <div class="app-row">
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select class="usage-status">
+                                <option value="pending">⏳ Pending</option>
+                                <option value="submitted">📤 Submitted</option>
+                                <option value="interview">🎯 Interview</option>
+                                <option value="approved">✅ Approved</option>
+                                <option value="rejected">❌ Rejected</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Notes</label>
+                            <input type="text" class="usage-notes" placeholder="Notes">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn-add-usage" onclick="addUsage()">
+                <i class="fas fa-plus"></i> Add Another Platform/Account
+            </button>
+
+            <div class="form-group" style="margin-top:12px;">
+                <label>General Notes</label>
+                <textarea id="notes" placeholder="Any extra notes..."></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">
+                <i class="fas fa-save"></i> Save Identity
+            </button>
+        </form>
+    </div>
+
+    <!-- RIGHT PANEL - LIST -->
+    <div class="list-panel">
+        <div class="list-header">
+            <div class="left-group">
+                <h4><i class="fas fa-id-card text-indigo-500"></i> Identities</h4>
+                <span class="count-badge">{{ identities|length }}</span>
+            </div>
+            <div class="filter-pills" id="filterGroup">
+                <button class="active" data-filter="all" onclick="filterIdentities('all', this)">All</button>
+                <button data-filter="available" onclick="filterIdentities('available', this)">✅ Available</button>
+                <button data-filter="used" onclick="filterIdentities('used', this)">📌 Used</button>
+            </div>
+        </div>
+
+        <div class="list-body" id="identitiesList">
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card total">
+                    <div class="stat-number">{{ total }}</div>
+                    <div class="stat-label">📊 Total</div>
+                </div>
+                <div class="stat-card available">
+                    <div class="stat-number">{{ available_count }}</div>
+                    <div class="stat-label">✅ Available</div>
+                </div>
+                <div class="stat-card used">
+                    <div class="stat-number">{{ used_count }}</div>
+                    <div class="stat-label">📌 Used</div>
+                </div>
+            </div>
+
+            <!-- Identity Cards -->
+            {% if identities %}
+                {% for identity in identities %}
+                <div class="identity-card {% if identity.usage %}used{% else %}available{% endif %}" 
+                     id="identity-{{ identity.id }}"
+                     data-used="{% if identity.usage %}true{% else %}false{% endif %}">
+                    
+                    <div class="card-top">
+                        <div class="identity-name">
+                            {{ identity.full_name or 'Unknown' }}
+                            <span class="usage-badge {% if identity.usage %}used{% else %}available{% endif %}">
+                                {% if identity.usage %}📌 Used ({{ identity.usage|length }}){% else %}✅ Available{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="card-details">
+                        <span><span class="label">📞</span> {{ identity.phone_number or 'N/A' }}</span>
+                        <span><span class="label">✉️</span> {{ identity.email or 'N/A' }}</span>
+                        <span><span class="label">🪪</span> SSN: {{ identity.ssn or 'N/A' }}</span>
+                    </div>
+
+                    <!-- ID Photos Preview -->
+                    {% if identity.id_front_url or identity.id_back_url %}
+                    <div style="display:flex;gap:6px;margin-top:4px;">
+                        {% if identity.id_front_url %}
+                        <img src="{{ identity.id_front_url }}" alt="Front ID" style="height:40px;width:auto;border-radius:4px;border:1px solid #e2e8f0;">
+                        {% endif %}
+                        {% if identity.id_back_url %}
+                        <img src="{{ identity.id_back_url }}" alt="Back ID" style="height:40px;width:auto;border-radius:4px;border:1px solid #e2e8f0;">
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Usage Tags -->
+                    {% if identity.usage %}
+                    <div class="usage-tags">
+                        {% for u in identity.usage %}
+                        <span class="usage-tag {{ u.platform|lower|replace(' ', '')|default('other') }}">
+                            {{ u.platform }} 
+                            {% if u.account_name %}→ {{ u.account_name }}{% endif %}
+                            <span class="status {{ u.application_status|default('pending') }}">
+                                ({{ u.application_status|upper|default('PENDING') }})
+                            </span>
+                        </span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="card-actions">
+                        <button class="view-btn" onclick="viewIdentity('{{ identity.id }}')">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                        <button class="edit-btn" onclick="editIdentity('{{ identity.id }}')">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        {% if not identity.usage %}
+                        <button class="use-btn" onclick="useIdentity('{{ identity.id }}')">
+                            <i class="fas fa-check"></i> Mark Used
+                        </button>
+                        {% endif %}
+                        <button class="delete-btn" onclick="deleteIdentity('{{ identity.id }}')">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-id-card"></i>
+                    <h3>No identities yet</h3>
+                    <p>Add your first identity using the form on the left</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// PHOTO UPLOAD
+// ============================================================
+function previewImage(input, previewId, boxId) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const preview = document.getElementById(previewId);
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+        document.getElementById(boxId).classList.add('has-image');
+        
+        // Upload to server
+        uploadFile(file, previewId);
+    };
+    reader.readAsDataURL(file);
+}
+
+async function uploadFile(file, previewId) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+        const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+        });
+        const result = await response.json();
+        if (result.success) {
+            const inputId = previewId.replace('Preview', '');
+            document.getElementById(inputId + '_url').value = result.url;
+        }
+    } catch (error) {
+        console.error('Upload error:', error);
+        showToast('❌ Failed to upload photo', 'error');
+    }
+}
+
+// ============================================================
+// USAGE MANAGEMENT
+// ============================================================
+function addUsage() {
+    const container = document.getElementById('usageContainer');
+    const entry = document.createElement('div');
+    entry.className = 'usage-entry';
+    entry.innerHTML = `
+        <span class="remove-usage" onclick="removeUsage(this)">✕</span>
+        <div class="app-row">
+            <div class="form-group">
+                <label>Platform <span class="required">*</span></label>
+                <select class="usage-platform" required>
+                    <option value="">Select</option>
+                    {% for platform in platforms %}
+                    <option value="{{ platform }}">{{ platform }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Account Name</label>
+                <input type="text" class="usage-account" placeholder="Account name">
+            </div>
+        </div>
+        <div class="app-row">
+            <div class="form-group">
+                <label>Status</label>
+                <select class="usage-status">
+                    <option value="pending">⏳ Pending</option>
+                    <option value="submitted">📤 Submitted</option>
+                    <option value="interview">🎯 Interview</option>
+                    <option value="approved">✅ Approved</option>
+                    <option value="rejected">❌ Rejected</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <input type="text" class="usage-notes" placeholder="Notes">
+            </div>
+        </div>
+    `;
+    container.appendChild(entry);
+}
+
+function removeUsage(element) {
+    const container = document.getElementById('usageContainer');
+    if (container.children.length > 1) {
+        element.parentElement.remove();
+    } else {
+        showToast('Must have at least one usage entry', 'warning');
+    }
+}
+
+// ============================================================
+// SAVE IDENTITY
+// ============================================================
+async function saveIdentity(event) {
+    event.preventDefault();
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    
+    // Get usage data
+    const usageEntries = document.querySelectorAll('.usage-entry');
+    const usage = [];
+    usageEntries.forEach(entry => {
+        const platform = entry.querySelector('.usage-platform').value;
+        if (platform) {
+            usage.push({
+                platform: platform,
+                account_name: entry.querySelector('.usage-account').value,
+                application_status: entry.querySelector('.usage-status').value,
+                notes: entry.querySelector('.usage-notes').value
+            });
+        }
+    });
+    
+    const data = {
+        full_name: document.getElementById('full_name').value.trim(),
+        phone_number: document.getElementById('phone_number').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        ssn: document.getElementById('ssn').value.trim(),
+        id_front_url: document.getElementById('id_front_url').value,
+        id_back_url: document.getElementById('id_back_url').value,
+        platform_credentials: document.getElementById('platform_credentials').value.trim(),
+        notes: document.getElementById('notes').value.trim(),
+        usage: usage
+    };
+    
+    if (!data.full_name) {
+        showToast('Please enter full name', 'warning');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        return;
+    }
+    
+    if (usage.length === 0) {
+        showToast('Please add at least one platform/account', 'warning');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/identities', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        
+        if (result.success) {
+            showToast('✅ Identity saved successfully!', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast('❌ ' + (result.error || 'Failed to save'), 'error');
+        }
+    } catch (error) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        showToast('❌ Error: ' + error.message, 'error');
+    }
+}
+
+// ============================================================
+// FILTER IDENTITIES
+// ============================================================
+function filterIdentities(filter, btn) {
+    document.querySelectorAll('#filterGroup button').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    
+    document.querySelectorAll('.identity-card').forEach(item => {
+        const isUsed = item.dataset.used === 'true';
+        let show = true;
+        if (filter === 'available' && isUsed) show = false;
+        if (filter === 'used' && !isUsed) show = false;
+        item.style.display = show ? '' : 'none';
+    });
+}
+
+// ============================================================
+// VIEW IDENTITY
+// ============================================================
+function viewIdentity(id) {
+    const card = document.getElementById(`identity-${id}`);
+    if (!card) return;
+    
+    // Toggle details visibility
+    const details = card.querySelector('.card-details');
+    const usageTags = card.querySelector('.usage-tags');
+    
+    if (details.style.display === 'none') {
+        details.style.display = 'grid';
+        if (usageTags) usageTags.style.display = 'flex';
+        showToast('📋 Showing full details', 'info');
+    } else {
+        details.style.display = 'none';
+        if (usageTags) usageTags.style.display = 'none';
+    }
+}
+
+// ============================================================
+// USE IDENTITY (Mark used for a platform)
+// ============================================================
+function useIdentity(id) {
+    const platform = prompt('Enter the platform to use this identity for (RWS, Handshake, Mercor, etc.):');
+    if (!platform) return;
+    
+    const accountName = prompt('Enter the account name:');
+    if (accountName === null) return;
+    
+    const status = prompt('Enter application status (pending, submitted, interview, approved, rejected):', 'submitted');
+    if (!status) return;
+    
+    fetch(`/api/identities/${id}/use`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            platform: platform,
+            account_name: accountName,
+            application_status: status
+        })
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            showToast('✅ ' + result.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast('❌ ' + result.error, 'error');
+        }
+    })
+    .catch(error => {
+        showToast('❌ Error: ' + error.message, 'error');
+    });
+}
+
+// ============================================================
+// DELETE IDENTITY
+// ============================================================
+async function deleteIdentity(id) {
+    if (!confirm('Delete this identity permanently? All usage records will also be deleted.')) return;
+    
+    try {
+        const response = await fetch(`/api/identities?id=${id}`, {
+            method: 'DELETE'
+        });
+        const result = await response.json();
+        if (result.success) {
+            const card = document.getElementById(`identity-${id}`);
+            if (card) {
+                card.style.transition = 'all 0.3s';
+                card.style.opacity = '0';
+                card.style.transform = 'translateX(-20px)';
+                setTimeout(() => card.remove(), 300);
+            }
+            showToast('✅ Identity deleted', 'success');
+        }
+    } catch (error) {
+        showToast('❌ Error: ' + error.message, 'error');
+    }
+}
+
+// ============================================================
+// EDIT IDENTITY
+// ============================================================
+function editIdentity(id) {
+    showToast('📝 Edit feature: Click on fields to edit directly, or use the form', 'info');
+}
+
+// ============================================================
+// SHOW TOAST
+// ============================================================
+function showToast(message, type = 'success') {
+    document.querySelectorAll('.toast-modern').forEach(el => el.remove());
+    const toast = document.createElement('div');
+    toast.className = `toast-modern ${type}`;
+    toast.innerHTML = `
+        <span>${message}</span>
+        <span class="close-btn" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></span>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+}
+</script>
+
+{% endblock %}
