@@ -181,6 +181,12 @@
         
         <div class="sidebar-divider border-t my-3"></div>
         
+        <!-- 🔥 IDENTITIES - NEW FEATURE -->
+        <a href="/identities" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm {% if request.endpoint == 'identities' %}active{% endif %}">
+            <i class="fas fa-id-card w-5 text-center"></i> Identities
+            <span class="ml-auto text-[10px] font-bold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full">NEW</span>
+        </a>
+        
         <!-- 🔥 MESSAGES - WhatsApp-style Chat -->
         <a href="/admin-messages" class="sidebar-link flex items-center gap-3 px-4 py-2.5 text-sm {% if request.endpoint == 'admin_messages' %}active{% endif %}">
             <i class="fas fa-comments w-5 text-center"></i> Messages
