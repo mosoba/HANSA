@@ -1202,7 +1202,9 @@ def api_upload():
         bucket_name = 'uploads'
         file_content = file.read()
         
-        url = f"{SUPABASE_URL}/storage/v1/object/public/{bucket_name}/{unique_filename}"
+        # ✅ TRY WITH /object/ endpoint FIRST
+        url = f"{SUPABASE_URL}/storage/v1/object/{bucket_name}/{unique_filename}"
+        
         headers = {
             'apikey': SUPABASE_KEY,
             'Authorization': f'Bearer {SUPABASE_KEY}',
@@ -1214,6 +1216,7 @@ def api_upload():
         
         response = requests.post(url, headers=headers, data=file_content)
         print(f"📤 Response status: {response.status_code}")
+        print(f"📤 Response text: {response.text[:200] if response.text else 'No response'}")
         
         if response.status_code in [200, 201, 204]:
             file_url = f"{SUPABASE_URL}/storage/v1/object/public/{bucket_name}/{unique_filename}"
@@ -1223,20 +1226,21 @@ def api_upload():
                 'filename': unique_filename
             })
         else:
-            alt_url = f"{SUPABASE_URL}/storage/v1/object/{bucket_name}/{unique_filename}"
-            alt_response = requests.post(alt_url, headers=headers, data=file_content)
+            # ✅ TRY WITH /public/ endpoint
+            public_url = f"{SUPABASE_URL}/storage/v1/object/public/{bucket_name}/{unique_filename}"
+            public_response = requests.post(public_url, headers=headers, data=file_content)
+            print(f"📤 Public response status: {public_response.status_code}")
             
-            if alt_response.status_code in [200, 201, 204]:
-                file_url = f"{SUPABASE_URL}/storage/v1/object/public/{bucket_name}/{unique_filename}"
+            if public_response.status_code in [200, 201, 204]:
                 return jsonify({
                     'success': True,
-                    'url': file_url,
+                    'url': public_url,
                     'filename': unique_filename
                 })
             else:
                 return jsonify({
                     'success': False,
-                    'error': f'Upload failed: {response.status_code} - {response.text[:100]}'
+                    'error': f'Upload failed. Status: {response.status_code}'
                 }), 500
                 
     except Exception as e:
