@@ -3732,18 +3732,18 @@ def identities():
         accounts_result = supabase_request('GET', 'hs_accounts')
         accounts = accounts_result['data'] if accounts_result['data'] else []
         
-        # ✅ GET PROXIES AND ATTACH TO ACCOUNTS
+        # ✅ GET PROXIES WITH IP ADDRESS
         proxies_result = supabase_request('GET', 'hs_proxies')
         proxies = {p['id']: p for p in proxies_result['data']} if proxies_result['data'] else {}
         
         for account in accounts:
             proxy_id = account.get('proxy_id')
             if proxy_id and proxy_id in proxies:
+                account['proxy_ip'] = proxies[proxy_id].get('ip', 'N/A')  # ✅ IP ADDRESS
                 account['proxy_location'] = proxies[proxy_id].get('location', 'N/A')
-                account['proxy_ip'] = proxies[proxy_id].get('ip', 'N/A')
             else:
-                account['proxy_location'] = 'No Proxy'
-                account['proxy_ip'] = 'N/A'
+                account['proxy_ip'] = 'No Proxy'
+                account['proxy_location'] = 'N/A'
         
         # Get all usage records
         usage_result = supabase_request('GET', 'hs_identity_usage')
@@ -3772,7 +3772,7 @@ def identities():
         
         return render_template('identities.html',
             identities=identity_list,
-            accounts=accounts,  # ✅ Now has proxy info
+            accounts=accounts,  # ✅ Now has proxy_ip
             platforms=platforms,
             total=total,
             used_count=used_count,
