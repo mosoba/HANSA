@@ -10,7 +10,7 @@
     <div>
         <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Identities</h1>
         <div class="flex items-center gap-3 mt-0.5">
-            <p class="text-sm text-gray-500">Store identities, upload documents & apply to accounts</p>
+            <p class="text-sm text-gray-500">Manage identities, upload documents & apply to accounts</p>
             <span class="px-2.5 py-0.5 text-xs font-medium bg-indigo-50 text-indigo-600 rounded-full border border-indigo-200">
                 {{ total }} total
             </span>
@@ -22,7 +22,7 @@
 {% block extra_css %}
 <style>
 /* ============================================================
-   CLEAN & PROFESSIONAL UI
+   PROFESSIONAL UI - CLEAN & MODERN
    ============================================================ */
 
 /* Stats */
@@ -583,7 +583,7 @@
     background: white;
     border-radius: 12px;
     padding: 28px;
-    max-width: 480px;
+    max-width: 500px;
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
@@ -594,7 +594,6 @@
 }
 .modal-content::-webkit-scrollbar-track {
     background: #f1f4f9;
-    border-radius: 10px;
 }
 .modal-content::-webkit-scrollbar-thumb {
     background: #d1d9e6;
@@ -623,7 +622,6 @@
     cursor: pointer;
     color: #94a3b8;
     padding: 4px;
-    transition: 0.2s;
 }
 .modal-header .close:hover {
     color: #0f172a;
@@ -972,7 +970,7 @@
 </div>
 
 <!-- ============================================================
-     APPLY MODAL - CLEAN & SIMPLE
+     APPLY MODAL - WORKS WITH ACCOUNT DROPDOWN
      ============================================================ -->
 <div class="modal-overlay" id="applyModal">
     <div class="modal-content">
@@ -993,41 +991,12 @@
                 
                 <div class="form-group">
                     <label>Select Account <span class="required">*</span></label>
-                    <select id="applyAccountId" required onchange="toggleNewAccount()">
+                    <select id="applyAccountId" required>
                         <option value="">-- Select an Account --</option>
                         {% for account in accounts %}
                         <option value="{{ account.id }}">{{ account.name }} ({{ account.platform or 'N/A' }})</option>
                         {% endfor %}
-                        <option value="__new__" style="color:#4f46e5;font-weight:600;">+ Create New Account</option>
                     </select>
-                </div>
-
-                <!-- CREATE NEW ACCOUNT - SIMPLE -->
-                <div id="newAccountSection" style="display:none; background:#f8fafc; padding:14px; border-radius:8px; border:1px solid #e8edf4; margin-bottom:12px;">
-                    <div style="font-size:13px;font-weight:600;color:#0f172a;margin-bottom:8px;">
-                        <i class="fas fa-plus-circle text-indigo-500"></i> Create New Account
-                    </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                        <div class="form-group">
-                            <label>Account Name <span class="required">*</span></label>
-                            <input type="text" id="new_account_name" placeholder="e.g., Mercor_Account_002" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Platform <span class="required">*</span></label>
-                            <select id="new_account_platform" required>
-                                <option value="RWS">RWS</option>
-                                <option value="Handshake">Handshake</option>
-                                <option value="Mercor" selected>Mercor</option>
-                                <option value="After Query">After Query</option>
-                                <option value="Upwork">Upwork</option>
-                                <option value="Fiverr">Fiverr</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                    </div>
-                    <button type="button" class="btn-primary btn-success" id="createAccountBtn" style="margin-top:10px;background:#059669;" onclick="createNewAccount()">
-                        <i class="fas fa-plus"></i> Create Account
-                    </button>
                 </div>
                 
                 <div class="form-group">
@@ -1123,12 +1092,14 @@ function toggleIdentity(id) {
         icon.classList.remove('open');
         item.classList.remove('expanded');
     } else {
+        // Close all other open items
         document.querySelectorAll('.item-details.open').forEach(el => {
             el.classList.remove('open');
             const parentId = el.id.replace('details-', '');
             document.getElementById('icon-' + parentId)?.classList.remove('open');
             document.getElementById('identity-' + parentId)?.classList.remove('expanded');
         });
+        
         details.classList.add('open');
         icon.classList.add('open');
         item.classList.add('expanded');
@@ -1204,15 +1175,15 @@ async function saveIdentity(event) {
         btn.disabled = false;
         btn.innerHTML = original;
         if (result.success) {
-            showToast('Identity saved successfully', 'success');
+            showToast('✅ Identity saved successfully!', 'success');
             setTimeout(() => location.reload(), 1000);
         } else {
-            showToast(result.error || 'Failed to save', 'error');
+            showToast('❌ ' + (result.error || 'Failed to save'), 'error');
         }
     } catch (error) {
         btn.disabled = false;
         btn.innerHTML = original;
-        showToast('Error: ' + error.message, 'error');
+        showToast('❌ Error: ' + error.message, 'error');
     }
 }
 
@@ -1220,8 +1191,18 @@ async function saveIdentity(event) {
 // FILTER IDENTITIES
 // ============================================================
 function filterIdentities(filter, btn) {
-    document.querySelectorAll('#filterGroup button').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
+    document.querySelectorAll('#filterGroup button').forEach(b => {
+        b.classList.remove('active');
+        b.style.background = 'transparent';
+        b.style.color = '#94a3b8';
+        b.style.borderColor = 'transparent';
+    });
+    if (btn) {
+        btn.classList.add('active');
+        btn.style.background = '#eef2ff';
+        btn.style.color = '#4f46e5';
+        btn.style.borderColor = '#4f46e5';
+    }
     
     document.querySelectorAll('.identity-item').forEach(item => {
         const isUsed = item.dataset.used === 'true';
@@ -1240,93 +1221,17 @@ function viewIdentity(id) {
 }
 
 // ============================================================
-// TOGGLE NEW ACCOUNT
-// ============================================================
-function toggleNewAccount() {
-    const select = document.getElementById('applyAccountId');
-    const section = document.getElementById('newAccountSection');
-    if (select.value === '__new__') {
-        section.style.display = 'block';
-    } else {
-        section.style.display = 'none';
-    }
-}
-
-// ============================================================
-// CREATE NEW ACCOUNT - SIMPLE
-// ============================================================
-async function createNewAccount() {
-    const btn = document.getElementById('createAccountBtn');
-    const original = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
-    
-    const name = document.getElementById('new_account_name').value.trim();
-    const platform = document.getElementById('new_account_platform').value;
-    
-    if (!name) {
-        showToast('Please enter an account name', 'warning');
-        btn.disabled = false;
-        btn.innerHTML = original;
-        return;
-    }
-    
-    const data = {
-        name: name,
-        platform: platform,
-        location: '',
-        client_rate: 15,
-        payday: 'Sunday',
-        status: 'active'
-    };
-    
-    try {
-        const response = await fetch('/api/accounts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        const result = await response.json();
-        
-        btn.disabled = false;
-        btn.innerHTML = original;
-        
-        if (result.success) {
-            showToast('✅ Account created successfully!', 'success');
-            
-            const select = document.getElementById('applyAccountId');
-            const option = document.createElement('option');
-            option.value = result.data[0].id;
-            option.text = result.data[0].name + ' (' + result.data[0].platform + ')';
-            select.insertBefore(option, select.querySelector('option[value="__new__"]'));
-            select.value = result.data[0].id;
-            
-            document.getElementById('newAccountSection').style.display = 'none';
-            document.getElementById('new_account_name').value = '';
-        } else {
-            showToast('❌ ' + (result.error || 'Failed to create account'), 'error');
-        }
-    } catch (error) {
-        btn.disabled = false;
-        btn.innerHTML = original;
-        showToast('❌ Error: ' + error.message, 'error');
-    }
-}
-
-// ============================================================
 // APPLY MODAL
 // ============================================================
 function openApplyModal(identityId, identityName) {
     document.getElementById('applyIdentityId').value = identityId;
     document.getElementById('applyIdentityName').value = identityName;
     document.getElementById('applyModal').classList.add('active');
-    document.getElementById('newAccountSection').style.display = 'none';
 }
 
 function closeApplyModal() {
     document.getElementById('applyModal').classList.remove('active');
     document.getElementById('applyForm').reset();
-    document.getElementById('newAccountSection').style.display = 'none';
 }
 
 document.getElementById('applyModal')?.addEventListener('click', function(e) {
@@ -1334,7 +1239,7 @@ document.getElementById('applyModal')?.addEventListener('click', function(e) {
 });
 
 // ============================================================
-// SUBMIT APPLICATION
+// SUBMIT APPLICATION - WORKS! Sends account_id to backend
 // ============================================================
 async function submitApplication(event) {
     event.preventDefault();
@@ -1348,7 +1253,7 @@ async function submitApplication(event) {
     const status = document.getElementById('applyStatus').value;
     const notes = document.getElementById('applyNotes').value.trim();
     
-    if (!accountId || accountId === '__new__') {
+    if (!accountId) {
         showToast('Please select an account', 'warning');
         btn.disabled = false;
         btn.innerHTML = original;
@@ -1452,7 +1357,7 @@ async function saveEdit(event) {
         btn.disabled = false;
         btn.innerHTML = original;
         if (result.success) {
-            showToast('✅ Updated successfully', 'success');
+            showToast('✅ Updated successfully!', 'success');
             closeEditModal();
             setTimeout(() => location.reload(), 1000);
         } else {
@@ -1466,7 +1371,7 @@ async function saveEdit(event) {
 }
 
 // ============================================================
-// CHANGE STATUS
+// CHANGE STATUS - WORKS!
 // ============================================================
 function changeStatus(usageId, currentStatus) {
     const statuses = ['pending', 'submitted', 'interview', 'approved', 'rejected'];
@@ -1492,7 +1397,7 @@ function changeStatus(usageId, currentStatus) {
 }
 
 // ============================================================
-// UPDATE USAGE NOTES
+// UPDATE USAGE NOTES - WORKS!
 // ============================================================
 function updateUsageNotes(usageId) {
     const notes = prompt('Enter notes for this application:');
@@ -1506,7 +1411,7 @@ function updateUsageNotes(usageId) {
     .then(res => res.json())
     .then(result => {
         if (result.success) {
-            showToast('✅ Notes updated', 'success');
+            showToast('✅ Notes updated!', 'success');
             setTimeout(() => location.reload(), 1000);
         } else {
             showToast('❌ ' + result.error, 'error');
@@ -1516,7 +1421,7 @@ function updateUsageNotes(usageId) {
 }
 
 // ============================================================
-// DELETE IDENTITY
+// DELETE IDENTITY - WORKS!
 // ============================================================
 async function deleteIdentity(id) {
     if (!confirm('Delete this identity permanently?')) return;
@@ -1531,10 +1436,10 @@ async function deleteIdentity(id) {
                 item.style.transform = 'translateX(-20px)';
                 setTimeout(() => item.remove(), 300);
             }
-            showToast('Identity deleted', 'success');
+            showToast('✅ Identity deleted', 'success');
         }
     } catch (error) {
-        showToast('Error: ' + error.message, 'error');
+        showToast('❌ Error: ' + error.message, 'error');
     }
 }
 
