@@ -4018,6 +4018,48 @@ def api_update_usage_notes(usage_id):
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/identities/<identity_id>', methods=['PUT'])
+@login_required
+@admin_required
+def api_update_identity(identity_id):
+    """Update an identity - uses ID from URL"""
+    try:
+        data = request.get_json()
+        print(f"🔄 Updating identity {identity_id}")
+        print(f"📤 Data: {data}")
+        
+        # Check if identity exists
+        check = supabase_request('GET', 'hs_identities', filters={'id': identity_id})
+        if not check['data']:
+            return jsonify({'success': False, 'error': 'Identity not found'}), 404
+        
+        # Build update data
+        update_data = {
+            'full_name': data.get('full_name'),
+            'phone_number': data.get('phone_number'),
+            'email': data.get('email'),
+            'ssn': data.get('ssn'),
+            'platform_credentials': data.get('platform_credentials', ''),
+            'notes': data.get('notes', ''),
+            'updated_at': datetime.utcnow().isoformat()
+        }
+        
+        # Remove None values
+        update_data = {k: v for k, v in update_data.items() if v is not None}
+        
+        result = supabase_request('PATCH', 'hs_identities', data=update_data, filters={'id': identity_id})
+        
+        return jsonify({
+            'success': True,
+            'data': result['data'],
+            'message': '✅ Identity updated successfully!'
+        })
+    except Exception as e:
+        print(f"❌ Error updating identity: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # ============================================================
 # RUN APP
 # ============================================================
