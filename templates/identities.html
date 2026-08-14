@@ -1108,7 +1108,7 @@ function toggleIdentity(id) {
 }
 
 // ============================================================
-// VIEW IDENTITY DETAILS - Shows FULL details in modal
+// VIEW IDENTITY DETAILS
 // ============================================================
 function viewIdentityDetails(id) {
     const modal = document.getElementById('viewModal');
@@ -1206,7 +1206,7 @@ document.getElementById('viewModal')?.addEventListener('click', function(e) {
 });
 
 // ============================================================
-// PHOTO UPLOAD - FIXED WITH BETTER DEBUGGING
+// PHOTO UPLOAD - FIXED
 // ============================================================
 function previewImage(input, previewId, boxId) {
     const file = input.files[0];
@@ -1216,9 +1216,15 @@ function previewImage(input, previewId, boxId) {
     
     const reader = new FileReader();
     reader.onload = function(e) {
-        document.getElementById(previewId).src = e.target.result;
-        document.getElementById(previewId).style.display = 'block';
-        document.getElementById(boxId).classList.add('has-image');
+        const preview = document.getElementById(previewId);
+        if (preview) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        }
+        const box = document.getElementById(boxId);
+        if (box) {
+            box.classList.add('has-image');
+        }
         uploadFile(file, previewId);
     };
     reader.readAsDataURL(file);
@@ -1239,14 +1245,20 @@ async function uploadFile(file, previewId) {
         console.log('📤 Upload result:', result);
         
         if (result.success) {
-            const inputId = previewId.replace('Preview', '');
-            const hiddenInput = document.getElementById(inputId + '_url');
+            // ✅ FIX: Correctly map previewId to hidden input
+            let hiddenInput;
+            if (previewId === 'frontPreview') {
+                hiddenInput = document.getElementById('id_front_url');
+            } else if (previewId === 'backPreview') {
+                hiddenInput = document.getElementById('id_back_url');
+            }
+            
             if (hiddenInput) {
                 hiddenInput.value = result.url;
                 console.log('✅ URL saved to:', hiddenInput.id, '=', hiddenInput.value);
                 showToast('✅ Photo uploaded!', 'success');
             } else {
-                console.error('❌ Hidden input not found:', inputId + '_url');
+                console.error('❌ Hidden input not found for previewId:', previewId);
             }
         } else {
             console.error('❌ Upload failed:', result);
@@ -1259,7 +1271,7 @@ async function uploadFile(file, previewId) {
 }
 
 // ============================================================
-// SAVE IDENTITY - FIXED WITH DEBUGGING
+// SAVE IDENTITY
 // ============================================================
 async function saveIdentity(event) {
     event.preventDefault();
@@ -1269,7 +1281,6 @@ async function saveIdentity(event) {
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
     
-    // Get all form values
     const full_name = document.getElementById('full_name').value.trim();
     const phone_number = document.getElementById('phone_number').value.trim();
     const email = document.getElementById('email').value.trim();
