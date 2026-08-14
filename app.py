@@ -3711,9 +3711,7 @@ def worker_messages():
         flash('Error loading messages', 'danger')
         return redirect(url_for('worker_dashboard'))
 
-# ============================================================
-# IDENTITIES - TRACK MZUNGU WITH FRONT/BACK PHOTOS
-# ============================================================
+
 
 # ============================================================
 # IDENTITIES - TRACK WITH FRONT/BACK PHOTOS
@@ -3723,7 +3721,6 @@ def worker_messages():
 @login_required
 @admin_required
 def identities():
-    """Track identities with front/back ID photos and platform usage"""
     try:
         user_name = session.get('user_name', 'Admin')
         
@@ -3731,9 +3728,22 @@ def identities():
         identity_result = supabase_request('GET', 'hs_identities')
         identity_list = identity_result['data'] if identity_result['data'] else []
         
-        # Get all accounts for dropdown
+        # Get all accounts
         accounts_result = supabase_request('GET', 'hs_accounts')
         accounts = accounts_result['data'] if accounts_result['data'] else []
+        
+        # ✅ GET PROXIES AND ATTACH TO ACCOUNTS
+        proxies_result = supabase_request('GET', 'hs_proxies')
+        proxies = {p['id']: p for p in proxies_result['data']} if proxies_result['data'] else {}
+        
+        for account in accounts:
+            proxy_id = account.get('proxy_id')
+            if proxy_id and proxy_id in proxies:
+                account['proxy_location'] = proxies[proxy_id].get('location', 'N/A')
+                account['proxy_ip'] = proxies[proxy_id].get('ip', 'N/A')
+            else:
+                account['proxy_location'] = 'No Proxy'
+                account['proxy_ip'] = 'N/A'
         
         # Get all usage records
         usage_result = supabase_request('GET', 'hs_identity_usage')
@@ -3762,7 +3772,7 @@ def identities():
         
         return render_template('identities.html',
             identities=identity_list,
-            accounts=accounts,
+            accounts=accounts,  # ✅ Now has proxy info
             platforms=platforms,
             total=total,
             used_count=used_count,
@@ -4016,48 +4026,6 @@ def api_update_usage_notes(usage_id):
             'message': 'Notes updated successfully!'
         })
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/identities/<identity_id>', methods=['PUT'])
-@login_required
-@admin_required
-def api_update_identity(identity_id):
-    """Update an identity - uses ID from URL"""
-    try:
-        data = request.get_json()
-        print(f"🔄 Updating identity {identity_id}")
-        print(f"📤 Data: {data}")
-        
-        # Check if identity exists
-        check = supabase_request('GET', 'hs_identities', filters={'id': identity_id})
-        if not check['data']:
-            return jsonify({'success': False, 'error': 'Identity not found'}), 404
-        
-        # Build update data
-        update_data = {
-            'full_name': data.get('full_name'),
-            'phone_number': data.get('phone_number'),
-            'email': data.get('email'),
-            'ssn': data.get('ssn'),
-            'platform_credentials': data.get('platform_credentials', ''),
-            'notes': data.get('notes', ''),
-            'updated_at': datetime.utcnow().isoformat()
-        }
-        
-        # Remove None values
-        update_data = {k: v for k, v in update_data.items() if v is not None}
-        
-        result = supabase_request('PATCH', 'hs_identities', data=update_data, filters={'id': identity_id})
-        
-        return jsonify({
-            'success': True,
-            'data': result['data'],
-            'message': '✅ Identity updated successfully!'
-        })
-    except Exception as e:
-        print(f"❌ Error updating identity: {str(e)}")
-        import traceback
-        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # ============================================================
