@@ -1206,11 +1206,14 @@ document.getElementById('viewModal')?.addEventListener('click', function(e) {
 });
 
 // ============================================================
-// PHOTO UPLOAD
+// PHOTO UPLOAD - FIXED WITH BETTER DEBUGGING
 // ============================================================
 function previewImage(input, previewId, boxId) {
     const file = input.files[0];
     if (!file) return;
+    
+    console.log('📸 Selected file:', file.name, file.size, 'bytes');
+    
     const reader = new FileReader();
     reader.onload = function(e) {
         document.getElementById(previewId).src = e.target.result;
@@ -1224,40 +1227,75 @@ function previewImage(input, previewId, boxId) {
 async function uploadFile(file, previewId) {
     const formData = new FormData();
     formData.append('file', file);
+    
+    console.log('📤 Uploading file:', file.name, file.size);
+    
     try {
-        const response = await fetch('/api/upload', { method: 'POST', body: formData });
+        const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+        });
         const result = await response.json();
+        console.log('📤 Upload result:', result);
+        
         if (result.success) {
             const inputId = previewId.replace('Preview', '');
-            document.getElementById(inputId + '_url').value = result.url;
+            const hiddenInput = document.getElementById(inputId + '_url');
+            if (hiddenInput) {
+                hiddenInput.value = result.url;
+                console.log('✅ URL saved to:', hiddenInput.id, '=', hiddenInput.value);
+                showToast('✅ Photo uploaded!', 'success');
+            } else {
+                console.error('❌ Hidden input not found:', inputId + '_url');
+            }
+        } else {
+            console.error('❌ Upload failed:', result);
+            showToast('❌ ' + (result.error || 'Upload failed'), 'error');
         }
     } catch (error) {
-        showToast('Failed to upload photo', 'error');
+        console.error('❌ Upload error:', error);
+        showToast('❌ Upload error: ' + error.message, 'error');
     }
 }
 
 // ============================================================
-// SAVE IDENTITY
+// SAVE IDENTITY - FIXED WITH DEBUGGING
 // ============================================================
 async function saveIdentity(event) {
     event.preventDefault();
+    
     const btn = document.getElementById('submitBtn');
     const original = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
     
+    // Get all form values
+    const full_name = document.getElementById('full_name').value.trim();
+    const phone_number = document.getElementById('phone_number').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const ssn = document.getElementById('ssn').value.trim();
+    const id_front_url = document.getElementById('id_front_url').value;
+    const id_back_url = document.getElementById('id_back_url').value;
+    const platform_credentials = document.getElementById('platform_credentials').value.trim();
+    const notes = document.getElementById('notes').value.trim();
+    
+    console.log('📸 Front ID URL:', id_front_url);
+    console.log('📸 Back ID URL:', id_back_url);
+    
     const data = {
-        full_name: document.getElementById('full_name').value.trim(),
-        phone_number: document.getElementById('phone_number').value.trim(),
-        email: document.getElementById('email').value.trim(),
-        ssn: document.getElementById('ssn').value.trim(),
-        id_front_url: document.getElementById('id_front_url').value,
-        id_back_url: document.getElementById('id_back_url').value,
-        platform_credentials: document.getElementById('platform_credentials').value.trim(),
-        notes: document.getElementById('notes').value.trim()
+        full_name: full_name,
+        phone_number: phone_number,
+        email: email,
+        ssn: ssn,
+        id_front_url: id_front_url,
+        id_back_url: id_back_url,
+        platform_credentials: platform_credentials,
+        notes: notes
     };
     
-    if (!data.full_name) {
+    console.log('📤 Submitting identity data:', data);
+    
+    if (!full_name) {
         showToast('Full name is required', 'warning');
         btn.disabled = false;
         btn.innerHTML = original;
@@ -1271,8 +1309,11 @@ async function saveIdentity(event) {
             body: JSON.stringify(data)
         });
         const result = await response.json();
+        console.log('📤 Save result:', result);
+        
         btn.disabled = false;
         btn.innerHTML = original;
+        
         if (result.success) {
             showToast('✅ Identity saved successfully!', 'success');
             setTimeout(() => location.reload(), 1000);
@@ -1282,6 +1323,7 @@ async function saveIdentity(event) {
     } catch (error) {
         btn.disabled = false;
         btn.innerHTML = original;
+        console.error('❌ Save error:', error);
         showToast('❌ Error: ' + error.message, 'error');
     }
 }
@@ -1463,14 +1505,13 @@ async function saveEdit(event) {
 }
 
 // ============================================================
-// CHANGE STATUS - WORKS! Cycles through all statuses
+// CHANGE STATUS
 // ============================================================
 function changeStatus(usageId, currentStatus) {
     const statuses = ['pending', 'submitted', 'interview', 'approved', 'rejected'];
     const idx = statuses.indexOf(currentStatus);
     const next = statuses[(idx + 1) % statuses.length];
     
-    // Show status options
     const options = statuses.map((s, i) => 
         `${i + 1}. ${s.toUpperCase()}${s === currentStatus ? ' (current)' : ''}`
     ).join('\n');
