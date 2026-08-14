@@ -417,6 +417,7 @@
 }
 .usage-tag .status-btn:hover {
     transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 .usage-tag .status-btn.pending { background: #fef3c7; color: #92400e; }
 .usage-tag .status-btn.submitted { background: #dbeafe; color: #1d4ed8; }
@@ -563,7 +564,7 @@
     font-size: 14px;
 }
 
-/* ===== MODALS ===== */
+/* ===== VIEW DETAILS MODAL ===== */
 .modal-overlay {
     display: none;
     position: fixed;
@@ -583,7 +584,7 @@
     background: white;
     border-radius: 12px;
     padding: 28px;
-    max-width: 500px;
+    max-width: 550px;
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
@@ -627,44 +628,26 @@
     color: #0f172a;
 }
 
-.modal-body .form-group {
-    margin-bottom: 12px;
+.modal-body .detail-row {
+    display: flex;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f4fa;
 }
-.modal-body .form-group label {
-    display: block;
-    font-size: 12px;
+.modal-body .detail-row .label {
     font-weight: 600;
-    color: #1e293b;
-    margin-bottom: 4px;
+    color: #64748b;
+    width: 120px;
+    flex-shrink: 0;
 }
-.modal-body .form-group label .required {
-    color: #ef4444;
-}
-.modal-body .form-group input,
-.modal-body .form-group select,
-.modal-body .form-group textarea {
-    width: 100%;
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 1.5px solid #e2e8f0;
-    font-size: 13px;
-    transition: all 0.2s;
-    background: #fafcff;
-    font-family: inherit;
+.modal-body .detail-row .value {
     color: #0f172a;
+    word-break: break-word;
 }
-.modal-body .form-group input:focus,
-.modal-body .form-group select:focus,
-.modal-body .form-group textarea:focus {
-    outline: none;
-    border-color: #4f46e5;
-    background: white;
-    box-shadow: 0 0 0 3px rgba(79,70,229,0.08);
-}
-.modal-body .form-group textarea {
-    resize: vertical;
-    min-height: 50px;
+.modal-body .detail-row .value img {
     max-height: 80px;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+    margin: 4px 0;
 }
 
 .modal-body .btn-primary {
@@ -929,7 +912,7 @@
                                     {{ u.platform }} → {{ u.account_name or 'N/A' }}
                                     <button class="status-btn {{ u.application_status|default('pending') }}" 
                                             onclick="event.stopPropagation(); changeStatus('{{ u.id }}', '{{ u.application_status|default('pending') }}')"
-                                            title="Click to change status">
+                                            title="Click to change status (cycles through: Pending → Submitted → Interview → Approved → Rejected)">
                                         {{ u.application_status|upper|default('PENDING') }}
                                     </button>
                                     <i class="fas fa-edit edit-notes" onclick="event.stopPropagation(); updateUsageNotes('{{ u.id }}')" title="Edit notes"></i>
@@ -943,8 +926,8 @@
                     </div>
 
                     <div class="details-actions">
-                        <button class="btn-view" onclick="event.stopPropagation(); viewIdentity('{{ identity.id }}')">
-                            <i class="fas fa-eye"></i> View
+                        <button class="btn-view" onclick="event.stopPropagation(); viewIdentityDetails('{{ identity.id }}')">
+                            <i class="fas fa-eye"></i> View Details
                         </button>
                         <button class="btn-apply" onclick="event.stopPropagation(); openApplyModal('{{ identity.id }}', '{{ identity.full_name }}')">
                             <i class="fas fa-paper-plane"></i> Apply
@@ -970,7 +953,27 @@
 </div>
 
 <!-- ============================================================
-     APPLY MODAL - WORKS WITH ACCOUNT DROPDOWN
+     VIEW DETAILS MODAL
+     ============================================================ -->
+<div class="modal-overlay" id="viewModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-id-card text-indigo-500"></i> Identity Details</h3>
+            <button class="close" onclick="closeViewModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body" id="viewModalBody">
+            <!-- Content loaded via JavaScript -->
+            <div style="text-align:center;padding:20px;color:#94a3b8;">
+                <i class="fas fa-spinner fa-spin"></i> Loading...
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     APPLY MODAL
      ============================================================ -->
 <div class="modal-overlay" id="applyModal">
     <div class="modal-content">
@@ -1092,19 +1095,115 @@ function toggleIdentity(id) {
         icon.classList.remove('open');
         item.classList.remove('expanded');
     } else {
-        // Close all other open items
         document.querySelectorAll('.item-details.open').forEach(el => {
             el.classList.remove('open');
             const parentId = el.id.replace('details-', '');
             document.getElementById('icon-' + parentId)?.classList.remove('open');
             document.getElementById('identity-' + parentId)?.classList.remove('expanded');
         });
-        
         details.classList.add('open');
         icon.classList.add('open');
         item.classList.add('expanded');
     }
 }
+
+// ============================================================
+// VIEW IDENTITY DETAILS - Shows FULL details in modal
+// ============================================================
+function viewIdentityDetails(id) {
+    const modal = document.getElementById('viewModal');
+    const body = document.getElementById('viewModalBody');
+    modal.classList.add('active');
+    body.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+    
+    fetch(`/api/identities/${id}`)
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                const d = result.data;
+                const usage = d.usage || [];
+                let usageHtml = '';
+                if (usage.length > 0) {
+                    usageHtml = usage.map(u => `
+                        <span class="usage-tag ${u.platform.toLowerCase()}">
+                            ${u.platform} → ${u.account_name || 'N/A'}
+                            <span class="status-btn ${u.application_status || 'pending'}">
+                                ${(u.application_status || 'PENDING').toUpperCase()}
+                            </span>
+                        </span>
+                    `).join('');
+                } else {
+                    usageHtml = '<span class="usage-tag available-all">✅ Available for all platforms</span>';
+                }
+                
+                body.innerHTML = `
+                    <div class="detail-row">
+                        <span class="label">Full Name</span>
+                        <span class="value">${d.full_name || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Phone</span>
+                        <span class="value">${d.phone_number || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Email</span>
+                        <span class="value">${d.email || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">SSN / ID</span>
+                        <span class="value">${d.ssn || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Platform Credentials</span>
+                        <span class="value">${d.platform_credentials ? '✅ Set' : '❌ Not set'}</span>
+                    </div>
+                    <div class="detail-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+                        <span class="label" style="width:100%;">ID Photos</span>
+                        <div style="display:flex;gap:8px;margin-top:4px;">
+                            ${d.id_front_url ? `<img src="${d.id_front_url}" alt="Front ID">` : '<span style="color:#94a3b8;">No front photo</span>'}
+                            ${d.id_back_url ? `<img src="${d.id_back_url}" alt="Back ID">` : '<span style="color:#94a3b8;">No back photo</span>'}
+                        </div>
+                    </div>
+                    <div class="detail-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
+                        <span class="label" style="width:100%;">Platform Usage</span>
+                        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                            ${usageHtml}
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Notes</span>
+                        <span class="value">${d.notes || 'No notes'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Created By</span>
+                        <span class="value">${d.created_by_name || 'Unknown'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Created At</span>
+                        <span class="value">${d.created_at ? new Date(d.created_at).toLocaleString() : 'N/A'}</span>
+                    </div>
+                    <div style="margin-top:16px;padding-top:14px;border-top:1px solid #f0f4fa;">
+                        <button class="btn-primary" onclick="closeViewModal()" style="width:100%;">
+                            <i class="fas fa-times"></i> Close
+                        </button>
+                    </div>
+                `;
+            } else {
+                body.innerHTML = `<div style="text-align:center;padding:20px;color:#ef4444;"><i class="fas fa-exclamation-circle"></i> Error: ${result.error}</div>`;
+            }
+        })
+        .catch(() => {
+            body.innerHTML = '<div style="text-align:center;padding:20px;color:#ef4444;"><i class="fas fa-exclamation-circle"></i> Error loading details</div>';
+        });
+}
+
+function closeViewModal() {
+    document.getElementById('viewModal').classList.remove('active');
+}
+
+document.getElementById('viewModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeViewModal();
+});
 
 // ============================================================
 // PHOTO UPLOAD
@@ -1214,13 +1313,6 @@ function filterIdentities(filter, btn) {
 }
 
 // ============================================================
-// VIEW IDENTITY
-// ============================================================
-function viewIdentity(id) {
-    toggleIdentity(id);
-}
-
-// ============================================================
 // APPLY MODAL
 // ============================================================
 function openApplyModal(identityId, identityName) {
@@ -1239,7 +1331,7 @@ document.getElementById('applyModal')?.addEventListener('click', function(e) {
 });
 
 // ============================================================
-// SUBMIT APPLICATION - WORKS! Sends account_id to backend
+// SUBMIT APPLICATION
 // ============================================================
 async function submitApplication(event) {
     event.preventDefault();
@@ -1371,18 +1463,40 @@ async function saveEdit(event) {
 }
 
 // ============================================================
-// CHANGE STATUS - WORKS!
+// CHANGE STATUS - WORKS! Cycles through all statuses
 // ============================================================
 function changeStatus(usageId, currentStatus) {
     const statuses = ['pending', 'submitted', 'interview', 'approved', 'rejected'];
     const idx = statuses.indexOf(currentStatus);
     const next = statuses[(idx + 1) % statuses.length];
-    if (!confirm(`Change from ${currentStatus.toUpperCase()} to ${next.toUpperCase()}?`)) return;
+    
+    // Show status options
+    const options = statuses.map((s, i) => 
+        `${i + 1}. ${s.toUpperCase()}${s === currentStatus ? ' (current)' : ''}`
+    ).join('\n');
+    
+    const choice = prompt(
+        `Current status: ${currentStatus.toUpperCase()}\n\nSelect new status:\n${options}\n\nEnter number (1-5):`,
+        `${idx + 1}`
+    );
+    
+    if (choice === null) return;
+    const newIdx = parseInt(choice) - 1;
+    if (isNaN(newIdx) || newIdx < 0 || newIdx >= statuses.length) {
+        showToast('Invalid selection', 'warning');
+        return;
+    }
+    
+    const newStatus = statuses[newIdx];
+    if (newStatus === currentStatus) {
+        showToast('Status already set to ' + currentStatus.toUpperCase(), 'info');
+        return;
+    }
     
     fetch(`/api/identity-usage/${usageId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ application_status: next })
+        body: JSON.stringify({ application_status: newStatus })
     })
     .then(res => res.json())
     .then(result => {
@@ -1397,7 +1511,7 @@ function changeStatus(usageId, currentStatus) {
 }
 
 // ============================================================
-// UPDATE USAGE NOTES - WORKS!
+// UPDATE USAGE NOTES
 // ============================================================
 function updateUsageNotes(usageId) {
     const notes = prompt('Enter notes for this application:');
@@ -1421,7 +1535,7 @@ function updateUsageNotes(usageId) {
 }
 
 // ============================================================
-// DELETE IDENTITY - WORKS!
+// DELETE IDENTITY
 // ============================================================
 async function deleteIdentity(id) {
     if (!confirm('Delete this identity permanently?')) return;
