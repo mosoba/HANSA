@@ -564,7 +564,7 @@
     font-size: 14px;
 }
 
-/* ===== VIEW DETAILS MODAL ===== */
+/* ===== MODALS ===== */
 .modal-overlay {
     display: none;
     position: fixed;
@@ -888,7 +888,7 @@
                         <div class="detail-item">
                             <i class="fas fa-key"></i>
                             <span class="lbl">Credentials:</span>
-                            <span>{{ 'Set' if identity.platform_credentials else 'Not set' }}</span>
+                            <span>{% if identity.platform_credentials %}✅ Set{% else %}❌ Not set{% endif %}</span>
                         </div>
                     </div>
 
@@ -912,7 +912,7 @@
                                     {{ u.platform }} → {{ u.account_name or 'N/A' }}
                                     <button class="status-btn {{ u.application_status|default('pending') }}" 
                                             onclick="event.stopPropagation(); changeStatus('{{ u.id }}', '{{ u.application_status|default('pending') }}')"
-                                            title="Click to change status (cycles through: Pending → Submitted → Interview → Approved → Rejected)">
+                                            title="Click to change status">
                                         {{ u.application_status|upper|default('PENDING') }}
                                     </button>
                                     <i class="fas fa-edit edit-notes" onclick="event.stopPropagation(); updateUsageNotes('{{ u.id }}')" title="Edit notes"></i>
@@ -953,7 +953,7 @@
 </div>
 
 <!-- ============================================================
-     VIEW DETAILS MODAL
+     VIEW DETAILS MODAL - FIXED
      ============================================================ -->
 <div class="modal-overlay" id="viewModal">
     <div class="modal-content">
@@ -964,7 +964,6 @@
             </button>
         </div>
         <div class="modal-body" id="viewModalBody">
-            <!-- Content loaded via JavaScript -->
             <div style="text-align:center;padding:20px;color:#94a3b8;">
                 <i class="fas fa-spinner fa-spin"></i> Loading...
             </div>
@@ -1027,7 +1026,7 @@
 </div>
 
 <!-- ============================================================
-     EDIT MODAL
+     EDIT MODAL - FIXED with Credentials field
      ============================================================ -->
 <div class="modal-overlay" id="editModal">
     <div class="modal-content">
@@ -1108,7 +1107,7 @@ function toggleIdentity(id) {
 }
 
 // ============================================================
-// VIEW IDENTITY DETAILS
+// VIEW IDENTITY DETAILS - FIXED: Shows credentials properly
 // ============================================================
 function viewIdentityDetails(id) {
     const modal = document.getElementById('viewModal');
@@ -1136,6 +1135,20 @@ function viewIdentityDetails(id) {
                     usageHtml = '<span class="usage-tag available-all">✅ Available for all platforms</span>';
                 }
                 
+                // ✅ Show credentials properly
+                const credsDisplay = d.platform_credentials ? 
+                    `<span style="color:#059669;font-weight:600;">✅ ${d.platform_credentials}</span>` : 
+                    '<span style="color:#94a3b8;">Not set (click Edit to add)</span>';
+                
+                // ✅ Show photos properly
+                const frontPhoto = d.id_front_url ? 
+                    `<img src="${d.id_front_url}" alt="Front ID" style="max-height:80px;border-radius:6px;border:1px solid #e2e8f0;">` : 
+                    '<span style="color:#94a3b8;font-size:13px;">No front photo</span>';
+                
+                const backPhoto = d.id_back_url ? 
+                    `<img src="${d.id_back_url}" alt="Back ID" style="max-height:80px;border-radius:6px;border:1px solid #e2e8f0;">` : 
+                    '<span style="color:#94a3b8;font-size:13px;">No back photo</span>';
+                
                 body.innerHTML = `
                     <div class="detail-row">
                         <span class="label">Full Name</span>
@@ -1155,16 +1168,22 @@ function viewIdentityDetails(id) {
                     </div>
                     <div class="detail-row">
                         <span class="label">Platform Credentials</span>
-                        <span class="value">${d.platform_credentials ? '✅ Set' : '❌ Not set'}</span>
+                        <span class="value">${credsDisplay}</span>
                     </div>
-                    <div class="detail-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+                    <div class="detail-row" style="flex-direction:column;align-items:flex-start;gap:8px;border-bottom:none;padding-bottom:0;">
                         <span class="label" style="width:100%;">ID Photos</span>
-                        <div style="display:flex;gap:8px;margin-top:4px;">
-                            ${d.id_front_url ? `<img src="${d.id_front_url}" alt="Front ID">` : '<span style="color:#94a3b8;">No front photo</span>'}
-                            ${d.id_back_url ? `<img src="${d.id_back_url}" alt="Back ID">` : '<span style="color:#94a3b8;">No back photo</span>'}
+                        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:4px;">
+                            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                                <span style="font-size:11px;color:#94a3b8;font-weight:500;">Front Side</span>
+                                ${frontPhoto}
+                            </div>
+                            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                                <span style="font-size:11px;color:#94a3b8;font-weight:500;">Back Side</span>
+                                ${backPhoto}
+                            </div>
                         </div>
                     </div>
-                    <div class="detail-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
+                    <div class="detail-row" style="flex-direction:column;align-items:flex-start;gap:8px;border-top:1px solid #f0f4fa;padding-top:10px;">
                         <span class="label" style="width:100%;">Platform Usage</span>
                         <div style="display:flex;flex-wrap:wrap;gap:6px;">
                             ${usageHtml}
@@ -1182,9 +1201,12 @@ function viewIdentityDetails(id) {
                         <span class="label">Created At</span>
                         <span class="value">${d.created_at ? new Date(d.created_at).toLocaleString() : 'N/A'}</span>
                     </div>
-                    <div style="margin-top:16px;padding-top:14px;border-top:1px solid #f0f4fa;">
-                        <button class="btn-primary" onclick="closeViewModal()" style="width:100%;">
+                    <div style="margin-top:16px;padding-top:14px;border-top:1px solid #f0f4fa;display:flex;gap:10px;">
+                        <button class="btn-primary" onclick="closeViewModal()" style="width:50%;">
                             <i class="fas fa-times"></i> Close
+                        </button>
+                        <button class="btn-primary" onclick="closeViewModal(); openEditModal('${id}')" style="width:50%;background:#059669;">
+                            <i class="fas fa-edit"></i> Edit
                         </button>
                     </div>
                 `;
@@ -1206,7 +1228,7 @@ document.getElementById('viewModal')?.addEventListener('click', function(e) {
 });
 
 // ============================================================
-// PHOTO UPLOAD - FIXED
+// PHOTO UPLOAD
 // ============================================================
 function previewImage(input, previewId, boxId) {
     const file = input.files[0];
@@ -1245,7 +1267,6 @@ async function uploadFile(file, previewId) {
         console.log('📤 Upload result:', result);
         
         if (result.success) {
-            // ✅ FIX: Correctly map previewId to hidden input
             let hiddenInput;
             if (previewId === 'frontPreview') {
                 hiddenInput = document.getElementById('id_front_url');
@@ -1433,7 +1454,7 @@ async function submitApplication(event) {
 }
 
 // ============================================================
-// EDIT MODAL
+// EDIT MODAL - FIXED: Loads credentials
 // ============================================================
 function openEditModal(identityId) {
     document.getElementById('editIdentityId').value = identityId;
@@ -1466,7 +1487,7 @@ document.getElementById('editModal')?.addEventListener('click', function(e) {
 });
 
 // ============================================================
-// SAVE EDIT
+// SAVE EDIT - FIXED: Saves credentials
 // ============================================================
 async function saveEdit(event) {
     event.preventDefault();
