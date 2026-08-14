@@ -3711,6 +3711,10 @@ def worker_messages():
 # IDENTITIES - TRACK MZUNGU WITH FRONT/BACK PHOTOS
 # ============================================================
 
+# ============================================================
+# IDENTITIES - TRACK WITH FRONT/BACK PHOTOS
+# ============================================================
+
 @app.route('/identities')
 @login_required
 @admin_required
@@ -3722,6 +3726,10 @@ def identities():
         # Get all identities
         identity_result = supabase_request('GET', 'hs_identities')
         identity_list = identity_result['data'] if identity_result['data'] else []
+        
+        # Get all accounts for dropdown
+        accounts_result = supabase_request('GET', 'hs_accounts')
+        accounts = accounts_result['data'] if accounts_result['data'] else []
         
         # Get all usage records
         usage_result = supabase_request('GET', 'hs_identity_usage')
@@ -3750,6 +3758,7 @@ def identities():
         
         return render_template('identities.html',
             identities=identity_list,
+            accounts=accounts,
             platforms=platforms,
             total=total,
             used_count=used_count,
@@ -3765,6 +3774,7 @@ def identities():
         flash(f'Error: {str(e)}', 'danger')
         return render_template('identities.html',
             identities=[],
+            accounts=[],
             platforms=[],
             total=0,
             used_count=0,
@@ -3809,34 +3819,10 @@ def api_identities():
             
             result = supabase_request('POST', 'hs_identities', data=identity_data)
             
-            # Create usage records
-            usage = data.get('usage', [])
-            created_usage = []
-            
-            for u in usage:
-                if u.get('platform'):
-                    usage_data = {
-                        'id': str(uuid.uuid4()),
-                        'identity_id': identity_id,
-                        'platform': u.get('platform'),
-                        'account_name': u.get('account_name', ''),
-                        'application_status': u.get('application_status', 'pending'),
-                        'used_by': session.get('user_id'),
-                        'used_by_name': session.get('user_name', 'Admin'),
-                        'notes': u.get('notes', ''),
-                        'used_at': datetime.utcnow().isoformat(),
-                        'created_at': datetime.utcnow().isoformat(),
-                        'updated_at': datetime.utcnow().isoformat()
-                    }
-                    usage_result = supabase_request('POST', 'hs_identity_usage', data=usage_data)
-                    if usage_result.get('data'):
-                        created_usage.append(usage_result['data'][0])
-            
             return jsonify({
                 'success': True,
                 'data': result['data'],
-                'usage': created_usage,
-                'message': f'Identity added with {len(created_usage)} platform usage records!'
+                'message': 'Identity added successfully!'
             })
         except Exception as e:
             print(f"❌ Error: {str(e)}")
@@ -3878,37 +3864,60 @@ def api_identities():
 @login_required
 @admin_required
 def api_use_identity(identity_id):
-    """Mark an identity as used for a specific platform/account"""
+    """Mark an identity as used for a specific account"""
     try:
         data = request.get_json()
-        platform = data.get('platform')
-        account_name = data.get('account_name', '')
+        account_id = data.get('account_id')
         application_status = data.get('application_status', 'submitted')
+        notes = data.get('notes', '')
         
-        if not platform:
-            return jsonify({'success': False, 'error': 'Platform is required'}), 400
+        if not account_id:
+            return jsonify({'success': False, 'error': 'Account is required'}), 400
         
-        # Check if already used for this platform
+        # Get account details
+        account_result = supabase_request('GET', 'hs_accounts', filters={'id': account_id})
+        if not account_result['data']:
+            return jsonify({'success': False, 'error': 'Account not found'}), 404
+        
+        account = account_result['data'][0]
+        platform = account.get('platform', 'Unknown')
+        account_name = account.get('name', 'Unknown')
+        
+        # Check if already used for this account
         existing = supabase_request('GET', 'hs_identity_usage', filters={
             'identity_id': identity_id,
-            'platform': platform
+            'account_id': account_id
         })
         
         if existing['data']:
             return jsonify({
                 'success': False,
-                'error': f'❌ This identity is already used for {platform}!'
+                'error': f'❌ This identity is already used for {account_name}!'
+            }), 400
+        
+        # Check if already used for this platform
+        platform_check = supabase_request('GET', 'hs_identity_usage', filters={
+            'identity_id': identity_id,
+            'platform': platform
+        })
+        
+        if platform_check['data']:
+            return jsonify({
+                'success': False,
+                'error': f'❌ This identity is already used for {platform} platform!'
             }), 400
         
         # Create usage record
         usage_data = {
             'id': str(uuid.uuid4()),
             'identity_id': identity_id,
+            'account_id': account_id,
             'platform': platform,
             'account_name': account_name,
             'application_status': application_status,
             'used_by': session.get('user_id'),
             'used_by_name': session.get('user_name', 'Admin'),
+            'notes': notes,
             'used_at': datetime.utcnow().isoformat(),
             'created_at': datetime.utcnow().isoformat(),
             'updated_at': datetime.utcnow().isoformat()
@@ -3919,33 +3928,32 @@ def api_use_identity(identity_id):
         return jsonify({
             'success': True,
             'data': result['data'],
-            'message': f'✅ Identity marked as USED for {platform}!'
+            'message': f'✅ Identity applied to {account_name}!'
         })
     except Exception as e:
+        print(f"❌ Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@app.route('/api/identities/available/<platform>', methods=['GET'])
+@app.route('/api/identities/<identity_id>', methods=['GET'])
 @login_required
 @admin_required
-def api_get_available_identities(platform):
-    """Get identities that haven't been used for a specific platform"""
+def api_get_identity(identity_id):
+    """Get a single identity with its usage"""
     try:
-        identity_result = supabase_request('GET', 'hs_identities')
-        identity_list = identity_result['data'] if identity_result['data'] else []
+        result = supabase_request('GET', 'hs_identities', filters={'id': identity_id})
+        if not result['data']:
+            return jsonify({'success': False, 'error': 'Identity not found'}), 404
         
-        usage_result = supabase_request('GET', 'hs_identity_usage')
-        usage_list = usage_result['data'] if usage_result['data'] else []
+        identity = result['data'][0]
         
-        used_ids = [u.get('identity_id') for u in usage_list if u.get('platform') == platform]
+        # Get usage
+        usage_result = supabase_request('GET', 'hs_identity_usage', filters={'identity_id': identity_id})
+        identity['usage'] = usage_result['data'] if usage_result['data'] else []
         
-        available = [i for i in identity_list if i['id'] not in used_ids]
-        
-        return jsonify({
-            'success': True,
-            'data': available,
-            'count': len(available)
-        })
+        return jsonify({'success': True, 'data': identity})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -3977,6 +3985,31 @@ def api_update_usage_status(usage_id):
             'success': True,
             'data': result['data'],
             'message': f'✅ Status updated to: {status.upper()}'
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/identity-usage/<usage_id>/notes', methods=['PATCH'])
+@login_required
+@admin_required
+def api_update_usage_notes(usage_id):
+    """Update notes for an application"""
+    try:
+        data = request.get_json()
+        notes = data.get('notes', '')
+        
+        update_data = {
+            'notes': notes,
+            'updated_at': datetime.utcnow().isoformat()
+        }
+        
+        result = supabase_request('PATCH', 'hs_identity_usage', data=update_data, filters={'id': usage_id})
+        
+        return jsonify({
+            'success': True,
+            'data': result['data'],
+            'message': 'Notes updated successfully!'
         })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
