@@ -3885,6 +3885,12 @@ def api_use_identity(identity_id):
         application_status = data.get('application_status', 'submitted')
         notes = data.get('notes', '')
         
+        print("=" * 60)
+        print("🔍 APPLY IDENTITY - CHECKING DUPLICATES")
+        print(f"📝 Identity ID: {identity_id}")
+        print(f"📝 Account ID: {account_id}")
+        print("=" * 60)
+        
         if not account_id:
             return jsonify({'success': False, 'error': 'Account is required'}), 400
         
@@ -3897,37 +3903,55 @@ def api_use_identity(identity_id):
         platform = account.get('platform', 'Unknown')
         account_name = account.get('name', 'Unknown')
         
-        # Check if already used for this account
+        # ✅ CHECK 1: Already used for THIS account?
         existing = supabase_request('GET', 'hs_identity_usage', filters={
             'identity_id': identity_id,
             'account_id': account_id
         })
         
+        print(f"🔍 Check 1 - Same account: {len(existing['data'])} records found")
+        
         if existing['data']:
+            print(f"❌ BLOCKED: Identity already used for {account_name}")
             return jsonify({
                 'success': False,
                 'error': f'❌ This identity is already used for {account_name}!'
             }), 400
         
-        # Check if already used for this platform
+        # ✅ CHECK 2: Already used for THIS platform?
         platform_check = supabase_request('GET', 'hs_identity_usage', filters={
             'identity_id': identity_id,
             'platform': platform
         })
         
+        print(f"🔍 Check 2 - Same platform: {len(platform_check['data'])} records found")
+        
         if platform_check['data']:
+            print(f"❌ BLOCKED: Identity already used for {platform}")
             return jsonify({
                 'success': False,
                 'error': f'❌ This identity is already used for {platform} platform!'
             }), 400
         
-        # Create usage record
+        # ✅ GET PROXY IP
+        proxy_ip = 'N/A'
+        proxy_location = 'N/A'
+        proxy_id = account.get('proxy_id')
+        if proxy_id:
+            proxy_result = supabase_request('GET', 'hs_proxies', filters={'id': proxy_id})
+            if proxy_result['data']:
+                proxy_ip = proxy_result['data'][0].get('ip', 'N/A')
+                proxy_location = proxy_result['data'][0].get('location', 'N/A')
+        
+        # ✅ Create usage record
         usage_data = {
             'id': str(uuid.uuid4()),
             'identity_id': identity_id,
             'account_id': account_id,
             'platform': platform,
             'account_name': account_name,
+            'proxy_ip': proxy_ip,
+            'proxy_location': proxy_location,
             'application_status': application_status,
             'used_by': session.get('user_id'),
             'used_by_name': session.get('user_name', 'Admin'),
@@ -3937,7 +3961,12 @@ def api_use_identity(identity_id):
             'updated_at': datetime.utcnow().isoformat()
         }
         
+        print(f"✅ Creating usage record: {usage_data}")
+        
         result = supabase_request('POST', 'hs_identity_usage', data=usage_data)
+        
+        print(f"✅ Result: {result}")
+        print("=" * 60)
         
         return jsonify({
             'success': True,
