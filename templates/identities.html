@@ -10,7 +10,7 @@
     <div>
         <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Identities</h1>
         <div class="flex items-center gap-3 mt-0.5">
-            <p class="text-sm text-gray-500">Manage identities & track platform applications</p>
+            <p class="text-sm text-gray-500">Store identities, upload documents & apply to accounts</p>
             <span class="px-2.5 py-0.5 text-xs font-medium bg-indigo-50 text-indigo-600 rounded-full border border-indigo-200">
                 {{ total }} total
             </span>
@@ -22,7 +22,7 @@
 {% block extra_css %}
 <style>
 /* ============================================================
-   PROFESSIONAL IDENTITIES UI - CLICK TO EXPAND
+   CLEAN & PROFESSIONAL UI
    ============================================================ */
 
 /* Stats */
@@ -226,14 +226,13 @@
     border-top: 1px solid #f0f4fa;
 }
 
-/* ===== IDENTITY LIST - CLICK TO EXPAND ===== */
+/* ===== IDENTITY LIST ===== */
 .identity-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-/* Identity Item - Clickable */
 .identity-item {
     background: white;
     border-radius: 10px;
@@ -241,15 +240,10 @@
     overflow: hidden;
     transition: all 0.2s;
     box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-    cursor: pointer;
 }
 .identity-item:hover {
     border-color: #c7d2fe;
     box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-}
-.identity-item.expanded {
-    border-color: #4f46e5;
-    box-shadow: 0 4px 24px rgba(79,70,229,0.08);
 }
 .identity-item.used {
     border-left: 4px solid #f59e0b;
@@ -258,7 +252,6 @@
     border-left: 4px solid #22c55e;
 }
 
-/* Item Header - Always visible */
 .item-header {
     display: flex;
     justify-content: space-between;
@@ -331,35 +324,7 @@
 .item-header .right .expand-icon.open {
     transform: rotate(180deg);
 }
-.item-header .right .actions-btn {
-    display: flex;
-    gap: 4px;
-}
-.item-header .right .actions-btn button {
-    padding: 4px 10px;
-    border-radius: 6px;
-    border: none;
-    font-size: 11px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    background: transparent;
-    color: #94a3b8;
-}
-.item-header .right .actions-btn button:hover {
-    background: #f1f4f9;
-    color: #475569;
-}
-.item-header .right .actions-btn .btn-edit:hover {
-    background: #eef2ff;
-    color: #4f46e5;
-}
-.item-header .right .actions-btn .btn-delete:hover {
-    background: #fee2e2;
-    color: #dc2626;
-}
 
-/* Item Details - Hidden by default, shown on click */
 .item-details {
     display: none;
     padding: 0 20px 20px 20px;
@@ -375,7 +340,6 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Details Grid */
 .details-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -399,7 +363,6 @@
     font-size: 13px;
 }
 
-/* ID Photos in details */
 .id-photos {
     display: flex;
     gap: 8px;
@@ -412,7 +375,7 @@
     border: 1px solid #e2e8f0;
 }
 
-/* Usage Section in details */
+/* Usage Section */
 .usage-section {
     margin-top: 14px;
     padding-top: 14px;
@@ -476,6 +439,7 @@
 .usage-tag.mercor { background: #fef3c7; color: #92400e; border-color: #fde68a; }
 .usage-tag.afterquery { background: #fce4ec; color: #c62828; border-color: #f9a8b4; }
 .usage-tag.upwork { background: #ede9fe; color: #5b21b6; border-color: #ddd6fe; }
+
 .usage-tag.available-all {
     background: #d1fae5;
     color: #065f46;
@@ -487,7 +451,6 @@
     border-color: #fde68a;
 }
 
-/* Details Actions */
 .details-actions {
     display: flex;
     gap: 10px;
@@ -580,7 +543,6 @@
     color: #4f46e5;
 }
 
-/* Empty State */
 .empty-state {
     text-align: center;
     padding: 60px 20px;
@@ -620,8 +582,8 @@
 .modal-content {
     background: white;
     border-radius: 12px;
-    padding: 32px;
-    max-width: 520px;
+    padding: 28px;
+    max-width: 480px;
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
@@ -643,10 +605,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
 }
 .modal-header h3 {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 700;
     color: #0f172a;
     margin: 0;
@@ -657,7 +619,7 @@
 .modal-header .close {
     background: none;
     border: none;
-    font-size: 20px;
+    font-size: 18px;
     cursor: pointer;
     color: #94a3b8;
     padding: 4px;
@@ -668,7 +630,7 @@
 }
 
 .modal-body .form-group {
-    margin-bottom: 14px;
+    margin-bottom: 12px;
 }
 .modal-body .form-group label {
     display: block;
@@ -684,7 +646,7 @@
 .modal-body .form-group select,
 .modal-body .form-group textarea {
     width: 100%;
-    padding: 9px 14px;
+    padding: 8px 12px;
     border-radius: 8px;
     border: 1.5px solid #e2e8f0;
     font-size: 13px;
@@ -703,13 +665,13 @@
 }
 .modal-body .form-group textarea {
     resize: vertical;
-    min-height: 60px;
-    max-height: 100px;
+    min-height: 50px;
+    max-height: 80px;
 }
 
 .modal-body .btn-primary {
     width: 100%;
-    padding: 12px;
+    padding: 10px;
     background: #4f46e5;
     color: white;
     border: none;
@@ -786,7 +748,7 @@
     .details-grid { grid-template-columns: 1fr; }
     .item-header { flex-direction: column; align-items: stretch; gap: 8px; }
     .item-header .right { justify-content: space-between; }
-    .modal-content { padding: 20px; margin: 10px; }
+    .modal-content { padding: 16px; margin: 10px; }
     .filter-pills { flex-wrap: wrap; }
 }
 </style>
@@ -907,7 +869,6 @@
                  id="identity-{{ identity.id }}"
                  data-used="{% if identity.usage %}true{% else %}false{% endif %}">
                 
-                <!-- Header - Always visible -->
                 <div class="item-header" onclick="toggleIdentity('{{ identity.id }}')">
                     <div class="left">
                         <div class="avatar {% if identity.usage %}used{% else %}available{% endif %}">
@@ -926,10 +887,7 @@
                     </div>
                 </div>
 
-                <!-- Details - Hidden, shown on click -->
                 <div class="item-details" id="details-{{ identity.id }}">
-                    
-                    <!-- Details Grid -->
                     <div class="details-grid">
                         <div class="detail-item">
                             <i class="fas fa-phone"></i>
@@ -953,7 +911,6 @@
                         </div>
                     </div>
 
-                    <!-- ID Photos -->
                     {% if identity.id_front_url or identity.id_back_url %}
                     <div class="id-photos">
                         {% if identity.id_front_url %}
@@ -965,7 +922,6 @@
                     </div>
                     {% endif %}
 
-                    <!-- Usage Section -->
                     <div class="usage-section">
                         <div class="title">Platform Usage</div>
                         <div class="usage-tags">
@@ -988,7 +944,6 @@
                         </div>
                     </div>
 
-                    <!-- Actions -->
                     <div class="details-actions">
                         <button class="btn-view" onclick="event.stopPropagation(); viewIdentity('{{ identity.id }}')">
                             <i class="fas fa-eye"></i> View
@@ -1017,7 +972,7 @@
 </div>
 
 <!-- ============================================================
-     APPLY MODAL
+     APPLY MODAL - CLEAN & SIMPLE
      ============================================================ -->
 <div class="modal-overlay" id="applyModal">
     <div class="modal-content">
@@ -1047,19 +1002,19 @@
                     </select>
                 </div>
 
-                <!-- Create New Account -->
-                <div id="newAccountSection" style="display:none; background:#f8fafc; padding:16px; border-radius:8px; border:1px solid #e8edf4; margin-bottom:14px;">
-                    <div style="font-size:13px;font-weight:600;color:#0f172a;margin-bottom:10px;">
+                <!-- CREATE NEW ACCOUNT - SIMPLE -->
+                <div id="newAccountSection" style="display:none; background:#f8fafc; padding:14px; border-radius:8px; border:1px solid #e8edf4; margin-bottom:12px;">
+                    <div style="font-size:13px;font-weight:600;color:#0f172a;margin-bottom:8px;">
                         <i class="fas fa-plus-circle text-indigo-500"></i> Create New Account
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                         <div class="form-group">
                             <label>Account Name <span class="required">*</span></label>
-                            <input type="text" id="new_account_name" placeholder="e.g., Mercor_Account_002">
+                            <input type="text" id="new_account_name" placeholder="e.g., Mercor_Account_002" required>
                         </div>
                         <div class="form-group">
                             <label>Platform <span class="required">*</span></label>
-                            <select id="new_account_platform">
+                            <select id="new_account_platform" required>
                                 <option value="RWS">RWS</option>
                                 <option value="Handshake">Handshake</option>
                                 <option value="Mercor" selected>Mercor</option>
@@ -1070,38 +1025,7 @@
                             </select>
                         </div>
                     </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
-                        <div class="form-group">
-                            <label>Location</label>
-                            <input type="text" id="new_account_location" placeholder="e.g., USA">
-                        </div>
-                        <div class="form-group">
-                            <label>Client Rate ($)</label>
-                            <input type="number" id="new_account_rate" value="15" step="0.50">
-                        </div>
-                    </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
-                        <div class="form-group">
-                            <label>Payday</label>
-                            <select id="new_account_payday">
-                                <option value="Monday">Monday</option>
-                                <option value="Tuesday">Tuesday</option>
-                                <option value="Wednesday">Wednesday</option>
-                                <option value="Thursday">Thursday</option>
-                                <option value="Friday">Friday</option>
-                                <option value="Saturday">Saturday</option>
-                                <option value="Sunday" selected>Sunday</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Status</label>
-                            <select id="new_account_status">
-                                <option value="active" selected>Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                        </div>
-                    </div>
-                    <button type="button" class="btn-primary btn-success" id="createAccountBtn" style="margin-top:10px;" onclick="createNewAccount()">
+                    <button type="button" class="btn-primary btn-success" id="createAccountBtn" style="margin-top:10px;background:#059669;" onclick="createNewAccount()">
                         <i class="fas fa-plus"></i> Create Account
                     </button>
                 </div>
@@ -1199,14 +1123,12 @@ function toggleIdentity(id) {
         icon.classList.remove('open');
         item.classList.remove('expanded');
     } else {
-        // Close all other open items
         document.querySelectorAll('.item-details.open').forEach(el => {
             el.classList.remove('open');
             const parentId = el.id.replace('details-', '');
             document.getElementById('icon-' + parentId)?.classList.remove('open');
             document.getElementById('identity-' + parentId)?.classList.remove('expanded');
         });
-        
         details.classList.add('open');
         icon.classList.add('open');
         item.classList.add('expanded');
@@ -1298,9 +1220,7 @@ async function saveIdentity(event) {
 // FILTER IDENTITIES
 // ============================================================
 function filterIdentities(filter, btn) {
-    document.querySelectorAll('#filterGroup button').forEach(b => {
-        b.classList.remove('active');
-    });
+    document.querySelectorAll('#filterGroup button').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
     
     document.querySelectorAll('.identity-item').forEach(item => {
@@ -1313,7 +1233,7 @@ function filterIdentities(filter, btn) {
 }
 
 // ============================================================
-// VIEW IDENTITY (Toggle details)
+// VIEW IDENTITY
 // ============================================================
 function viewIdentity(id) {
     toggleIdentity(id);
@@ -1333,7 +1253,7 @@ function toggleNewAccount() {
 }
 
 // ============================================================
-// CREATE NEW ACCOUNT
+// CREATE NEW ACCOUNT - SIMPLE
 // ============================================================
 async function createNewAccount() {
     const btn = document.getElementById('createAccountBtn');
@@ -1341,21 +1261,24 @@ async function createNewAccount() {
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
     
-    const data = {
-        name: document.getElementById('new_account_name').value.trim(),
-        platform: document.getElementById('new_account_platform').value,
-        location: document.getElementById('new_account_location').value.trim(),
-        client_rate: parseFloat(document.getElementById('new_account_rate').value) || 15,
-        payday: document.getElementById('new_account_payday').value,
-        status: document.getElementById('new_account_status').value
-    };
+    const name = document.getElementById('new_account_name').value.trim();
+    const platform = document.getElementById('new_account_platform').value;
     
-    if (!data.name) {
+    if (!name) {
         showToast('Please enter an account name', 'warning');
         btn.disabled = false;
         btn.innerHTML = original;
         return;
     }
+    
+    const data = {
+        name: name,
+        platform: platform,
+        location: '',
+        client_rate: 15,
+        payday: 'Sunday',
+        status: 'active'
+    };
     
     try {
         const response = await fetch('/api/accounts', {
@@ -1380,8 +1303,6 @@ async function createNewAccount() {
             
             document.getElementById('newAccountSection').style.display = 'none';
             document.getElementById('new_account_name').value = '';
-            document.getElementById('new_account_location').value = '';
-            document.getElementById('new_account_rate').value = '15';
         } else {
             showToast('❌ ' + (result.error || 'Failed to create account'), 'error');
         }
