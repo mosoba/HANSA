@@ -974,9 +974,7 @@
 <!-- ============================================================
      APPLY MODAL
      ============================================================ -->
-<!-- ============================================================
-     APPLY MODAL - WITH PROXY IN DROPDOWN
-     ============================================================ -->
+<!-- APPLY MODAL - WITH PROXY IP -->
 <div class="modal-overlay" id="applyModal">
     <div class="modal-content">
         <div class="modal-header">
@@ -1001,8 +999,8 @@
                         {% for account in accounts %}
                         <option value="{{ account.id }}">
                             {{ account.name }} ({{ account.platform or 'N/A' }})
-                            {% if account.proxy_location %}
-                                - Proxy: {{ account.proxy_location }}
+                            {% if account.proxy_ip and account.proxy_ip != 'No Proxy' %}
+                                - Proxy: {{ account.proxy_ip }}
                             {% endif %}
                         </option>
                         {% endfor %}
